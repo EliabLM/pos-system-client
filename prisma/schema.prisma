@@ -124,8 +124,8 @@ model User {
   organizationId String
   storeId        String? // NULL para ADMIN, específico para SELLER
   clerkId        String    @unique // ID del usuario en Clerk
-  email          String    @unique
-  username       String    @unique
+  email          String
+  username       String
   firstName      String
   lastName       String
   role           UserRole  @default(SELLER)
@@ -165,7 +165,7 @@ model Category {
   products     Product[]
 
   // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, name, isDeleted], name: "unique_category_name_per_org")
+  @@unique([organizationId, name, deletedAt], name: "unique_category_name_per_org")
   @@map("categories")
 }
 
@@ -187,7 +187,7 @@ model Brand {
   products     Product[]
 
   // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, name, isDeleted], name: "unique_brand_name_per_org")
+  @@unique([organizationId, name, deletedAt], name: "unique_brand_name_per_org")
   @@map("brands")
 }
 
@@ -209,8 +209,8 @@ model UnitMeasure {
   saleItems    SaleItem[]
 
   // ✅ SOLUCION: Unique compuestos por organización + condicional para soft delete
-  @@unique([organizationId, name, isDeleted], name: "unique_unit_name_per_org")
-  @@unique([organizationId, abbreviation, isDeleted], name: "unique_unit_abbrev_per_org")
+  @@unique([organizationId, name, deletedAt], name: "unique_unit_name_per_org")
+  @@unique([organizationId, abbreviation, deletedAt], name: "unique_unit_abbrev_per_org")
   @@map("unit_measures")
 }
 
@@ -254,8 +254,8 @@ model Product {
   stockMovements StockMovement[]
 
   // ✅ SOLUCION: Unique compuestos por organización + condicional para soft delete
-  @@unique([organizationId, barcode, isDeleted], name: "unique_barcode_per_org")
-  @@unique([organizationId, sku, isDeleted], name: "unique_sku_per_org")
+  @@unique([organizationId, barcode, deletedAt], name: "unique_barcode_per_org")
+  @@unique([organizationId, sku, deletedAt], name: "unique_sku_per_org")
   @@map("products")
 }
 
@@ -287,8 +287,8 @@ model Customer {
   sales        Sale[]
 
   // ✅ SOLUCION: Unique compuestos por organización + condicional para soft delete
-  @@unique([organizationId, email, isDeleted], name: "unique_customer_email_per_org")
-  @@unique([organizationId, document, isDeleted], name: "unique_customer_document_per_org")
+  @@unique([organizationId, email, deletedAt], name: "unique_customer_email_per_org")
+  @@unique([organizationId, document, deletedAt], name: "unique_customer_document_per_org")
   @@map("customers")
 }
 
@@ -315,7 +315,7 @@ model Supplier {
   purchases    Purchase[]
 
   // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, taxId, isDeleted], name: "unique_supplier_taxid_per_org")
+  @@unique([organizationId, taxId, deletedAt], name: "unique_supplier_taxid_per_org")
   @@map("suppliers")
 }
 
@@ -340,7 +340,7 @@ model PaymentMethod {
   salePayments SalePayment[]
 
   // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, name, isDeleted], name: "unique_payment_method_per_org")
+  @@unique([organizationId, name, deletedAt], name: "unique_payment_method_per_org")
   @@map("payment_methods")
 }
 
@@ -371,7 +371,7 @@ model Sale {
   salePayments SalePayment[]
 
   // ✅ SOLUCION: Unique compuesto por tienda + condicional para soft delete
-  @@unique([storeId, saleNumber, isDeleted], name: "unique_sale_number_per_store")
+  @@unique([storeId, saleNumber, deletedAt], name: "unique_sale_number_per_store")
   @@map("sales")
 }
 
@@ -513,6 +513,6 @@ model SystemConfig {
   organization Organization @relation(fields: [organizationId], references: [id])
 
   // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, key, isDeleted], name: "unique_system_config_per_org")
+  @@unique([organizationId, key, deletedAt], name: "unique_system_config_per_org")
   @@map("system_configs")
 }

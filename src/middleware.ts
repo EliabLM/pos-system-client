@@ -6,6 +6,8 @@ export default clerkMiddleware(async (auth, req) => {
     if (!isPublicRoute(req)) {
         await auth.protect()
     }
+}, {
+    signInUrl: '/auth/login'
 })
 
 export const config = {

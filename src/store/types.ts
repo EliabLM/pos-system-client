@@ -5,13 +5,14 @@ export interface TempUser {
     email: string;
     clerkId: string;
     id: string;
+    organizationId: string;
 }
 
 export type LoginSlice = {
     stepIndex: number
     tempUser: TempUser | null
     setStepIndex: (stepIndex: number) => void
-    setTempUser: (user: TempUser) => void
+    setTempUser: (user: TempUser | null) => void
 }
 
 export type UiSlice = {

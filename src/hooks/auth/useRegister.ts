@@ -13,5 +13,5 @@ export const useRegister = () => {
         setStepIndex(stepIndex - 1)
     }
 
-    return { stepIndex, tempUser, handleNext, handleBack, setTempUser }
+    return { stepIndex, tempUser, handleNext, handleBack, setTempUser, setStepIndex }
 }

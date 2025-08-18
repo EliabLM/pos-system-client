@@ -141,6 +141,7 @@ const RegisterUserPage = ({
         username: data.username,
         clerkId: createdUser.id,
         id: '',
+        organizationId: '',
       });
 
       setVerificationStep(true);

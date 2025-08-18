@@ -39,6 +39,7 @@ import Swal from 'sweetalert2';
 import { GENERIC_ERROR_MESSAGE } from '@/constants';
 import { deleteOrgByClerkId } from '@/actions/organization/delete-clerk-org';
 import { updateUserOrgAction } from '@/actions/user/update-org';
+import { createSlug } from '@/utils/createSlug';
 
 // Schema de validación con Yup
 const onboardingSchema = yup.object({
@@ -84,22 +85,9 @@ const onboardingSchema = yup.object({
 
 type SignUpFormData = yup.InferType<typeof onboardingSchema>;
 
-// Función para crear slug desde el nombre de la empresa
-const createSlugFromCompanyName = (companyName: string): string => {
-  return companyName
-    .toLowerCase()
-    .normalize('NFD') // Normalizar caracteres acentuados
-    .replace(/[\u0300-\u036f]/g, '') // Remover acentos
-    .replace(/[^a-z0-9\s-]/g, '') // Solo letras, números, espacios y guiones
-    .replace(/\s+/g, '-') // Reemplazar espacios con guiones
-    .replace(/-+/g, '-') // Reemplazar múltiples guiones con uno solo
-    .replace(/^-|-$/g, '') // Remover guiones al inicio y final
-    .substring(0, 30); // Limitar longitud
-};
-
 const RegisterOrganizationPage = () => {
   const { handleNext } = useRegister();
-  const { tempUser } = useStore();
+  const { tempUser, setTempUser } = useStore();
   const { createOrganization, isLoaded } = useOrganizationList();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -155,7 +143,11 @@ const RegisterOrganizationPage = () => {
         return;
       }
 
+      setTempUser({ ...tempUser, organizationId: resOrgDb.data.id });
+
       await updateUserOrgAction(tempUser.id, resOrgDb.data.id);
+
+      // todo - crear categorias y configuraciones iniciales de la organización
 
       handleNext();
     } catch (error) {
@@ -171,7 +163,7 @@ const RegisterOrganizationPage = () => {
   // Actualizar subdominio automáticamente cuando cambia el nombre de la empresa
   useEffect(() => {
     if (watchedCompanyName && watchedCompanyName.length >= 2) {
-      const newSubdomain = createSlugFromCompanyName(watchedCompanyName);
+      const newSubdomain = createSlug(watchedCompanyName);
       if (newSubdomain !== watchedSubdomain) {
         form.setValue('subdomain', newSubdomain, { shouldValidate: true });
       }

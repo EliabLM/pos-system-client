@@ -1,7 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useSignIn } from '@clerk/nextjs';
+import { useSignIn, useUser } from '@clerk/nextjs';
+import { Loader2Icon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -14,16 +16,22 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2Icon } from 'lucide-react';
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
   const { isLoaded, signIn, setActive } = useSignIn();
+  const { isSignedIn } = useUser();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      router.replace('/dashboard');
+    }
+  }, [isSignedIn]);
 
   if (!isLoaded) return null;
 
@@ -67,11 +75,12 @@ export function LoginForm({
       e.preventDefault();
       setIsLoading(true);
 
-      await signIn.authenticateWithRedirect({
+      const result = await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
         redirectUrl: '/sso-callback', // ruta definida en Clerk
         redirectUrlComplete: '/dashboard',
       });
+      console.log('🚀 ~ handleLoginWithGoogle ~ result:', result);
     } catch (error) {
       console.error('🚀 ~ handleLoginWithGoogle ~ error:', error);
     } finally {
@@ -152,9 +161,12 @@ export function LoginForm({
               </div>
               <div className='text-center text-sm'>
                 ¿No tienes una cuenta?{' '}
-                <a href='#' className='underline underline-offset-4'>
+                <Link
+                  href={'/auth/register'}
+                  className='underline underline-offset-4'
+                >
                   Registrarse
-                </a>
+                </Link>
               </div>
             </div>
           </form>

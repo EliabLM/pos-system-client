@@ -1,7 +1,3 @@
-// Schema Prisma Multi-tenant CORREGIDO
-// Soluciones: Unique compuestos + Conditional unique para soft delete
-// Stack: Next.js + Prisma + PostgreSQL + Clerk
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -13,19 +9,387 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ================================
-// ENUMS
-// ================================
+model Organization {
+  id             String          @id @default(cuid())
+  clerkOrgId     String          @unique
+  name           String
+  email          String
+  phone          String?
+  address        String?
+  city           String?
+  department     String?
+  taxId          String?
+  isActive       Boolean         @default(true)
+  isDeleted      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  brands         Brand[]
+  categories     Category[]
+  customers      Customer[]
+  paymentMethods PaymentMethod[]
+  products       Product[]
+  stockMovements StockMovement[]
+  stores         Store[]
+  suppliers      Supplier[]
+  systemConfigs  SystemConfig[]
+  unitMeasures   UnitMeasure[]
+  users          User[]
+
+  @@map("organizations")
+}
+
+model Store {
+  id               String       @id @default(cuid())
+  organizationId   String
+  name             String
+  description      String?
+  address          String
+  city             String?
+  department       String?
+  phone            String?
+  saleNumberPrefix String       @default("")
+  lastSaleNumber   Int          @default(0)
+  isActive         Boolean      @default(true)
+  isDeleted        Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  deletedAt        DateTime?
+  sales            Sale[]
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  users            User[]
+
+  @@unique([organizationId, name], name: "unique_store_name_per_org")
+  @@map("stores")
+}
+
+model User {
+  id             String          @id @default(cuid())
+  organizationId String
+  storeId        String?
+  clerkId        String          @unique
+  email          String
+  username       String
+  firstName      String
+  lastName       String
+  role           UserRole        @default(SELLER)
+  isActive       Boolean         @default(true)
+  isDeleted      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  sales          Sale[]
+  stockMovements StockMovement[]
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  store          Store?          @relation(fields: [storeId], references: [id])
+
+  @@map("users")
+}
+
+model Category {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+
+  @@unique([organizationId, name, deletedAt], name: "unique_category_name_per_org")
+  @@map("categories")
+}
+
+model Brand {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  logo           String?
+  description    String?
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+
+  @@unique([organizationId, name, deletedAt], name: "unique_brand_name_per_org")
+  @@map("brands")
+}
+
+model UnitMeasure {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  abbreviation   String
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  products       Product[]
+  saleItems      SaleItem[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, name, deletedAt], name: "unique_unit_name_per_org")
+  @@unique([organizationId, abbreviation, deletedAt], name: "unique_unit_abbrev_per_org")
+  @@map("unit_measures")
+}
+
+model Product {
+  id             String          @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  image          String?
+  barcode        String?
+  sku            String?
+  categoryId     String?
+  brandId        String?
+  unitMeasureId  String
+  costPrice      Decimal         @db.Decimal(10, 2)
+  salePrice      Decimal         @db.Decimal(10, 2)
+  minStock       Int             @default(0)
+  currentStock   Int             @default(0)
+  alcoholGrade   Float?
+  volume         Float?
+  size           String?
+  color          String?
+  model          String?
+  isActive       Boolean         @default(true)
+  isDeleted      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  brand          Brand?          @relation(fields: [brandId], references: [id])
+  category       Category?       @relation(fields: [categoryId], references: [id])
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  unitMeasure    UnitMeasure     @relation(fields: [unitMeasureId], references: [id])
+  purchaseItems  PurchaseItem[]
+  saleItems      SaleItem[]
+  stockMovements StockMovement[]
+
+  @@unique([organizationId, barcode, deletedAt], name: "unique_barcode_per_org")
+  @@unique([organizationId, sku, deletedAt], name: "unique_sku_per_org")
+  @@map("products")
+}
+
+model Customer {
+  id             String       @id @default(cuid())
+  organizationId String
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  address        String?
+  city           String?
+  department     String?
+  document       String?
+  documentType   String?
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  sales          Sale[]
+
+  @@unique([organizationId, email, deletedAt], name: "unique_customer_email_per_org")
+  @@unique([organizationId, document, deletedAt], name: "unique_customer_document_per_org")
+  @@map("customers")
+}
+
+model Supplier {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  contactName    String?
+  email          String?
+  phone          String?
+  address        String?
+  city           String?
+  department     String?
+  taxId          String?
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  purchases      Purchase[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, taxId, deletedAt], name: "unique_supplier_taxid_per_org")
+  @@map("suppliers")
+}
+
+model PaymentMethod {
+  id             String        @id @default(cuid())
+  organizationId String
+  name           String
+  type           PaymentType
+  isActive       Boolean       @default(true)
+  isDeleted      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  salePayments   SalePayment[]
+
+  @@unique([organizationId, name, deletedAt], name: "unique_payment_method_per_org")
+  @@map("payment_methods")
+}
+
+model Sale {
+  id           String        @id @default(cuid())
+  storeId      String
+  saleNumber   String
+  customerId   String?
+  userId       String
+  subtotal     Decimal       @db.Decimal(10, 2)
+  total        Decimal       @db.Decimal(10, 2)
+  status       SaleStatus    @default(PAID)
+  saleDate     DateTime      @default(now())
+  dueDate      DateTime?
+  paidDate     DateTime?
+  notes        String?
+  isDeleted    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+  saleItems    SaleItem[]
+  salePayments SalePayment[]
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  store        Store         @relation(fields: [storeId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+
+  @@unique([storeId, saleNumber, deletedAt], name: "unique_sale_number_per_store")
+  @@map("sales")
+}
+
+model SaleItem {
+  id            String      @id @default(cuid())
+  saleId        String
+  productId     String
+  unitMeasureId String
+  quantity      Int
+  unitPrice     Decimal     @db.Decimal(10, 2)
+  subtotal      Decimal     @db.Decimal(10, 2)
+  isDeleted     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+  product       Product     @relation(fields: [productId], references: [id])
+  sale          Sale        @relation(fields: [saleId], references: [id])
+  unitMeasure   UnitMeasure @relation(fields: [unitMeasureId], references: [id])
+
+  @@map("sale_items")
+}
+
+model SalePayment {
+  id              String        @id @default(cuid())
+  saleId          String
+  paymentMethodId String
+  amount          Decimal       @db.Decimal(10, 2)
+  reference       String?
+  notes           String?
+  paymentDate     DateTime      @default(now())
+  isDeleted       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  sale            Sale          @relation(fields: [saleId], references: [id])
+
+  @@map("sale_payments")
+}
+
+model Purchase {
+  id             String         @id @default(cuid())
+  supplierId     String
+  purchaseNumber String
+  total          Decimal        @db.Decimal(10, 2)
+  status         PurchaseStatus @default(PENDING)
+  purchaseDate   DateTime       @default(now())
+  receivedDate   DateTime?
+  notes          String?
+  isDeleted      Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+  purchaseItems  PurchaseItem[]
+  supplier       Supplier       @relation(fields: [supplierId], references: [id])
+
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id         String    @id @default(cuid())
+  purchaseId String
+  productId  String
+  quantity   Int
+  unitPrice  Decimal   @db.Decimal(10, 2)
+  subtotal   Decimal   @db.Decimal(10, 2)
+  isDeleted  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  product    Product   @relation(fields: [productId], references: [id])
+  purchase   Purchase  @relation(fields: [purchaseId], references: [id])
+
+  @@map("purchase_items")
+}
+
+model StockMovement {
+  id             String            @id @default(cuid())
+  organizationId String
+  productId      String
+  storeId        String?
+  type           StockMovementType
+  quantity       Int
+  previousStock  Int
+  newStock       Int
+  reason         String?
+  userId         String?
+  reference      String?
+  createdAt      DateTime          @default(now())
+  organization   Organization      @relation(fields: [organizationId], references: [id])
+  product        Product           @relation(fields: [productId], references: [id])
+  user           User?             @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, productId, createdAt])
+  @@map("stock_movements")
+}
+
+model SystemConfig {
+  id             String       @id @default(cuid())
+  organizationId String
+  key            String
+  value          String
+  type           String       @default("STRING")
+  description    String?
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, key, deletedAt], name: "unique_system_config_per_org")
+  @@map("system_configs")
+}
 
 enum UserRole {
-  ADMIN // Administra la organización y puede vender en cualquier tienda
-  SELLER // Vendedor asignado a una tienda específica
+  ADMIN
+  SELLER
 }
 
 enum StockMovementType {
-  IN // Entrada de inventario (compras, ajustes positivos)
-  OUT // Salida de inventario (ventas, ajustes negativos)
-  ADJUSTMENT // Ajuste de inventario manual
+  IN
+  OUT
+  ADJUSTMENT
 }
 
 enum PaymentType {
@@ -38,481 +402,14 @@ enum PaymentType {
 }
 
 enum SaleStatus {
-  PAID // PAGADA
-  PENDING // PENDIENTE (crédito)
-  OVERDUE // VENCIDA
-  CANCELLED // CANCELADA
+  PAID
+  PENDING
+  OVERDUE
+  CANCELLED
 }
 
 enum PurchaseStatus {
   PENDING
   RECEIVED
   CANCELLED
-}
-
-// ================================
-// ORGANIZACIONES Y USUARIOS
-// ================================
-
-// Organizaciones principales (multi-tenant)
-model Organization {
-  id         String    @id @default(cuid())
-  clerkOrgId String    @unique // ID de la organización en Clerk
-  name       String
-  email      String
-  phone      String?
-  address    String?
-  city       String?
-  department String? // Para Colombia: Bolívar, Antioquia, etc.
-  taxId      String? // NIT en Colombia
-  isActive   Boolean   @default(true)
-  isDeleted  Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
-
-  // Relaciones
-  stores         Store[]
-  users          User[]
-  customers      Customer[]
-  suppliers      Supplier[]
-  categories     Category[]
-  brands         Brand[]
-  products       Product[]
-  unitMeasures   UnitMeasure[]
-  paymentMethods PaymentMethod[]
-  stockMovements StockMovement[]
-  systemConfigs  SystemConfig[]
-
-  @@map("organizations")
-}
-
-// Tiendas físicas dentro de una organización
-model Store {
-  id             String  @id @default(cuid())
-  organizationId String
-  name           String
-  description    String?
-  address        String
-  city           String?
-  department     String?
-  phone          String?
-
-  // Configuración para numeración de facturas independiente
-  saleNumberPrefix String @default("") // Prefijo para numeración: "TIENDA1-", "CENTRO-", etc.
-  lastSaleNumber   Int    @default(0) // Último número de venta para secuencia
-
-  isActive  Boolean   @default(true)
-  isDeleted Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  // Relaciones
-  organization Organization @relation(fields: [organizationId], references: [id])
-  users        User[] // Vendedores asignados a esta tienda
-  sales        Sale[] // Ventas realizadas en esta tienda
-
-  // ✅ SOLUCION: Unique compuesto para evitar conflictos entre organizaciones
-  @@unique([organizationId, name], name: "unique_store_name_per_org")
-  @@map("stores")
-}
-
-// Usuarios del sistema (sincronizado con Clerk)
-model User {
-  id             String    @id @default(cuid())
-  organizationId String
-  storeId        String? // NULL para ADMIN, específico para SELLER
-  clerkId        String    @unique // ID del usuario en Clerk
-  email          String
-  username       String
-  firstName      String
-  lastName       String
-  role           UserRole  @default(SELLER)
-  isActive       Boolean   @default(true)
-  isDeleted      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  organization   Organization    @relation(fields: [organizationId], references: [id])
-  store          Store?          @relation(fields: [storeId], references: [id]) // NULL para ADMIN
-  sales          Sale[]
-  stockMovements StockMovement[]
-
-  @@map("users")
-}
-
-// ================================
-// CATÁLOGO DE PRODUCTOS
-// ================================
-
-// Categorías de productos
-model Category {
-  id             String    @id @default(cuid())
-  organizationId String
-  name           String
-  description    String?
-  isActive       Boolean   @default(true)
-  isDeleted      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  organization Organization @relation(fields: [organizationId], references: [id])
-  products     Product[]
-
-  // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, name, deletedAt], name: "unique_category_name_per_org")
-  @@map("categories")
-}
-
-// Marcas de productos
-model Brand {
-  id             String    @id @default(cuid())
-  organizationId String
-  name           String
-  logo           String?
-  description    String?
-  isActive       Boolean   @default(true)
-  isDeleted      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  organization Organization @relation(fields: [organizationId], references: [id])
-  products     Product[]
-
-  // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, name, deletedAt], name: "unique_brand_name_per_org")
-  @@map("brands")
-}
-
-// Unidades de medida
-model UnitMeasure {
-  id             String    @id @default(cuid())
-  organizationId String
-  name           String // "Unidad", "Litro", "Par", "Caja", "Botella"
-  abbreviation   String // "UN", "L", "PR", "CJ", "BOT"
-  isActive       Boolean   @default(true)
-  isDeleted      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  organization Organization @relation(fields: [organizationId], references: [id])
-  products     Product[]
-  saleItems    SaleItem[]
-
-  // ✅ SOLUCION: Unique compuestos por organización + condicional para soft delete
-  @@unique([organizationId, name, deletedAt], name: "unique_unit_name_per_org")
-  @@unique([organizationId, abbreviation, deletedAt], name: "unique_unit_abbrev_per_org")
-  @@map("unit_measures")
-}
-
-// Productos principales (STOCK CENTRALIZADO por organización)
-model Product {
-  id             String  @id @default(cuid())
-  organizationId String
-  name           String
-  description    String?
-  image          String? // URL de la imagen del producto
-  barcode        String?
-  sku            String?
-  categoryId     String?
-  brandId        String?
-  unitMeasureId  String
-  costPrice      Decimal @db.Decimal(10, 2)
-  salePrice      Decimal @db.Decimal(10, 2)
-  minStock       Int     @default(0)
-  currentStock   Int     @default(0) // STOCK CENTRALIZADO
-
-  // Campos específicos para diferentes tipos de productos
-  alcoholGrade Float? // Para licores (% de alcohol)
-  volume       Float? // Volumen en ml/litros
-  size         String? // Para zapatos: "42", "43", ropa: "M", "L"
-  color        String? // Para productos con colores específicos
-  model        String? // Modelo específico del producto
-
-  isActive  Boolean   @default(true)
-  isDeleted Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  // Relaciones
-  organization   Organization    @relation(fields: [organizationId], references: [id])
-  category       Category?       @relation(fields: [categoryId], references: [id])
-  brand          Brand?          @relation(fields: [brandId], references: [id])
-  unitMeasure    UnitMeasure     @relation(fields: [unitMeasureId], references: [id])
-  saleItems      SaleItem[]
-  purchaseItems  PurchaseItem[]
-  stockMovements StockMovement[]
-
-  // ✅ SOLUCION: Unique compuestos por organización + condicional para soft delete
-  @@unique([organizationId, barcode, deletedAt], name: "unique_barcode_per_org")
-  @@unique([organizationId, sku, deletedAt], name: "unique_sku_per_org")
-  @@map("products")
-}
-
-// ================================
-// CLIENTES Y PROVEEDORES
-// ================================
-
-// Clientes (compartidos a nivel organización)
-model Customer {
-  id             String    @id @default(cuid())
-  organizationId String
-  firstName      String
-  lastName       String
-  email          String?
-  phone          String?
-  address        String?
-  city           String?
-  department     String?
-  document       String? // Cédula, NIT, etc.
-  documentType   String? // "CC", "NIT", "CE", etc.
-  isActive       Boolean   @default(true)
-  isDeleted      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  organization Organization @relation(fields: [organizationId], references: [id])
-  sales        Sale[]
-
-  // ✅ SOLUCION: Unique compuestos por organización + condicional para soft delete
-  @@unique([organizationId, email, deletedAt], name: "unique_customer_email_per_org")
-  @@unique([organizationId, document, deletedAt], name: "unique_customer_document_per_org")
-  @@map("customers")
-}
-
-// Proveedores (compartidos a nivel organización)
-model Supplier {
-  id             String    @id @default(cuid())
-  organizationId String
-  name           String
-  contactName    String?
-  email          String?
-  phone          String?
-  address        String?
-  city           String?
-  department     String?
-  taxId          String? // NIT del proveedor
-  isActive       Boolean   @default(true)
-  isDeleted      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  organization Organization @relation(fields: [organizationId], references: [id])
-  purchases    Purchase[]
-
-  // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, taxId, deletedAt], name: "unique_supplier_taxid_per_org")
-  @@map("suppliers")
-}
-
-// ================================
-// VENTAS
-// ================================
-
-// Métodos de pago
-model PaymentMethod {
-  id             String      @id @default(cuid())
-  organizationId String
-  name           String
-  type           PaymentType
-  isActive       Boolean     @default(true)
-  isDeleted      Boolean     @default(false)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  organization Organization  @relation(fields: [organizationId], references: [id])
-  salePayments SalePayment[]
-
-  // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, name, deletedAt], name: "unique_payment_method_per_org")
-  @@map("payment_methods")
-}
-
-// Ventas principales (NUMERACIÓN INDEPENDIENTE POR TIENDA)
-model Sale {
-  id         String     @id @default(cuid())
-  storeId    String
-  saleNumber String // Número generado: "TIENDA1-00001", "CENTRO-00001"
-  customerId String?
-  userId     String
-  subtotal   Decimal    @db.Decimal(10, 2)
-  total      Decimal    @db.Decimal(10, 2)
-  status     SaleStatus @default(PAID)
-  saleDate   DateTime   @default(now())
-  dueDate    DateTime? // Para ventas a crédito
-  paidDate   DateTime? // Fecha de pago completo
-  notes      String?
-  isDeleted  Boolean    @default(false)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  deletedAt  DateTime?
-
-  // Relaciones
-  store        Store         @relation(fields: [storeId], references: [id])
-  customer     Customer?     @relation(fields: [customerId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
-  saleItems    SaleItem[]
-  salePayments SalePayment[]
-
-  // ✅ SOLUCION: Unique compuesto por tienda + condicional para soft delete
-  @@unique([storeId, saleNumber, deletedAt], name: "unique_sale_number_per_store")
-  @@map("sales")
-}
-
-// Items de venta
-model SaleItem {
-  id            String    @id @default(cuid())
-  saleId        String
-  productId     String
-  unitMeasureId String
-  quantity      Int
-  unitPrice     Decimal   @db.Decimal(10, 2)
-  subtotal      Decimal   @db.Decimal(10, 2)
-  isDeleted     Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
-
-  // Relaciones
-  sale        Sale        @relation(fields: [saleId], references: [id])
-  product     Product     @relation(fields: [productId], references: [id])
-  unitMeasure UnitMeasure @relation(fields: [unitMeasureId], references: [id])
-
-  @@map("sale_items")
-}
-
-// Pagos de ventas (soporte para pagos múltiples)
-model SalePayment {
-  id              String    @id @default(cuid())
-  saleId          String
-  paymentMethodId String
-  amount          Decimal   @db.Decimal(10, 2)
-  reference       String? // Número de transacción, cheque, etc.
-  notes           String?
-  paymentDate     DateTime  @default(now())
-  isDeleted       Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
-
-  // Relaciones
-  sale          Sale          @relation(fields: [saleId], references: [id])
-  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
-
-  @@map("sale_payments")
-}
-
-// ================================
-// COMPRAS (Para gestión de inventario centralizado)
-// ================================
-
-// Compras a proveedores
-model Purchase {
-  id             String         @id @default(cuid())
-  supplierId     String
-  purchaseNumber String
-  total          Decimal        @db.Decimal(10, 2)
-  status         PurchaseStatus @default(PENDING)
-  purchaseDate   DateTime       @default(now())
-  receivedDate   DateTime? // Fecha de recepción de mercancía
-  notes          String?
-  isDeleted      Boolean        @default(false)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  supplier      Supplier       @relation(fields: [supplierId], references: [id])
-  purchaseItems PurchaseItem[]
-
-  @@map("purchases")
-}
-
-// Items de compra
-model PurchaseItem {
-  id         String    @id @default(cuid())
-  purchaseId String
-  productId  String
-  quantity   Int
-  unitPrice  Decimal   @db.Decimal(10, 2)
-  subtotal   Decimal   @db.Decimal(10, 2)
-  isDeleted  Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
-
-  // Relaciones
-  purchase Purchase @relation(fields: [purchaseId], references: [id])
-  product  Product  @relation(fields: [productId], references: [id])
-
-  @@map("purchase_items")
-}
-
-// ================================
-// INVENTARIO CENTRALIZADO
-// ================================
-
-// Movimientos de stock (trazabilidad completa)
-model StockMovement {
-  id             String            @id @default(cuid())
-  organizationId String
-  productId      String
-  storeId        String? // Tienda donde se realizó el movimiento (NULL para movimientos generales)
-  type           StockMovementType
-  quantity       Int // Positivo para entradas, negativo para salidas
-  previousStock  Int // Stock anterior al movimiento
-  newStock       Int // Stock después del movimiento
-  reason         String? // Descripción del movimiento
-  userId         String? // Usuario que realizó el movimiento
-  reference      String? // ID de venta, compra, ajuste manual, etc.
-  createdAt      DateTime          @default(now())
-
-  // Relaciones
-  organization Organization @relation(fields: [organizationId], references: [id])
-  product      Product      @relation(fields: [productId], references: [id])
-  user         User?        @relation(fields: [userId], references: [id])
-
-  @@index([organizationId, productId, createdAt])
-  @@map("stock_movements")
-}
-
-// ================================
-// CONFIGURACIÓN DEL SISTEMA
-// ================================
-
-// Configuraciones por organización
-model SystemConfig {
-  id             String    @id @default(cuid())
-  organizationId String
-  key            String
-  value          String
-  type           String    @default("STRING") // STRING, NUMBER, BOOLEAN, JSON
-  description    String?
-  isDeleted      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
-
-  // Relaciones
-  organization Organization @relation(fields: [organizationId], references: [id])
-
-  // ✅ SOLUCION: Unique compuesto por organización + condicional para soft delete
-  @@unique([organizationId, key, deletedAt], name: "unique_system_config_per_org")
-  @@map("system_configs")
 }

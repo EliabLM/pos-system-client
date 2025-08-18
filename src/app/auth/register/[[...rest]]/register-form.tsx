@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useLogin } from '@/hooks/auth/useLogin';
+import { useRegister } from '@/hooks/auth/useRegister';
 
 import RegisterUserPage from './steps/register-user';
 import RegisterOrganizationPage from './steps/register-organization';
@@ -19,14 +19,14 @@ const getStepContent = (step: number) => {
 };
 
 export function RegisterForm() {
-  const { stepIndex, handleBack, handleNext } = useLogin();
+  const { stepIndex, handleBack, handleNext } = useRegister();
 
   // Formulario principal de registro
   return (
     <div>
       {getStepContent(stepIndex)}
 
-      {/* <Button onClick={handleNext}>Siguiente</Button> */}
+      <Button onClick={handleNext}>Siguiente</Button>
       <Button onClick={handleBack}>Volver</Button>
     </div>
   );

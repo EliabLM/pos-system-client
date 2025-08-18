@@ -1,6 +1,6 @@
 import { useStore } from "@/store"
 
-export const useLogin = () => {
+export const useRegister = () => {
     const { stepIndex, tempUser, setStepIndex, setTempUser } = useStore();
 
     const handleNext = () => {

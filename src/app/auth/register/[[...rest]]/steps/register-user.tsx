@@ -6,7 +6,7 @@ import { useSignUp, useUser } from '@clerk/nextjs';
 import { isClerkAPIResponseError } from '@clerk/nextjs/errors';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, GalleryVerticalEnd, Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useLogin } from '@/hooks/auth/useLogin';
+import { useRegister } from '@/hooks/auth/useRegister';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { createUserAction } from '@/actions/user/create-user';
@@ -86,7 +86,7 @@ const RegisterUserPage = ({
   className,
   ...props
 }: React.ComponentProps<'div'>) => {
-  const { tempUser, handleNext, setTempUser } = useLogin();
+  const { tempUser, handleNext, setTempUser } = useRegister();
   const { signUp, isLoaded, setActive } = useSignUp();
   const { user } = useUser();
 
@@ -140,6 +140,7 @@ const RegisterUserPage = ({
         lastName: data.lastName,
         username: data.username,
         clerkId: createdUser.id,
+        id: '',
       });
 
       setVerificationStep(true);
@@ -218,7 +219,7 @@ const RegisterUserPage = ({
           username: tempUser.username,
         });
 
-        if (result === 'ERROR') {
+        if (result.status === 'ERROR' || !result.data) {
           await Swal.fire({
             icon: 'error',
             text: GENERIC_ERROR_MESSAGE,
@@ -230,6 +231,12 @@ const RegisterUserPage = ({
 
           return;
         }
+
+        setTempUser({
+          ...tempUser,
+          clerkId: completeSignUp.createdUserId,
+          id: result.data.id,
+        });
 
         handleNext();
       }
@@ -275,247 +282,278 @@ const RegisterUserPage = ({
 
   if (verificationStep) {
     return (
-      <div className={cn('flex flex-col gap-6', className)} {...props}>
-        <Card className='w-full max-w-md'>
-          <CardHeader className='text-center'>
-            <CardTitle className='text-2xl font-bold'>
-              Verifica tu email
-            </CardTitle>
-            <CardDescription>
-              Hemos enviado un código de verificación a tu email. Ingrésalo para
-              completar tu registro.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleVerification} className='space-y-4'>
-              <div>
-                <Label htmlFor='verification-code'>
-                  Código de verificación
-                </Label>
-                <Input
-                  id='verification-code'
-                  type='text'
-                  placeholder='Ingresa el código de 6 dígitos'
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  maxLength={6}
-                  className='text-center text-lg tracking-wider mt-1'
-                  required
-                />
-              </div>
+      <div className='bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10'>
+        <div className='flex w-full max-w-sm flex-col gap-6'>
+          <Link
+            href='/'
+            className='flex items-center gap-2 self-center font-medium'
+          >
+            <div className='bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md'>
+              <GalleryVerticalEnd className='size-4' />
+            </div>
+            Sistema POS
+          </Link>
+          <div className={cn('flex flex-col gap-6', className)} {...props}>
+            <Card className='w-full max-w-md'>
+              <CardHeader className='text-center'>
+                <CardTitle className='text-2xl font-bold'>
+                  Verifica tu email
+                </CardTitle>
+                <CardDescription>
+                  Hemos enviado un código de verificación a tu email. Ingrésalo
+                  para completar tu registro.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleVerification} className='space-y-4'>
+                  <div>
+                    <Label htmlFor='verification-code'>
+                      Código de verificación
+                    </Label>
+                    <Input
+                      id='verification-code'
+                      type='text'
+                      placeholder='Ingresa el código de 6 dígitos'
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      maxLength={6}
+                      className='text-center text-lg tracking-wider mt-1'
+                      required
+                    />
+                  </div>
 
-              <Button
-                type='submit'
-                className='w-full'
-                disabled={isLoading || verificationCode.length !== 6}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    Verificando...
-                  </>
-                ) : (
-                  'Verificar y crear cuenta'
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                  <Button
+                    type='submit'
+                    className='w-full'
+                    disabled={isLoading || verificationCode.length !== 6}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                        Verificando...
+                      </>
+                    ) : (
+                      'Verificar y crear cuenta'
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className='w-full max-w-md'>
-        <CardHeader className='text-center'>
-          <CardTitle className='text-2xl font-bold'>Crear cuenta</CardTitle>
-          <CardDescription>Completa tus datos para registrarte</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-              {/* Username */}
-              <FormField
-                control={form.control}
-                name='username'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre de usuario</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='usuario123'
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* First Name */}
-              <FormField
-                control={form.control}
-                name='firstName'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='Juan'
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Last Name */}
-              <FormField
-                control={form.control}
-                name='lastName'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Apellido</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='Pérez'
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Email */}
-              <FormField
-                control={form.control}
-                name='email'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type='email'
-                        placeholder='juan@ejemplo.com'
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Password */}
-              <FormField
-                control={form.control}
-                name='password'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
-                    <FormControl>
-                      <div className='relative'>
-                        <Input
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder='Contraseña'
-                          {...field}
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='sm'
-                          className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
-                          onClick={() => setShowPassword(!showPassword)}
-                          disabled={isLoading}
-                        >
-                          {showPassword ? (
-                            <EyeOff className='h-4 w-4' />
-                          ) : (
-                            <Eye className='h-4 w-4' />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Confirm Password */}
-              <FormField
-                control={form.control}
-                name='confirmPassword'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirmar contraseña</FormLabel>
-                    <FormControl>
-                      <div className='relative'>
-                        <Input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          placeholder='Contraseña'
-                          {...field}
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='sm'
-                          className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          disabled={isLoading}
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className='h-4 w-4' />
-                          ) : (
-                            <Eye className='h-4 w-4' />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type='submit'
-                className='w-full'
-                disabled={isLoading || !form.formState.isValid}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    Creando cuenta...
-                  </>
-                ) : (
-                  'Crear cuenta'
-                )}
-              </Button>
-            </form>
-          </Form>
-
-          <div className='mt-6 text-center'>
-            <p className='text-sm text-gray-600'>
-              ¿Ya tienes cuenta?{' '}
-              <Link
-                href='/auth/login'
-                className='font-medium text-blue-600 hover:text-blue-500'
-              >
-                Inicia sesión
-              </Link>
-            </p>
+    <div className='bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10'>
+      <div className='flex w-full max-w-sm flex-col gap-6'>
+        <Link
+          href='/'
+          className='flex items-center gap-2 self-center font-medium'
+        >
+          <div className='bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md'>
+            <GalleryVerticalEnd className='size-4' />
           </div>
-        </CardContent>
-      </Card>
+          Sistema POS
+        </Link>
+        <div className={cn('flex flex-col gap-6', className)} {...props}>
+          <Card className='w-full max-w-md'>
+            <CardHeader className='text-center'>
+              <CardTitle className='text-2xl font-bold'>Crear cuenta</CardTitle>
+              <CardDescription>
+                Completa tus datos para registrarte
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className='space-y-4'
+                >
+                  {/* Username */}
+                  <FormField
+                    control={form.control}
+                    name='username'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre de usuario</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='usuario123'
+                            {...field}
+                            disabled={isLoading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* First Name */}
+                  <FormField
+                    control={form.control}
+                    name='firstName'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='Juan'
+                            {...field}
+                            disabled={isLoading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Last Name */}
+                  <FormField
+                    control={form.control}
+                    name='lastName'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Apellido</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='Pérez'
+                            {...field}
+                            disabled={isLoading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Email */}
+                  <FormField
+                    control={form.control}
+                    name='email'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='email'
+                            placeholder='juan@ejemplo.com'
+                            {...field}
+                            disabled={isLoading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Password */}
+                  <FormField
+                    control={form.control}
+                    name='password'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Contraseña</FormLabel>
+                        <FormControl>
+                          <div className='relative'>
+                            <Input
+                              type={showPassword ? 'text' : 'password'}
+                              placeholder='Contraseña'
+                              {...field}
+                              disabled={isLoading}
+                            />
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='sm'
+                              className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
+                              onClick={() => setShowPassword(!showPassword)}
+                              disabled={isLoading}
+                            >
+                              {showPassword ? (
+                                <EyeOff className='h-4 w-4' />
+                              ) : (
+                                <Eye className='h-4 w-4' />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Confirm Password */}
+                  <FormField
+                    control={form.control}
+                    name='confirmPassword'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirmar contraseña</FormLabel>
+                        <FormControl>
+                          <div className='relative'>
+                            <Input
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              placeholder='Contraseña'
+                              {...field}
+                              disabled={isLoading}
+                            />
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='sm'
+                              className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
+                              onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                              }
+                              disabled={isLoading}
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className='h-4 w-4' />
+                              ) : (
+                                <Eye className='h-4 w-4' />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type='submit'
+                    className='w-full'
+                    disabled={isLoading || !form.formState.isValid}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                        Creando cuenta...
+                      </>
+                    ) : (
+                      'Crear cuenta'
+                    )}
+                  </Button>
+                </form>
+              </Form>
+
+              <div className='mt-6 text-center'>
+                <p className='text-sm text-gray-600'>
+                  ¿Ya tienes cuenta?{' '}
+                  <Link
+                    href='/auth/login'
+                    className='font-medium text-blue-600 hover:text-blue-500'
+                  >
+                    Inicia sesión
+                  </Link>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

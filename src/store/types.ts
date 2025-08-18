@@ -4,6 +4,7 @@ export interface TempUser {
     lastName: string;
     email: string;
     clerkId: string;
+    id: string;
 }
 
 export type LoginSlice = {

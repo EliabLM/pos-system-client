@@ -34,7 +34,7 @@ export const createStoreAction = async (storeInfo: StoreRequest) => {
 
         return {
             status: 'SUCCESS',
-            data: ''
+            data: result
         }
     } catch (error) {
         console.error("🚀 ~ createStoreAction ~ error:", error);

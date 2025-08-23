@@ -1,12 +1,4 @@
-export interface TempUser {
-    username: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    clerkId: string;
-    id: string;
-    organizationId: string;
-}
+import { TempUser, User } from "@/interfaces";
 
 export type LoginSlice = {
     stepIndex: number
@@ -22,4 +14,9 @@ export type UiSlice = {
     setTheme: (t: 'light' | 'dark') => void;
 };
 
-export type AppState = LoginSlice //& UiSlice; // agregar más slices según necesites
+export type AuthSlice = {
+    user: User | null;
+    setUser: (user: User | null) => void
+}
+
+export type AppState = LoginSlice & AuthSlice //& UiSlice; // agregar más slices según necesites

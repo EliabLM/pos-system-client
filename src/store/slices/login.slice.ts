@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
-import { AppState, LoginSlice, TempUser } from '../types';
+import { AppState, LoginSlice } from '../types';
+import { TempUser } from '@/interfaces';
 
 export const createLoginSlice: StateCreator<AppState, [], [], LoginSlice> =
     (set, get) => ({

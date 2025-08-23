@@ -3,12 +3,14 @@ import { devtools, persist } from 'zustand/middleware';
 
 import { AppState } from './types';
 import { createLoginSlice } from './slices/login.slice';
+import { createAuthSlice } from './slices/auth.slice';
 
 export const useStore = create<AppState>()(
     devtools(
         persist(
             (set, get, api) => ({
-                ...createLoginSlice(set, get, api)
+                ...createLoginSlice(set, get, api),
+                ...createAuthSlice(set, get, api)
                 // ...otros slices
             }),
             {

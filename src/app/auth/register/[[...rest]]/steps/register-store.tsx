@@ -76,7 +76,6 @@ const RegisterStorePage = () => {
     debugger;
     try {
       setIsSubmitting(true);
-      console.log('🚀 ~ onSubmit ~ data:', data);
 
       if (!tempUser) {
         return;
@@ -92,7 +91,6 @@ const RegisterStorePage = () => {
         department: 'Bolívar',
         saleNumberPrefix: createSlug(data.storeName),
       });
-      console.log('🚀 ~ onSubmit ~ resStoreDb:', resStoreDb);
 
       if (resStoreDb.status === 'ERROR') {
         Swal.fire({

@@ -14,7 +14,6 @@ import {
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
-  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
@@ -27,10 +26,8 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconCircleCheckFilled,
-  IconDotsVertical,
-  IconGripVertical,
   IconLayoutColumns,
-  IconLoader,
+  IconAlertCircleFilled,
 } from '@tabler/icons-react';
 import {
   ColumnDef,
@@ -57,8 +54,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
@@ -78,6 +73,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Category } from '@/generated/prisma';
+import { ActionComponent } from './action-component';
 
 export const schema = yup.object({
   id: yup.number(),
@@ -89,81 +85,78 @@ export const schema = yup.object({
   reviewer: yup.string(),
 });
 
-const columns: ColumnDef<Category>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <div className='flex items-center justify-center'>
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label='Select all'
+const getColumns = ({
+  setItemSelected,
+  setSheetOpen,
+}: {
+  setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setItemSelected: React.Dispatch<React.SetStateAction<Category | null>>;
+}): ColumnDef<Category>[] => {
+  return [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <div className='flex items-center justify-center'>
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && 'indeterminate')
+            }
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label='Select all'
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className='flex items-center justify-center'>
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label='Select row'
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: 'name',
+      header: 'Nombre',
+      enableHiding: false,
+    },
+    {
+      accessorKey: 'description',
+      header: 'Descripción',
+      enableHiding: true,
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant='outline' className='text-muted-foreground px-1.5'>
+          {row.original.isActive ? (
+            <IconCircleCheckFilled className='fill-green-500 dark:fill-green-400' />
+          ) : (
+            <IconAlertCircleFilled />
+          )}
+          {row.original.isActive ? 'Activo' : 'Inactivo'}
+        </Badge>
+      ),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <ActionComponent
+          item={row.original}
+          setItemSelected={setItemSelected}
+          setSheetOpen={setSheetOpen}
         />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className='flex items-center justify-center'>
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label='Select row'
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'name',
-    header: 'Nombre',
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'description',
-    header: 'Descripción',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => (
-      <Badge variant='outline' className='text-muted-foreground px-1.5'>
-        {row.original.isActive ? (
-          <IconCircleCheckFilled className='fill-green-500 dark:fill-green-400' />
-        ) : (
-          <IconLoader />
-        )}
-        {row.original.isActive ? 'Activo' : 'Inactivo'}
-      </Badge>
-    ),
-  },
-  {
-    id: 'actions',
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant='ghost'
-            className='data-[state=open]:bg-muted text-muted-foreground flex size-8'
-            size='icon'
-          >
-            <IconDotsVertical />
-            <span className='sr-only'>Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='end' className='w-32'>
-          <DropdownMenuItem>Editar</DropdownMenuItem>
-          <DropdownMenuItem>Copiar ID</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant='destructive'>Eliminar</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-];
+      ),
+    },
+  ];
+};
 
 function DraggableRow({ row }: { row: Row<Category> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -193,9 +186,13 @@ function DraggableRow({ row }: { row: Row<Category> }) {
 export function DataTable({
   data,
   loading,
+  setSheetOpen,
+  setItemSelected,
 }: {
   data: Category[];
   loading: boolean;
+  setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setItemSelected: React.Dispatch<React.SetStateAction<Category | null>>;
 }) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -222,7 +219,7 @@ export function DataTable({
 
   const table = useReactTable({
     data,
-    columns,
+    columns: getColumns({ setItemSelected, setSheetOpen }),
     state: {
       sorting,
       columnVisibility,
@@ -332,7 +329,9 @@ export function DataTable({
                 ) : loading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={columns.length}
+                      colSpan={
+                        getColumns({ setItemSelected, setSheetOpen }).length
+                      }
                       className='h-24 text-center'
                     >
                       Cargando...
@@ -341,7 +340,9 @@ export function DataTable({
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={columns.length}
+                      colSpan={
+                        getColumns({ setItemSelected, setSheetOpen }).length
+                      }
                       className='h-24 text-center'
                     >
                       Sin registros

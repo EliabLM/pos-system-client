@@ -30,7 +30,6 @@ export const createStoreAction = async (storeInfo: StoreRequest) => {
                 saleNumberPrefix: storeInfo.saleNumberPrefix
             }
         })
-        console.log("🚀 ~ createStoreAction ~ result:", result)
 
         return {
             status: 'SUCCESS',

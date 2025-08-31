@@ -19,7 +19,7 @@ export const updateUserOrgAction = async (userId: string, orgId: string) => {
 
         return 'SUCCESS';
     } catch (error) {
-        console.log("🚀 ~ updateUserOrg ~ error:", error);
+        console.error("🚀 ~ updateUserOrg ~ error:", error);
         return 'ERROR';
     }
 }

@@ -114,7 +114,6 @@ const RegisterOrganizationPage = () => {
 
     try {
       setIsSubmitting(true);
-      console.log('🚀 ~ onSubmit ~ data:', data);
 
       //todo - check subdomain
 
@@ -122,7 +121,6 @@ const RegisterOrganizationPage = () => {
         name: data.companyName,
         slug: data.subdomain,
       });
-      console.log('🚀 ~ onSubmit ~ result:', resOrgClerk);
 
       const resOrgDb = await createOrgAction({
         clerkOrgId: resOrgClerk.id,

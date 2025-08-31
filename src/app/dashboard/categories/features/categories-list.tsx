@@ -13,12 +13,15 @@ import { DataTable } from '../features/data-table';
 import { Button } from '@/components/ui/button';
 import { Sheet } from '@/components/ui/sheet';
 
-import NewCategory from './new-category';
+import { Category } from '@/generated/prisma';
 import { useAllCategories } from '@/hooks/useCategories';
+
+import NewCategory from './new-category';
 
 const CategoriesList = () => {
   const categories = useAllCategories();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [itemSelected, setItemSelected] = useState<Category | null>(null);
 
   return (
     <div className='@container/main flex flex-1 flex-col gap-2'>
@@ -35,11 +38,20 @@ const CategoriesList = () => {
               </CardDescription>
 
               <CardAction>
-                <Button onClick={() => setSheetOpen(true)}>
+                <Button
+                  onClick={() => {
+                    setItemSelected(null);
+                    setSheetOpen(true);
+                  }}
+                >
                   Crear nueva categoría
                 </Button>
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  <NewCategory setSheetOpen={setSheetOpen} />
+                  <NewCategory
+                    setSheetOpen={setSheetOpen}
+                    itemSelected={itemSelected}
+                    setItemSelected={setItemSelected}
+                  />
                 </Sheet>
               </CardAction>
             </CardHeader>
@@ -47,6 +59,8 @@ const CategoriesList = () => {
               <DataTable
                 loading={categories.isLoading}
                 data={categories.data ?? []}
+                setSheetOpen={setSheetOpen}
+                setItemSelected={setItemSelected}
               />
             </CardContent>
           </Card>

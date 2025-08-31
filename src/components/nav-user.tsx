@@ -1,5 +1,6 @@
 'use client';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   IconCreditCard,
@@ -9,7 +10,7 @@ import {
   IconUserCircle,
 } from '@tabler/icons-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ import { useStore } from '@/store';
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { signOut } = useAuth();
+  const queryClient = useQueryClient();
 
   const setUser = useStore((state) => state.setUser);
   const user = useStore((state) => state.user);
@@ -100,6 +102,9 @@ export function NavUser() {
               onClick={() => {
                 signOut({ redirectUrl: '/auth/login' });
                 setUser(null);
+
+                // Limpiar cache de Tanstack-query
+                queryClient.clear();
               }}
             >
               <IconLogout />

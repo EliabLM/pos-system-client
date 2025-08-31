@@ -99,10 +99,6 @@ export function LoginForm({
     } catch (error) {
       if (isClerkAPIResponseError(error) && error.errors) {
         const firstError = error.errors?.[0];
-        console.log(
-          '🚀 ~ handleLoginWithEmailAndPassword ~ firstError:',
-          firstError
-        );
 
         if (
           firstError.code === 'form_password_incorrect' ||
@@ -135,7 +131,6 @@ export function LoginForm({
         redirectUrl: '/sso-callback', // ruta definida en Clerk
         redirectUrlComplete: '/dashboard',
       });
-      console.log('🚀 ~ handleLoginWithGoogle ~ result:', result);
     } catch (error) {
       console.error('🚀 ~ handleLoginWithGoogle ~ error:', error);
     } finally {

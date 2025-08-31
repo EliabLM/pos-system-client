@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
@@ -21,11 +21,11 @@ import {
   FormControl,
   FormMessage,
   Form,
-  FormDescription,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useCreateCategory } from '@/hooks/useCategories';
+import { useCreateCategory, useUpdateCategory } from '@/hooks/useCategories';
+import { Category } from '@/generated/prisma';
 
 const schema = yup.object().shape({
   name: yup
@@ -40,19 +40,23 @@ type CategoryFormData = yup.InferType<typeof schema>;
 
 const NewCategory = ({
   setSheetOpen,
+  itemSelected,
+  setItemSelected,
 }: {
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setItemSelected: React.Dispatch<React.SetStateAction<Category | null>>;
+  itemSelected: Category | null;
 }) => {
   const createMutation = useCreateCategory();
-
+  const updateMutation = useUpdateCategory();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<CategoryFormData>({
     criteriaMode: 'firstError',
     defaultValues: {
-      name: '',
-      description: '',
-      active: true,
+      name: itemSelected?.name ?? '',
+      description: itemSelected?.description ?? '',
+      active: itemSelected?.isActive ?? true,
     },
     mode: 'all',
     reValidateMode: 'onChange',
@@ -60,20 +64,33 @@ const NewCategory = ({
   });
 
   const onSubmit = async (data: CategoryFormData) => {
-    console.log('🚀 ~ onSubmit ~ data:', data);
-
     try {
       setIsLoading(true);
 
-      await createMutation.mutateAsync({
-        name: data.name,
-        description: data.description,
-        isActive: data.active,
-      });
+      if (itemSelected) {
+        await updateMutation.mutateAsync({
+          categoryId: itemSelected.id,
+          categoryData: {
+            name: data.name,
+            description: data.description,
+            isActive: data.active,
+          },
+        });
 
-      toast.success('Categoría creada exitosamente');
+        toast.success('Categoría actualizada exitosamente');
+      } else {
+        await createMutation.mutateAsync({
+          name: data.name,
+          description: data.description,
+          isActive: data.active,
+        });
+
+        toast.success('Categoría creada exitosamente');
+      }
+
       form.reset();
       setSheetOpen(false);
+      setItemSelected(null);
     } catch (error) {
       console.error('🚀 ~ onSubmit ~ error:', error);
       toast.error('Ha ocurrido un error creando la categoría');
@@ -82,12 +99,27 @@ const NewCategory = ({
     }
   };
 
+  useEffect(() => {
+    if (!itemSelected) {
+      form.setValue('name', '');
+      form.setValue('description', '');
+      form.setValue('active', true);
+      return;
+    }
+
+    form.setValue('name', itemSelected.name);
+    form.setValue('description', itemSelected.description);
+    form.setValue('active', itemSelected.isActive);
+  }, [itemSelected]);
+
   return (
     <SheetContent>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <SheetHeader>
-            <SheetTitle>Nueva categoría</SheetTitle>
+            <SheetTitle>
+              {itemSelected ? 'Actualizar categoría' : 'Nueva categoría'}
+            </SheetTitle>
             <SheetDescription>
               Ingresa la información de la categoría y presiona guardar para
               aplicar los cambios.
@@ -159,7 +191,9 @@ const NewCategory = ({
               {isLoading ? 'Cargando...' : 'Guardar cambios'}
             </Button>
             <SheetClose asChild>
-              <Button variant='outline'>Cerrar</Button>
+              <Button variant='outline' onClick={() => setItemSelected(null)}>
+                Cerrar
+              </Button>
             </SheetClose>
           </SheetFooter>
         </form>

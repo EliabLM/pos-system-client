@@ -29,7 +29,6 @@ export const createOrgAction = async (org: OrgRequest) => {
                 department: 'Bolívar'
             }
         })
-        console.log("🚀 ~ createOrgAction ~ result:", result)
 
         return {
             status: 'SUCCESS',

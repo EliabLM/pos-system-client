@@ -121,7 +121,6 @@ const RegisterUserPage = ({
         emailAddress: data.email,
         password: data.password,
       });
-      console.log('🚀 ~ onSubmit ~ createdUser:', createdUser);
 
       if (!createdUser.id) {
         Swal.fire({
@@ -193,7 +192,6 @@ const RegisterUserPage = ({
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: verificationCode,
       });
-      console.log('🚀 ~ handleVerification ~ completeSignUp:', completeSignUp);
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId });

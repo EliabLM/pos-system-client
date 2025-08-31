@@ -25,8 +25,6 @@ export const createUserAction = async (user: UserRequest) => {
                 role: user.role,
             }
         })
-        console.log("🚀 ~ createUserAction ~ result:", result)
-
 
         return {
             status: 'SUCCESS',

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createCategory, getCategoriesByOrgId } from '@/actions/category'
+import { createCategory, getCategoriesByOrgId, softDeleteCategory, updateCategory } from '@/actions/category'
 import { useStore } from '@/store'
 import { Category } from '@/generated/prisma';
 
@@ -72,4 +72,74 @@ export const useActiveCategories = () => {
 // Hook adicional para obtener todas las categorías (activas e inactivas)
 export const useAllCategories = () => {
     return useCategories() // sin parámetro = todas
+}
+
+// Hook para eliminar categorías (soft)
+export const useSoftDeleteCategory = () => {
+    const queryClient = useQueryClient()
+    const user = useStore(state => state.user);
+
+    return useMutation({
+        mutationFn: async ({ categoryId }: { categoryId: string }) => {
+            if (!user?.organizationId) {
+                throw new Error('Usuario no tiene organización asignada')
+            }
+
+            const response = await softDeleteCategory(categoryId, user.id);
+
+            if (response.status !== 200) {
+                throw new Error(response.message)
+            }
+
+            return response.data
+        },
+        onSuccess: (newCategory) => {
+            // Invalidar todas las queries de categorías para esta organización
+            queryClient.invalidateQueries({
+                queryKey: ['categories', user?.organizationId]
+            })
+        },
+        onError: (error) => {
+            console.error('Error eliminando categoría:', error)
+        }
+    })
+}
+
+export const useUpdateCategory = () => {
+    const queryClient = useQueryClient()
+    const user = useStore(state => state.user);
+
+    return useMutation({
+        mutationFn: async (
+            { categoryId,
+                categoryData }:
+                {
+                    categoryId: string,
+                    categoryData: Partial<Omit<Category,
+                        'id' | 'organizationId' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'>>
+
+                }) => {
+
+            if (!user?.organizationId) {
+                throw new Error('Usuario no tiene organización asignada')
+            }
+
+            const response = await updateCategory(categoryId, user.id, categoryData)
+
+            if (response.status !== 200) {
+                throw new Error(response.message)
+            }
+
+            return response.data
+        },
+        onSuccess: (newCategory) => {
+            // Invalidar todas las queries de categorías para esta organización
+            queryClient.invalidateQueries({
+                queryKey: ['categories', user?.organizationId]
+            })
+        },
+        onError: (error) => {
+            console.error('Error actualizando categoría:', error)
+        }
+    })
 }

@@ -43,3 +43,9 @@ export interface Organization {
     updatedAt: Date;
     deletedAt: null;
 }
+
+export interface ActionResponse<T = null> {
+    status: number;
+    message: string;
+    data: T | null;
+}

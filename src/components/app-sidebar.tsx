@@ -17,9 +17,10 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
+  IconCategory,
 } from '@tabler/icons-react';
 
-import { NavDocuments } from '@/components/nav-documents';
+import { NavParametrization } from '@/components/nav-parametrization';
 import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
 import { NavUser } from '@/components/nav-user';
@@ -33,12 +34,13 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useStore } from '@/store';
+import Link from 'next/link';
 
 const data = {
   navMain: [
     {
       title: 'Dashboard',
-      url: '#',
+      url: '/dashboard',
       icon: IconDashboard,
     },
     {
@@ -127,11 +129,11 @@ const data = {
       icon: IconSearch,
     },
   ],
-  documents: [
+  parametrization: [
     {
-      name: 'Data Library',
-      url: '#',
-      icon: IconDatabase,
+      name: 'Categorías',
+      url: '/dashboard/categories',
+      icon: IconCategory,
     },
     {
       name: 'Reports',
@@ -158,19 +160,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className='data-[slot=sidebar-menu-button]:!p-1.5'
             >
-              <a href='#'>
+              <Link href='/dashboard'>
                 <IconInnerShadowTop className='!size-5' />
                 <span className='text-base font-semibold'>
                   {user?.organization?.name}
                 </span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        <NavParametrization items={data.parametrization} />
         <NavSecondary items={data.navSecondary} className='mt-auto' />
       </SidebarContent>
       <SidebarFooter>

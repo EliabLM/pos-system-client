@@ -24,8 +24,9 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useCreateCategory, useUpdateCategory } from '@/hooks/useCategories';
-import { Category } from '@/generated/prisma';
+
+import { useCreateBrand, useUpdateBrand } from '@/hooks/useBrands';
+import { Brand } from '@/generated/prisma';
 
 const schema = yup.object().shape({
   name: yup
@@ -36,22 +37,22 @@ const schema = yup.object().shape({
   active: yup.bool().default(true),
 });
 
-type CategoryFormData = yup.InferType<typeof schema>;
+type BrandFormData = yup.InferType<typeof schema>;
 
-const NewCategory = ({
+const NewBrand = ({
   setSheetOpen,
   itemSelected,
   setItemSelected,
 }: {
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<Category | null>>;
-  itemSelected: Category | null;
+  setItemSelected: React.Dispatch<React.SetStateAction<Brand | null>>;
+  itemSelected: Brand | null;
 }) => {
-  const createMutation = useCreateCategory();
-  const updateMutation = useUpdateCategory();
+  const createMutation = useCreateBrand();
+  const updateMutation = useUpdateBrand();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<CategoryFormData>({
+  const form = useForm<BrandFormData>({
     criteriaMode: 'firstError',
     defaultValues: {
       name: itemSelected?.name ?? '',
@@ -63,21 +64,21 @@ const NewCategory = ({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data: CategoryFormData) => {
+  const onSubmit = async (data: BrandFormData) => {
     try {
       setIsLoading(true);
 
       if (itemSelected) {
         await updateMutation.mutateAsync({
-          categoryId: itemSelected.id,
-          categoryData: {
+          brandId: itemSelected.id,
+          brandData: {
             name: data.name,
             description: data.description,
             isActive: data.active,
           },
         });
 
-        toast.success('Categoría actualizada exitosamente');
+        toast.success('Marca actualizada exitosamente');
       } else {
         await createMutation.mutateAsync({
           name: data.name,
@@ -85,7 +86,7 @@ const NewCategory = ({
           isActive: data.active,
         });
 
-        toast.success('Categoría creada exitosamente');
+        toast.success('Marca creada exitosamente');
       }
 
       form.reset();
@@ -93,7 +94,7 @@ const NewCategory = ({
       setItemSelected(null);
     } catch (error) {
       console.error('🚀 ~ onSubmit ~ error:', error);
-      toast.error('Ha ocurrido un error creando la categoría');
+      toast.error('Ha ocurrido un error creando la marca');
     } finally {
       setIsLoading(false);
     }
@@ -118,11 +119,11 @@ const NewCategory = ({
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <SheetHeader>
             <SheetTitle>
-              {itemSelected ? 'Actualizar categoría' : 'Nueva categoría'}
+              {itemSelected ? 'Actualizar marca' : 'Nueva marca'}
             </SheetTitle>
             <SheetDescription>
-              Ingresa la información de la categoría y presiona guardar para
-              aplicar los cambios.
+              Ingresa la información de la marca y presiona guardar para aplicar
+              los cambios.
             </SheetDescription>
           </SheetHeader>
           <div className='grid flex-1 auto-rows-min gap-6 px-4'>
@@ -132,7 +133,7 @@ const NewCategory = ({
                 name='name'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombres</FormLabel>
+                    <FormLabel>Nombre</FormLabel>
                     <FormControl>
                       <Input
                         id='name'
@@ -206,4 +207,4 @@ const NewCategory = ({
   );
 };
 
-export default NewCategory;
+export default NewBrand;

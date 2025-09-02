@@ -71,16 +71,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Category } from '@/generated/prisma';
-import { ActionComponent } from './action-component';
+import { Brand } from '@/generated/prisma';
+import { BrandActionComponent } from './action-component';
 
 const getColumns = ({
   setItemSelected,
   setSheetOpen,
 }: {
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<Category | null>>;
-}): ColumnDef<Category>[] => {
+  setItemSelected: React.Dispatch<React.SetStateAction<Brand | null>>;
+}): ColumnDef<Brand>[] => {
   return [
     {
       id: 'select',
@@ -137,7 +137,7 @@ const getColumns = ({
     {
       id: 'actions',
       cell: ({ row }) => (
-        <ActionComponent
+        <BrandActionComponent
           item={row.original}
           setItemSelected={setItemSelected}
           setSheetOpen={setSheetOpen}
@@ -147,7 +147,7 @@ const getColumns = ({
   ];
 };
 
-function DraggableRow({ row }: { row: Row<Category> }) {
+function DraggableRow({ row }: { row: Row<Brand> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id ?? 0,
   });
@@ -178,10 +178,10 @@ export function DataTable({
   setSheetOpen,
   setItemSelected,
 }: {
-  data: Category[];
+  data: Brand[];
   loading: boolean;
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<Category | null>>;
+  setItemSelected: React.Dispatch<React.SetStateAction<Brand | null>>;
 }) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =

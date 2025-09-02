@@ -13,7 +13,7 @@ import {
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
-  IconReport,
+  IconAB2,
   IconSearch,
   IconSettings,
   IconUsers,
@@ -136,9 +136,9 @@ const data = {
       icon: IconCategory,
     },
     {
-      name: 'Reports',
-      url: '#',
-      icon: IconReport,
+      name: 'Marcas',
+      url: '/dashboard/brands',
+      icon: IconAB2,
     },
     {
       name: 'Word Assistant',

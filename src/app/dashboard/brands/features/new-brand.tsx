@@ -126,19 +126,19 @@ const NewBrand = ({
               los cambios.
             </SheetDescription>
           </SheetHeader>
-          <div className='grid flex-1 auto-rows-min gap-6 px-4'>
-            <div className='grid gap-3'>
+          <div className="grid flex-1 auto-rows-min gap-6 px-4">
+            <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name='name'
+                name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nombre</FormLabel>
                     <FormControl>
                       <Input
-                        id='name'
-                        type='text'
-                        placeholder='Categoría'
+                        id="name"
+                        type="text"
+                        placeholder="Marca"
                         {...field}
                       />
                     </FormControl>
@@ -147,17 +147,17 @@ const NewBrand = ({
                 )}
               />
             </div>
-            <div className='grid gap-3'>
+            <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name='description'
+                name="description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Descripción</FormLabel>
                     <FormControl>
                       <Textarea
-                        id='description'
-                        placeholder='Descripción'
+                        id="description"
+                        placeholder="Descripción"
                         {...field}
                         value={field.value ?? ''}
                       />
@@ -167,13 +167,13 @@ const NewBrand = ({
                 )}
               />
             </div>
-            <div className='grid gap-3'>
+            <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name='active'
+                name="active"
                 render={({ field }) => (
-                  <FormItem className='flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm'>
-                    <div className='space-y-0.5'>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
                       <FormLabel>Activo</FormLabel>
                     </div>
                     <FormControl>
@@ -188,13 +188,13 @@ const NewBrand = ({
             </div>
           </div>
           <SheetFooter>
-            <Button type='submit' disabled={isLoading}>
+            <Button type="submit" disabled={isLoading}>
               {isLoading ? 'Cargando...' : 'Guardar cambios'}
             </Button>
             <SheetClose asChild>
               <Button
-                type='button'
-                variant='outline'
+                type="button"
+                variant="outline"
                 onClick={() => setItemSelected(null)}
               >
                 Cerrar

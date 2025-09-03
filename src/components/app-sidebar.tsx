@@ -17,6 +17,7 @@ import {
   IconSettings,
   IconUsers,
   IconCategory,
+  IconBuildingStore,
 } from '@tabler/icons-react';
 
 import { NavParametrization } from '@/components/nav-parametrization';
@@ -144,6 +145,11 @@ const data = {
       url: '/dashboard/payment-methods',
       icon: IconCash,
     },
+    {
+      name: 'Tiendas',
+      url: '/dashboard/stores',
+      icon: IconBuildingStore,
+    },
   ],
 };
 
@@ -151,17 +157,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useStore((state) => state.user);
 
   return (
-    <Sidebar collapsible='offcanvas' {...props}>
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className='data-[slot=sidebar-menu-button]:!p-1.5'
+              className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <Link href='/dashboard'>
-                <IconInnerShadowTop className='!size-5' />
-                <span className='text-base font-semibold'>
+              <Link href="/dashboard">
+                <IconInnerShadowTop className="!size-5" />
+                <span className="text-base font-semibold">
                   {user?.organization?.name}
                 </span>
               </Link>
@@ -172,7 +178,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavParametrization items={data.parametrization} />
-        <NavSecondary items={data.navSecondary} className='mt-auto' />
+        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

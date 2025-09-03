@@ -91,7 +91,7 @@ export const updateBrand = async (
 
         const updatedBrand = await prisma.brand.update({
             where: { id: brandId },
-            data: updateData,
+            data: {...updateData, updatedAt: new Date()},
             include: brandInclude,
         });
 

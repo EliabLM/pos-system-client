@@ -22,10 +22,9 @@ import {
 } from '@/components/ui/form';
 import { useRegister } from '@/hooks/auth/useRegister';
 import Swal from 'sweetalert2';
-import { GENERIC_ERROR_MESSAGE } from '@/constants';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
-import { createStoreAction } from '@/actions/store/create-store';
+import { createStore } from '@/actions/store';
 import { createSlug } from '@/utils/createSlug';
 
 // Schema de validación con Yup
@@ -73,7 +72,6 @@ const RegisterStorePage = () => {
   });
 
   const onSubmit = async (data: SignUpFormData) => {
-    debugger;
     try {
       setIsSubmitting(true);
 
@@ -81,21 +79,25 @@ const RegisterStorePage = () => {
         return;
       }
 
-      const resStoreDb = await createStoreAction({
-        address: data.address,
-        name: data.storeName,
-        organizationId: tempUser?.organizationId,
-        phone: data.phone,
-        description: data.description,
-        city: 'Cartagena',
-        department: 'Bolívar',
-        saleNumberPrefix: createSlug(data.storeName),
-      });
+      const resStoreDb = await createStore(
+        tempUser.organizationId,
+        tempUser.id,
+        {
+          address: data.address,
+          name: data.storeName,
+          phone: data.phone,
+          description: data.description,
+          city: 'Cartagena',
+          department: 'Bolívar',
+          saleNumberPrefix: createSlug(data.storeName),
+          isActive: true,
+        }
+      );
 
-      if (resStoreDb.status === 'ERROR') {
+      if (resStoreDb.status !== 201) {
         Swal.fire({
           icon: 'error',
-          text: GENERIC_ERROR_MESSAGE,
+          text: resStoreDb.message,
         });
 
         return;
@@ -113,40 +115,40 @@ const RegisterStorePage = () => {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center  py-12 px-4 sm:px-6 lg:px-8'>
-      <Card className='w-full max-w-2xl'>
-        <CardHeader className='text-center'>
-          <div className='flex justify-center mb-4'>
-            <div className='bg-blue-100 p-3 rounded-full'>
-              <Building2 className='h-8 w-8 text-blue-600' />
+    <div className="min-h-screen flex items-center justify-center  py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-2xl">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="bg-blue-100 p-3 rounded-full">
+              <Building2 className="h-8 w-8 text-blue-600" />
             </div>
           </div>
-          <CardTitle className='text-3xl font-bold text-gray-900'>
+          <CardTitle className="text-3xl font-bold text-gray-900">
             ¡Bienvenido, {tempUser?.firstName} {tempUser?.lastName}! 👋
           </CardTitle>
-          <CardDescription className='text-lg text-gray-600 mt-2'>
+          <CardDescription className="text-lg text-gray-600 mt-2">
             Vamos a configurar los datos de tu primera tienda
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Nombre de la empresa */}
               <FormField
                 control={form.control}
-                name='storeName'
+                name="storeName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className='flex items-center gap-2'>
-                      <Building2 className='h-4 w-4' />
+                    <FormLabel className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
                       Nombre de la tienda
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Ej: Tecnología Innovadora S.A.S'
+                        placeholder="Ej: Tecnología Innovadora S.A.S"
                         {...field}
                         disabled={isSubmitting}
-                        className='text-lg'
+                        className="text-lg"
                       />
                     </FormControl>
                     <FormMessage />
@@ -156,19 +158,19 @@ const RegisterStorePage = () => {
 
               <FormField
                 control={form.control}
-                name='description'
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className='flex items-center gap-2'>
-                      <Building2 className='h-4 w-4' />
+                    <FormLabel className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
                       Descripción
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder='Ej: Ubicada en la entrada de...'
+                        placeholder="Ej: Ubicada en la entrada de..."
                         {...field}
                         disabled={isSubmitting}
-                        className='text-lg'
+                        className="text-lg"
                       />
                     </FormControl>
                     <FormMessage />
@@ -179,17 +181,17 @@ const RegisterStorePage = () => {
               {/* Teléfono */}
               <FormField
                 control={form.control}
-                name='phone'
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className='flex items-center gap-2'>
-                      <Phone className='h-4 w-4' />
+                    <FormLabel className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
                       Teléfono
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type='tel'
-                        placeholder='Ej: +57 300 123 4567'
+                        type="tel"
+                        placeholder="Ej: +57 300 123 4567"
                         {...field}
                         disabled={isSubmitting}
                       />
@@ -202,16 +204,16 @@ const RegisterStorePage = () => {
               {/* Dirección */}
               <FormField
                 control={form.control}
-                name='address'
+                name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className='flex items-center gap-2'>
-                      <MapPin className='h-4 w-4' />
+                    <FormLabel className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
                       Dirección
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Ej: Calle 123 #45-67, Cartagena, Colombia'
+                        placeholder="Ej: Calle 123 #45-67, Cartagena, Colombia"
                         {...field}
                         disabled={isSubmitting}
                       />
@@ -222,19 +224,19 @@ const RegisterStorePage = () => {
               />
 
               <Button
-                type='submit'
-                className='w-full text-lg py-6'
+                type="submit"
+                className="w-full text-lg py-6"
                 disabled={isSubmitting || !form.formState.isValid}
-                size='lg'
+                size="lg"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className='mr-2 h-5 w-5 animate-spin' />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Creando tu tienda...
                   </>
                 ) : (
                   <>
-                    <Building2 className='mr-2 h-5 w-5' />
+                    <Building2 className="mr-2 h-5 w-5" />
                     Crear mi tienda
                   </>
                 )}

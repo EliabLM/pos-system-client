@@ -22,88 +22,51 @@ import {
   FormMessage,
   Form,
 } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 
 import {
-  useCreatePaymentMethod,
-  useUpdatePaymentMethod,
-} from '@/hooks/usePaymentMethods';
-import { PaymentMethod, PaymentType } from '@/generated/prisma';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
-const OPTIONS = [
-  {
-    label: 'Tarjeta',
-    value: PaymentType.CARD,
-  },
-  {
-    label: 'Efectivo',
-    value: PaymentType.CASH,
-  },
-  {
-    label: 'Cheque',
-    value: PaymentType.CHECK,
-  },
-  {
-    label: 'Crédito',
-    value: PaymentType.CREDIT,
-  },
-  {
-    label: 'Transferencia',
-    value: PaymentType.TRANSFER,
-  },
-  {
-    label: 'Otro',
-    value: PaymentType.OTHER,
-  },
-];
+  useCreateStore,
+  useStoreById,
+  useUpdateStore,
+} from '@/hooks/useStores';
+import { Store } from '@/generated/prisma';
+import { createSlug } from '@/utils/createSlug';
 
 const schema = yup.object().shape({
   name: yup
     .string()
     .min(3, 'Debe ingresar mínimo 3 caracteres')
     .required('El nombre es requerido'),
-  type: yup
-    .string<PaymentType>()
-    .nullable()
-    .required('El tipo de método de pago es requerido'),
-  // .oneOf([
-  //   PaymentType.CARD,
-  //   PaymentType.CASH,
-  //   PaymentType.CHECK,
-  //   PaymentType.CREDIT,
-  //   PaymentType.OTHER,
-  //   PaymentType.TRANSFER,
-  // ]),
+  description: yup.string().nullable().notRequired().defined(),
+  phone: yup.string().nullable().notRequired().defined(),
+  address: yup.string().required('La dirección es requerida'),
   active: yup.bool().default(true),
 });
 
-type PaymentMethodFormData = yup.InferType<typeof schema>;
+type StoreFormData = yup.InferType<typeof schema>;
 
-const NewPaymentMethod = ({
+const NewStore = ({
   setSheetOpen,
   itemSelected,
   setItemSelected,
 }: {
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<PaymentMethod | null>>;
-  itemSelected: PaymentMethod | null;
+  setItemSelected: React.Dispatch<React.SetStateAction<Store | null>>;
+  itemSelected: Store | null;
 }) => {
-  const createMutation = useCreatePaymentMethod();
-  const updateMutation = useUpdatePaymentMethod();
+  const createMutation = useCreateStore();
+  const updateMutation = useUpdateStore();
+  const selectedStore = useStoreById(itemSelected?.id ?? '');
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<PaymentMethodFormData>({
+  const form = useForm<StoreFormData>({
     criteriaMode: 'firstError',
     defaultValues: {
       name: itemSelected?.name ?? '',
-      type: itemSelected?.type,
+      description: itemSelected?.description ?? '',
+      address: itemSelected?.address ?? '',
+      phone: selectedStore?.data?.phone ?? '',
       active: itemSelected?.isActive ?? true,
     },
     mode: 'all',
@@ -111,29 +74,36 @@ const NewPaymentMethod = ({
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data: PaymentMethodFormData) => {
+  const onSubmit = async (data: StoreFormData) => {
     try {
       setIsLoading(true);
 
       if (itemSelected) {
         await updateMutation.mutateAsync({
-          paymentMethodId: itemSelected.id,
-          updateData: {
+          storeId: itemSelected.id,
+          storeData: {
             name: data.name,
+            description: data.description,
+            address: data.address,
+            phone: data.phone,
             isActive: data.active,
-            type: data.type,
           },
         });
 
-        toast.success('Método de pago actualizado exitosamente');
+        toast.success('Tienda actualizada exitosamente');
       } else {
         await createMutation.mutateAsync({
           name: data.name,
-          type: data.type,
+          description: data.description,
+          address: data.address,
+          saleNumberPrefix: createSlug(data.name),
+          city: 'Cartagena',
+          department: 'Bolívar',
+          phone: data.phone,
           isActive: data.active,
         });
 
-        toast.success('Método de pago creado exitosamente');
+        toast.success('Tienda creada exitosamente');
       }
 
       form.reset();
@@ -141,24 +111,28 @@ const NewPaymentMethod = ({
       setItemSelected(null);
     } catch (error) {
       console.error('🚀 ~ onSubmit ~ error:', error);
-      toast.error('Ha ocurrido un error creando el método de pago');
+      toast.error('Ha ocurrido un error creando la tienda');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!itemSelected) {
+    if (!itemSelected || !selectedStore.data) {
       form.setValue('name', '');
-      form.resetField('type');
+      form.setValue('description', '');
+      form.setValue('address', '');
+      form.setValue('phone', '');
       form.setValue('active', true);
       return;
     }
 
     form.setValue('name', itemSelected.name);
-    form.setValue('type', itemSelected.type);
+    form.setValue('description', itemSelected.description);
+    form.setValue('address', itemSelected.address);
+    form.setValue('phone', selectedStore.data.phone);
     form.setValue('active', itemSelected.isActive);
-  }, [itemSelected]);
+  }, [itemSelected, selectedStore.data]);
 
   return (
     <SheetContent>
@@ -166,12 +140,10 @@ const NewPaymentMethod = ({
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <SheetHeader>
             <SheetTitle>
-              {itemSelected
-                ? 'Actualizar método de pago'
-                : 'Nuevo método de pago'}
+              {itemSelected ? 'Actualizar tienda' : 'Nueva tienda'}
             </SheetTitle>
             <SheetDescription>
-              Ingresa la información del método de pago y presiona guardar para
+              Ingresa la información de la tienda y presiona guardar para
               aplicar los cambios.
             </SheetDescription>
           </SheetHeader>
@@ -199,33 +171,66 @@ const NewPaymentMethod = ({
             <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name="type"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo de método de pago</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona un tipo de método de pago" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {OPTIONS.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
+                    <FormLabel>Descripción</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        id="description"
+                        placeholder="Descripción"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+            <div className="grid gap-3">
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dirección</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="address"
+                        type="text"
+                        placeholder="Dirección"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-3">
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Teléfono</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="address"
+                        type="text"
+                        placeholder="Teléfono"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <div className="grid gap-3">
               <FormField
                 control={form.control}
@@ -266,4 +271,4 @@ const NewPaymentMethod = ({
   );
 };
 
-export default NewPaymentMethod;
+export default NewStore;

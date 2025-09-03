@@ -13,15 +13,15 @@ import { DataTable } from '../features/data-table';
 import { Button } from '@/components/ui/button';
 import { Sheet } from '@/components/ui/sheet';
 
-import { PaymentMethod } from '@/generated/prisma';
-import { useAllPaymentMethods } from '@/hooks/usePaymentMethods';
+import { Store } from '@/generated/prisma';
+import { useAllStores } from '@/hooks/useStores';
 
-import NewPaymentMethod from './new-payment-method';
+import NewStore from './new-store';
 
-const PaymentMethodsList = () => {
-  const paymentMethods = useAllPaymentMethods();
+const StoresList = () => {
+  const stores = useAllStores();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [itemSelected, setItemSelected] = useState<PaymentMethod | null>(null);
+  const [itemSelected, setItemSelected] = useState<Store | null>(null);
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
@@ -29,10 +29,10 @@ const PaymentMethodsList = () => {
         <div className="px-4 lg:px-6">
           <Card className="@container/card">
             <CardHeader>
-              <CardTitle>Métodos de pago</CardTitle>
+              <CardTitle>Tiendas</CardTitle>
               <CardDescription>
                 <span className="hidden @[540px]/card:block">
-                  Listado de todos los métodos de pago
+                  Listado de todas las tiendas
                 </span>
                 {/* <span className='@[540px]/card:hidden'>Last 3 months</span> */}
               </CardDescription>
@@ -47,7 +47,7 @@ const PaymentMethodsList = () => {
                   Crear nuevo método de pago
                 </Button>
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  <NewPaymentMethod
+                  <NewStore
                     setSheetOpen={setSheetOpen}
                     itemSelected={itemSelected}
                     setItemSelected={setItemSelected}
@@ -57,8 +57,8 @@ const PaymentMethodsList = () => {
             </CardHeader>
             <CardContent>
               <DataTable
-                loading={paymentMethods.isLoading}
-                data={paymentMethods.data ?? []}
+                loading={stores.isLoading}
+                data={stores.data ?? []}
                 setSheetOpen={setSheetOpen}
                 setItemSelected={setItemSelected}
               />
@@ -70,4 +70,4 @@ const PaymentMethodsList = () => {
   );
 };
 
-export default PaymentMethodsList;
+export default StoresList;

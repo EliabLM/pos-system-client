@@ -11,9 +11,9 @@ datasource db {
 
 model Organization {
   id             String          @id @default(cuid())
-  clerkOrgId     String          @unique
   name           String
   email          String
+  nit            String?
   phone          String?
   address        String?
   city           String?
@@ -151,8 +151,8 @@ model Product {
   categoryId     String?
   brandId        String?
   unitMeasureId  String
-  costPrice      Decimal         @db.Decimal(10, 2)
-  salePrice      Decimal         @db.Decimal(10, 2)
+  costPrice      Float
+  salePrice      Float
   minStock       Int             @default(0)
   currentStock   Int             @default(0)
   alcoholGrade   Float?
@@ -244,27 +244,28 @@ model PaymentMethod {
 }
 
 model Sale {
-  id           String        @id @default(cuid())
-  storeId      String
-  saleNumber   String
-  customerId   String?
-  userId       String
-  subtotal     Decimal       @db.Decimal(10, 2)
-  total        Decimal       @db.Decimal(10, 2)
-  status       SaleStatus    @default(PAID)
-  saleDate     DateTime      @default(now())
-  dueDate      DateTime?
-  paidDate     DateTime?
-  notes        String?
-  isDeleted    Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deletedAt    DateTime?
-  saleItems    SaleItem[]
-  salePayments SalePayment[]
-  customer     Customer?     @relation(fields: [customerId], references: [id])
-  store        Store         @relation(fields: [storeId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
+  id             String        @id @default(cuid())
+  organizationId String
+  storeId        String
+  saleNumber     String
+  customerId     String?
+  userId         String
+  subtotal       Float
+  total          Float
+  status         SaleStatus    @default(PAID)
+  saleDate       DateTime      @default(now())
+  dueDate        DateTime?
+  paidDate       DateTime?
+  notes          String?
+  isDeleted      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  saleItems      SaleItem[]
+  salePayments   SalePayment[]
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  store          Store         @relation(fields: [storeId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
 
   @@unique([storeId, saleNumber, deletedAt], name: "unique_sale_number_per_store")
   @@map("sales")
@@ -276,8 +277,8 @@ model SaleItem {
   productId     String
   unitMeasureId String
   quantity      Int
-  unitPrice     Decimal     @db.Decimal(10, 2)
-  subtotal      Decimal     @db.Decimal(10, 2)
+  unitPrice     Float
+  subtotal      Float
   isDeleted     Boolean     @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -293,7 +294,7 @@ model SalePayment {
   id              String        @id @default(cuid())
   saleId          String
   paymentMethodId String
-  amount          Decimal       @db.Decimal(10, 2)
+  amount          Float
   reference       String?
   notes           String?
   paymentDate     DateTime      @default(now())
@@ -309,9 +310,10 @@ model SalePayment {
 
 model Purchase {
   id             String         @id @default(cuid())
+  organizationId String
   supplierId     String
   purchaseNumber String
-  total          Decimal        @db.Decimal(10, 2)
+  total          Float
   status         PurchaseStatus @default(PENDING)
   purchaseDate   DateTime       @default(now())
   receivedDate   DateTime?
@@ -331,8 +333,8 @@ model PurchaseItem {
   purchaseId String
   productId  String
   quantity   Int
-  unitPrice  Decimal   @db.Decimal(10, 2)
-  subtotal   Decimal   @db.Decimal(10, 2)
+  unitPrice  Float
+  subtotal   Float
   isDeleted  Boolean   @default(false)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt

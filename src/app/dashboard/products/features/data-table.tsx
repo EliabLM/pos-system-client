@@ -44,6 +44,7 @@ import {
   useReactTable,
   VisibilityState,
 } from '@tanstack/react-table';
+import { NumericFormat } from 'react-number-format';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -71,16 +72,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Product } from '@/generated/prisma';
 import { ProductActionComponent } from './action-component';
+import Image from 'next/image';
+import { ProductWithIncludesNumberPrice } from '@/interfaces';
+
+const getStockStatus = (stock: number, minStock: number) => {
+  if (stock < minStock) return { color: 'bg-red-500', status: 'low' };
+  if (stock < 2 * minStock) return { color: 'bg-yellow-500', status: 'medium' };
+  if (stock < 4 * minStock) return { color: 'bg-orange-500', status: 'good' };
+  return { color: 'bg-green-500', status: 'high' };
+};
 
 const getColumns = ({
   setItemSelected,
   setSheetOpen,
 }: {
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<Product | null>>;
-}): ColumnDef<Product>[] => {
+  setItemSelected: React.Dispatch<
+    React.SetStateAction<ProductWithIncludesNumberPrice | null>
+  >;
+}): ColumnDef<ProductWithIncludesNumberPrice>[] => {
   return [
     {
       id: 'select',
@@ -112,28 +123,103 @@ const getColumns = ({
     },
     {
       accessorKey: 'name',
-      header: 'Nombre',
+      header: 'Producto',
       enableHiding: false,
+      cell: ({ row }) => {
+        const product = row.original;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+              <Image
+                className="rounded-sm object-cover w-full h-full"
+                src={product.image ?? ''}
+                alt={product.name}
+                width={50}
+                height={50}
+              />
+            </div>
+            <span className="font-medium">{product.name}</span>
+          </div>
+        );
+      },
     },
     {
-      accessorKey: 'description',
-      header: 'Descripción',
+      accessorKey: 'category.name',
+      header: 'Categoría',
       enableHiding: true,
+      cell: ({ row }) => {
+        const product = row.original;
+
+        return (
+          <Badge
+            className="rounded-sm text-muted-foreground px-1.5"
+            variant={'info'}
+          >
+            {product.category?.name?.toLowerCase() ?? 'Sin categoría'}
+          </Badge>
+        );
+      },
     },
     {
-      accessorKey: 'address',
-      header: 'Dirección',
-      enableHiding: true,
+      accessorKey: 'stock',
+      header: 'Stock',
+      cell: ({ row }) => {
+        const product = row.original;
+
+        const stockStatus = getStockStatus(
+          product.currentStock,
+          product.minStock
+        );
+        return (
+          <div className="flex items-center gap-2">
+            <div className={`h-4 w-4 rounded-full ${stockStatus.color}`} />
+            <span className="font-medium">{product.currentStock}</span>
+          </div>
+        );
+      },
     },
     {
-      accessorKey: 'saleNumberPrefix',
-      header: 'Prefijo',
+      accessorKey: 'brand.name',
+      header: 'Marca',
       enableHiding: true,
+      cell: ({ row }) => {
+        const product = row.original;
+
+        return (
+          <Badge
+            className="rounded-sm text-muted-foreground px-1.5"
+            variant={'secondary'}
+          >
+            {product.brand?.name?.toUpperCase()}
+          </Badge>
+        );
+      },
     },
     {
-      accessorKey: 'lastSaleNumber',
-      header: 'Ventas',
+      accessorKey: 'salePrice',
+      header: 'Precio',
       enableHiding: true,
+      cell: ({ row }) => {
+        const price = Number(row.original.salePrice);
+        return (
+          <NumericFormat
+            value={price}
+            prefix="$"
+            thousandSeparator="."
+            decimalSeparator=","
+            readOnly
+            disabled
+          />
+        );
+      },
+    },
+    {
+      accessorKey: 'updatedAt',
+      header: 'Última actualización',
+      enableHiding: true,
+      cell: ({ row }) => {
+        return row.original.updatedAt?.toLocaleDateString();
+      },
     },
     {
       accessorKey: 'status',
@@ -162,7 +248,7 @@ const getColumns = ({
   ];
 };
 
-function DraggableRow({ row }: { row: Row<Product> }) {
+function DraggableRow({ row }: { row: Row<ProductWithIncludesNumberPrice> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id ?? 0,
   });
@@ -193,10 +279,12 @@ export function DataTable({
   setSheetOpen,
   setItemSelected,
 }: {
-  data: Product[];
+  data: ProductWithIncludesNumberPrice[];
   loading: boolean;
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<Product | null>>;
+  setItemSelected: React.Dispatch<
+    React.SetStateAction<ProductWithIncludesNumberPrice | null>
+  >;
 }) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =

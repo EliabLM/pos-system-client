@@ -17,7 +17,7 @@ export const ourFileRouter = {
       return { userId: 'example-user-id' };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("file url", file.ufsUrl);
+
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { fileUrl: file.ufsUrl };
     }),

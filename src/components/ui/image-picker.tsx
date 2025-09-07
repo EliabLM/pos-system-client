@@ -6,10 +6,15 @@ import { Input } from '@/components/ui/input';
 
 interface ImagePickerProps {
   onImageChange: (file: File | null) => void;
+  url?: string | null;
   className?: string;
 }
 
-export function ImagePicker({ onImageChange, className }: ImagePickerProps) {
+export function ImagePicker({
+  onImageChange,
+  url,
+  className,
+}: ImagePickerProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,7 +51,7 @@ export function ImagePicker({ onImageChange, className }: ImagePickerProps) {
         className="hidden"
       />
 
-      {!preview ? (
+      {!preview && !url ? (
         <div
           className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
           onClick={handleUploadAreaClick}
@@ -66,7 +71,7 @@ export function ImagePicker({ onImageChange, className }: ImagePickerProps) {
         >
           <div className="relative">
             <Image
-              src={preview}
+              src={preview || url || ''}
               width={500}
               height={300}
               alt="Product image"

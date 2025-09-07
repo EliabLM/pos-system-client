@@ -3,6 +3,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { NumberFormatValues, NumericFormat } from 'react-number-format';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +32,6 @@ import {
   useProductById,
   useUpdateProduct,
 } from '@/hooks/useProducts';
-import { Product } from '@/generated/prisma';
 import { deleteImageFromUploadThing, uploadImage } from '@/actions/product';
 import { useActiveCategories } from '@/hooks/useCategories';
 import { useActiveBrands } from '@/hooks/useBrands';
@@ -42,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ProductWithIncludesNumberPrice } from '@/interfaces';
 
 const schema = yup.object().shape({
   name: yup
@@ -89,12 +90,13 @@ const NewProduct = ({
   setItemSelected,
 }: {
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<Product | null>>;
-  itemSelected: Product | null;
+  setItemSelected: React.Dispatch<
+    React.SetStateAction<ProductWithIncludesNumberPrice | null>
+  >;
+  itemSelected: ProductWithIncludesNumberPrice | null;
 }) => {
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
-  const selectedProduct = useProductById(itemSelected?.id ?? '');
   const { data: activeCategories } = useActiveCategories();
   const { data: activeBrands } = useActiveBrands();
 
@@ -129,7 +131,6 @@ const NewProduct = ({
     try {
       setIsLoading(true);
 
-      console.log('🚀 ~ onSubmit ~ data:', data);
       //* Upload image and get the url
       if (file) {
         const response = await uploadImage(file);
@@ -196,8 +197,20 @@ const NewProduct = ({
   };
 
   useEffect(() => {
-    if (!itemSelected || !selectedProduct.data) {
-      form.reset();
+    if (!itemSelected) {
+      form.resetField('name');
+      form.resetField('description');
+      form.resetField('description');
+      form.resetField('image');
+      form.resetField('barcode');
+      form.resetField('sku');
+      form.resetField('costPrice');
+      form.resetField('salePrice');
+      form.resetField('minStock');
+      form.resetField('currentStock');
+      form.resetField('categoryId');
+      form.resetField('brandId');
+      form.resetField('active');
       return;
     }
 
@@ -211,8 +224,10 @@ const NewProduct = ({
     form.setValue('salePrice', Number(itemSelected.salePrice));
     form.setValue('minStock', itemSelected.minStock);
     form.setValue('currentStock', itemSelected.currentStock);
+    form.setValue('categoryId', itemSelected.categoryId);
+    form.setValue('brandId', itemSelected.brandId ?? '');
     form.setValue('active', itemSelected.isActive);
-  }, [itemSelected, selectedProduct.data]);
+  }, [itemSelected]);
 
   return (
     <SheetContent className="sm:max-w-xl overflow-y-scroll">
@@ -284,11 +299,16 @@ const NewProduct = ({
                   <FormItem>
                     <FormLabel>Costo</FormLabel>
                     <FormControl>
-                      <Input
-                        id="costPrice"
-                        type="number"
+                      <NumericFormat
+                        value={field.value}
+                        onValueChange={(values: NumberFormatValues) => {
+                          field.onChange(values.floatValue);
+                        }}
+                        customInput={Input}
                         placeholder="$0.00"
-                        {...field}
+                        prefix="$"
+                        thousandSeparator="."
+                        decimalSeparator=","
                       />
                     </FormControl>
                     <FormMessage />
@@ -303,11 +323,16 @@ const NewProduct = ({
                   <FormItem>
                     <FormLabel>Precio de venta</FormLabel>
                     <FormControl>
-                      <Input
-                        id="salePrice"
-                        type="number"
+                      <NumericFormat
+                        value={field.value}
+                        onValueChange={(values: NumberFormatValues) => {
+                          field.onChange(values.floatValue);
+                        }}
+                        customInput={Input}
                         placeholder="$0.00"
-                        {...field}
+                        prefix="$"
+                        thousandSeparator="."
+                        decimalSeparator=","
                       />
                     </FormControl>
                     <FormMessage />
@@ -334,7 +359,7 @@ const NewProduct = ({
                 )}
               />
 
-              <ImagePicker onImageChange={setFile} />
+              <ImagePicker onImageChange={setFile} url={itemSelected?.image} />
             </div>
 
             <div className="space-y-6">

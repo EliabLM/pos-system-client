@@ -13,15 +13,17 @@ import { DataTable } from './data-table';
 import { Button } from '@/components/ui/button';
 import { Sheet } from '@/components/ui/sheet';
 
-import { Product } from '@/generated/prisma';
 import { useAllProducts } from '@/hooks/useProducts';
+import { ProductWithIncludesNumberPrice } from '@/interfaces';
 
 import NewProduct from './new-product';
 
 const ProductsList = () => {
   const products = useAllProducts();
+
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [itemSelected, setItemSelected] = useState<Product | null>(null);
+  const [itemSelected, setItemSelected] =
+    useState<ProductWithIncludesNumberPrice | null>(null);
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">

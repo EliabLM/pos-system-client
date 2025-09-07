@@ -14,16 +14,18 @@ import { Button } from '@/components/ui/button';
 
 import { useStore } from '@/store';
 import { useSoftDeleteProduct } from '@/hooks/useProducts';
-import { Product } from '@/generated/prisma';
+import { ProductWithIncludesNumberPrice } from '@/interfaces';
 
 export const ProductActionComponent = ({
   item,
   setItemSelected,
   setSheetOpen,
 }: {
-  item: Product;
+  item: ProductWithIncludesNumberPrice;
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<Product | null>>;
+  setItemSelected: React.Dispatch<
+    React.SetStateAction<ProductWithIncludesNumberPrice | null>
+  >;
 }) => {
   const softDeleteMutation = useSoftDeleteProduct();
   const user = useStore((state) => state.user);
@@ -56,7 +58,7 @@ export const ProductActionComponent = ({
         allowOutsideClick: () => !Swal.isLoading(),
       }).then((result) => {
         if (result.isConfirmed) {
-          toast.success('Producto eliminada exitosamente');
+          toast.success('Producto eliminado exitosamente');
         }
       });
     } catch (error) {

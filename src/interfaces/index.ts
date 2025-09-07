@@ -1,4 +1,4 @@
-import { Product } from "@/generated/prisma";
+import { Category, Prisma, Product } from "@/generated/prisma";
 
 export interface TempUser {
   username: string;
@@ -58,4 +58,42 @@ export type CreateProductInput = Omit<
 > & {
   costPrice: number | string;
   salePrice: number | string;
+};
+
+const productInclude: Prisma.ProductInclude = {
+  organization: true,
+  brand: true,
+  category: true,
+  unitMeasure: true,
+  saleItems: {
+    take: 5,
+    orderBy: { createdAt: 'desc' },
+  },
+  purchaseItems: {
+    take: 5,
+    orderBy: { createdAt: 'desc' },
+  },
+  stockMovements: {
+    take: 5,
+    orderBy: { createdAt: 'desc' },
+  },
+  _count: {
+    select: {
+      saleItems: true,
+      purchaseItems: true,
+      stockMovements: true,
+    },
+  },
+};
+
+export type ProductWithIncludes = Prisma.ProductGetPayload<{
+  include: typeof productInclude;
+}>;
+
+export type ProductWithIncludesNumberPrice = Omit<
+  ProductWithIncludes,
+  'salePrice' | 'costPrice'
+> & {
+  salePrice: number;
+  costPrice: number;
 };

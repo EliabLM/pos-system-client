@@ -2,7 +2,7 @@
 
 import { utapi } from '@/server/uploadThing';
 import { Product, Prisma } from '@/generated/prisma';
-import { ActionResponse, CreateProductInput } from '@/interfaces';
+import { ActionResponse, CreateProductInput, ProductWithIncludesNumberPrice } from '@/interfaces';
 import {
   prisma,
   checkAdminRole,
@@ -223,6 +223,8 @@ export const createProduct = async (
   }
 };
 
+
+
 // GET MANY
 export const getProductsByOrgId = async (
   orgId: string,
@@ -234,7 +236,7 @@ export const getProductsByOrgId = async (
     search?: string;
   },
   includeDeleted: boolean = false
-): Promise<ActionResponse<Product[] | null>> => {
+): Promise<ActionResponse<ProductWithIncludesNumberPrice[] | null>> => {
   try {
     if (checkOrgId(orgId)) return emptyOrgIdResponse();
 
@@ -279,7 +281,7 @@ export const getProductsByOrgId = async (
     return {
       status: 200,
       message: 'Productos obtenidos exitosamente',
-      data: products,
+      data: products.map(item => ({ ...item, salePrice: Number(item.salePrice), costPrice: Number(item.costPrice) })),
     };
   } catch (error) {
     console.error('Error fetching products:', error);

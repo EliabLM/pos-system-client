@@ -24,9 +24,6 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // Se ejecuta cuando la subida se completa
-      console.log("Upload complete for userId:", metadata.userId);
-      console.log("File URL:", file.ufsUrl);
-
       // Aquí podrías guardar la referencia en tu base de datos
       // await saveFileReference(file.url, metadata.userId);
 

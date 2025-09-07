@@ -1,5 +1,4 @@
-import { use, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { useSignUp, useUser } from '@clerk/nextjs';
@@ -182,7 +181,6 @@ const RegisterUserPage = ({
   };
 
   const handleVerification = async (e: React.FormEvent) => {
-    debugger;
     e.preventDefault();
     if (!isLoaded) return;
 
@@ -281,21 +279,21 @@ const RegisterUserPage = ({
 
   if (verificationStep) {
     return (
-      <div className='bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10'>
-        <div className='flex w-full max-w-sm flex-col gap-6'>
+      <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+        <div className="flex w-full max-w-sm flex-col gap-6">
           <Link
-            href='/'
-            className='flex items-center gap-2 self-center font-medium'
+            href="/"
+            className="flex items-center gap-2 self-center font-medium"
           >
-            <div className='bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md'>
-              <GalleryVerticalEnd className='size-4' />
+            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+              <GalleryVerticalEnd className="size-4" />
             </div>
             Sistema POS
           </Link>
           <div className={cn('flex flex-col gap-6', className)} {...props}>
-            <Card className='w-full max-w-md'>
-              <CardHeader className='text-center'>
-                <CardTitle className='text-2xl font-bold'>
+            <Card className="w-full max-w-md">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-bold">
                   Verifica tu email
                 </CardTitle>
                 <CardDescription>
@@ -304,31 +302,31 @@ const RegisterUserPage = ({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleVerification} className='space-y-4'>
+                <form onSubmit={handleVerification} className="space-y-4">
                   <div>
-                    <Label htmlFor='verification-code'>
+                    <Label htmlFor="verification-code">
                       Código de verificación
                     </Label>
                     <Input
-                      id='verification-code'
-                      type='text'
-                      placeholder='Ingresa el código de 6 dígitos'
+                      id="verification-code"
+                      type="text"
+                      placeholder="Ingresa el código de 6 dígitos"
                       value={verificationCode}
                       onChange={(e) => setVerificationCode(e.target.value)}
                       maxLength={6}
-                      className='text-center text-lg tracking-wider mt-1'
+                      className="text-center text-lg tracking-wider mt-1"
                       required
                     />
                   </div>
 
                   <Button
-                    type='submit'
-                    className='w-full'
+                    type="submit"
+                    className="w-full"
                     disabled={isLoading || verificationCode.length !== 6}
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Verificando...
                       </>
                     ) : (
@@ -345,21 +343,21 @@ const RegisterUserPage = ({
   }
 
   return (
-    <div className='bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10'>
-      <div className='flex w-full max-w-sm flex-col gap-6'>
+    <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+      <div className="flex w-full max-w-sm flex-col gap-6">
         <Link
-          href='/'
-          className='flex items-center gap-2 self-center font-medium'
+          href="/"
+          className="flex items-center gap-2 self-center font-medium"
         >
-          <div className='bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md'>
-            <GalleryVerticalEnd className='size-4' />
+          <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+            <GalleryVerticalEnd className="size-4" />
           </div>
           Sistema POS
         </Link>
         <div className={cn('flex flex-col gap-6', className)} {...props}>
-          <Card className='w-full max-w-md'>
-            <CardHeader className='text-center'>
-              <CardTitle className='text-2xl font-bold'>Crear cuenta</CardTitle>
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">Crear cuenta</CardTitle>
               <CardDescription>
                 Completa tus datos para registrarte
               </CardDescription>
@@ -368,18 +366,18 @@ const RegisterUserPage = ({
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
-                  className='space-y-4'
+                  className="space-y-4"
                 >
                   {/* Username */}
                   <FormField
                     control={form.control}
-                    name='username'
+                    name="username"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Nombre de usuario</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder='usuario123'
+                            placeholder="usuario123"
                             {...field}
                             disabled={isLoading}
                           />
@@ -392,13 +390,13 @@ const RegisterUserPage = ({
                   {/* First Name */}
                   <FormField
                     control={form.control}
-                    name='firstName'
+                    name="firstName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Nombre</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder='Juan'
+                            placeholder="Juan"
                             {...field}
                             disabled={isLoading}
                           />
@@ -411,13 +409,13 @@ const RegisterUserPage = ({
                   {/* Last Name */}
                   <FormField
                     control={form.control}
-                    name='lastName'
+                    name="lastName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Apellido</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder='Pérez'
+                            placeholder="Pérez"
                             {...field}
                             disabled={isLoading}
                           />
@@ -430,14 +428,14 @@ const RegisterUserPage = ({
                   {/* Email */}
                   <FormField
                     control={form.control}
-                    name='email'
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
-                            type='email'
-                            placeholder='juan@ejemplo.com'
+                            type="email"
+                            placeholder="juan@ejemplo.com"
                             {...field}
                             disabled={isLoading}
                           />
@@ -450,30 +448,30 @@ const RegisterUserPage = ({
                   {/* Password */}
                   <FormField
                     control={form.control}
-                    name='password'
+                    name="password"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Contraseña</FormLabel>
                         <FormControl>
-                          <div className='relative'>
+                          <div className="relative">
                             <Input
                               type={showPassword ? 'text' : 'password'}
-                              placeholder='Contraseña'
+                              placeholder="Contraseña"
                               {...field}
                               disabled={isLoading}
                             />
                             <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                               onClick={() => setShowPassword(!showPassword)}
                               disabled={isLoading}
                             >
                               {showPassword ? (
-                                <EyeOff className='h-4 w-4' />
+                                <EyeOff className="h-4 w-4" />
                               ) : (
-                                <Eye className='h-4 w-4' />
+                                <Eye className="h-4 w-4" />
                               )}
                             </Button>
                           </div>
@@ -486,32 +484,32 @@ const RegisterUserPage = ({
                   {/* Confirm Password */}
                   <FormField
                     control={form.control}
-                    name='confirmPassword'
+                    name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Confirmar contraseña</FormLabel>
                         <FormControl>
-                          <div className='relative'>
+                          <div className="relative">
                             <Input
                               type={showConfirmPassword ? 'text' : 'password'}
-                              placeholder='Contraseña'
+                              placeholder="Contraseña"
                               {...field}
                               disabled={isLoading}
                             />
                             <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                               onClick={() =>
                                 setShowConfirmPassword(!showConfirmPassword)
                               }
                               disabled={isLoading}
                             >
                               {showConfirmPassword ? (
-                                <EyeOff className='h-4 w-4' />
+                                <EyeOff className="h-4 w-4" />
                               ) : (
-                                <Eye className='h-4 w-4' />
+                                <Eye className="h-4 w-4" />
                               )}
                             </Button>
                           </div>
@@ -522,13 +520,13 @@ const RegisterUserPage = ({
                   />
 
                   <Button
-                    type='submit'
-                    className='w-full'
+                    type="submit"
+                    className="w-full"
                     disabled={isLoading || !form.formState.isValid}
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Creando cuenta...
                       </>
                     ) : (
@@ -538,12 +536,12 @@ const RegisterUserPage = ({
                 </form>
               </Form>
 
-              <div className='mt-6 text-center'>
-                <p className='text-sm text-gray-600'>
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
                   ¿Ya tienes cuenta?{' '}
                   <Link
-                    href='/auth/login'
-                    className='font-medium text-blue-600 hover:text-blue-500'
+                    href="/auth/login"
+                    className="font-medium text-blue-600 hover:text-blue-500"
                   >
                     Inicia sesión
                   </Link>

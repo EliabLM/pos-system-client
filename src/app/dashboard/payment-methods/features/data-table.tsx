@@ -85,7 +85,7 @@ const getColumns = ({
     {
       id: 'select',
       header: ({ table }) => (
-        <div className='flex items-center justify-center'>
+        <div className="flex items-center justify-center">
           <Checkbox
             checked={
               table.getIsAllPageRowsSelected() ||
@@ -94,16 +94,16 @@ const getColumns = ({
             onCheckedChange={(value) =>
               table.toggleAllPageRowsSelected(!!value)
             }
-            aria-label='Select all'
+            aria-label="Select all"
           />
         </div>
       ),
       cell: ({ row }) => (
-        <div className='flex items-center justify-center'>
+        <div className="flex items-center justify-center">
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label='Select row'
+            aria-label="Select row"
           />
         </div>
       ),
@@ -124,9 +124,9 @@ const getColumns = ({
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => (
-        <Badge variant='outline' className='text-muted-foreground px-1.5'>
+        <Badge variant="outline" className="text-muted-foreground px-1.5">
           {row.original.isActive ? (
-            <IconCircleCheckFilled className='fill-green-500 dark:fill-green-400' />
+            <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
           ) : (
             <IconAlertCircleFilled />
           )}
@@ -157,7 +157,7 @@ function DraggableRow({ row }: { row: Row<PaymentMethod> }) {
       data-state={row.getIsSelected() && 'selected'}
       data-dragging={isDragging}
       ref={setNodeRef}
-      className='relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80'
+      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
       style={{
         transform: CSS.Transform.toString(transform),
         transition: transition,
@@ -239,19 +239,19 @@ export function DataTable({
   }
 
   return (
-    <div className='w-full flex-col justify-start gap-6'>
-      <div className='flex items-center justify-end mb-4 '>
-        <div className='flex items-center gap-2'>
+    <div className="w-full flex-col justify-start gap-6">
+      <div className="flex items-center justify-end mb-4 ">
+        <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='outline' size='sm'>
+              <Button variant="outline" size="sm">
                 <IconLayoutColumns />
-                <span className='hidden lg:inline'>Personalizar columnas</span>
-                <span className='lg:hidden'>Columnas</span>
+                <span className="hidden lg:inline">Personalizar columnas</span>
+                <span className="lg:hidden">Columnas</span>
                 <IconChevronDown />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-56'>
+            <DropdownMenuContent align="end" className="w-56">
               {table
                 .getAllColumns()
                 .filter(
@@ -263,13 +263,13 @@ export function DataTable({
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
-                      className='capitalize'
+                      className="capitalize"
                       checked={column.getIsVisible()}
                       onCheckedChange={(value) =>
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id}
+                      {column.columnDef.header?.toString()}
                     </DropdownMenuCheckboxItem>
                   );
                 })}
@@ -277,8 +277,8 @@ export function DataTable({
           </DropdownMenu>
         </div>
       </div>
-      <div className='relative flex flex-col gap-4 overflow-auto'>
-        <div className='overflow-hidden rounded-lg border'>
+      <div className="relative flex flex-col gap-4 overflow-auto">
+        <div className="overflow-hidden rounded-lg border">
           <DndContext
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
@@ -287,7 +287,7 @@ export function DataTable({
             id={sortableId}
           >
             <Table>
-              <TableHeader className='bg-muted sticky top-0 z-10'>
+              <TableHeader className="bg-muted sticky top-0 z-10">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
@@ -305,7 +305,7 @@ export function DataTable({
                   </TableRow>
                 ))}
               </TableHeader>
-              <TableBody className='**:data-[slot=table-cell]:first:w-8'>
+              <TableBody className="**:data-[slot=table-cell]:first:w-8">
                 {table.getRowModel().rows?.length ? (
                   <SortableContext
                     items={dataIds}
@@ -321,7 +321,7 @@ export function DataTable({
                       colSpan={
                         getColumns({ setItemSelected, setSheetOpen }).length
                       }
-                      className='h-24 text-center'
+                      className="h-24 text-center"
                     >
                       Cargando...
                     </TableCell>
@@ -332,7 +332,7 @@ export function DataTable({
                       colSpan={
                         getColumns({ setItemSelected, setSheetOpen }).length
                       }
-                      className='h-24 text-center'
+                      className="h-24 text-center"
                     >
                       Sin registros
                     </TableCell>
@@ -342,14 +342,14 @@ export function DataTable({
             </Table>
           </DndContext>
         </div>
-        <div className='flex items-center justify-between px-4'>
-          <div className='text-muted-foreground hidden flex-1 text-sm lg:flex'>
+        <div className="flex items-center justify-between px-4">
+          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
             {table.getFilteredSelectedRowModel().rows.length} de{' '}
             {table.getFilteredRowModel().rows.length} filas(s) seleccionadas.
           </div>
-          <div className='flex w-full items-center gap-8 lg:w-fit'>
-            <div className='hidden items-center gap-2 lg:flex'>
-              <Label htmlFor='rows-per-page' className='text-sm font-medium'>
+          <div className="flex w-full items-center gap-8 lg:w-fit">
+            <div className="hidden items-center gap-2 lg:flex">
+              <Label htmlFor="rows-per-page" className="text-sm font-medium">
                 Filas por página
               </Label>
               <Select
@@ -358,12 +358,12 @@ export function DataTable({
                   table.setPageSize(Number(value));
                 }}
               >
-                <SelectTrigger size='sm' className='w-20' id='rows-per-page'>
+                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
                   <SelectValue
                     placeholder={table.getState().pagination.pageSize}
                   />
                 </SelectTrigger>
-                <SelectContent side='top'>
+                <SelectContent side="top">
                   {[10, 20, 30, 40, 50].map((pageSize) => (
                     <SelectItem key={pageSize} value={`${pageSize}`}>
                       {pageSize}
@@ -372,48 +372,48 @@ export function DataTable({
                 </SelectContent>
               </Select>
             </div>
-            <div className='flex w-fit items-center justify-center text-sm font-medium'>
+            <div className="flex w-fit items-center justify-center text-sm font-medium">
               Página {table.getState().pagination.pageIndex + 1} de{' '}
               {table.getPageCount()}
             </div>
-            <div className='ml-auto flex items-center gap-2 lg:ml-0'>
+            <div className="ml-auto flex items-center gap-2 lg:ml-0">
               <Button
-                variant='outline'
-                className='hidden h-8 w-8 p-0 lg:flex'
+                variant="outline"
+                className="hidden h-8 w-8 p-0 lg:flex"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span className='sr-only'>Ir a primera página</span>
+                <span className="sr-only">Ir a primera página</span>
                 <IconChevronsLeft />
               </Button>
               <Button
-                variant='outline'
-                className='size-8'
-                size='icon'
+                variant="outline"
+                className="size-8"
+                size="icon"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span className='sr-only'>Página anterior</span>
+                <span className="sr-only">Página anterior</span>
                 <IconChevronLeft />
               </Button>
               <Button
-                variant='outline'
-                className='size-8'
-                size='icon'
+                variant="outline"
+                className="size-8"
+                size="icon"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                <span className='sr-only'>Siguiente página</span>
+                <span className="sr-only">Siguiente página</span>
                 <IconChevronRight />
               </Button>
               <Button
-                variant='outline'
-                className='hidden size-8 lg:flex'
-                size='icon'
+                variant="outline"
+                className="hidden size-8 lg:flex"
+                size="icon"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >
-                <span className='sr-only'>Ir a última página</span>
+                <span className="sr-only">Ir a última página</span>
                 <IconChevronsRight />
               </Button>
             </div>

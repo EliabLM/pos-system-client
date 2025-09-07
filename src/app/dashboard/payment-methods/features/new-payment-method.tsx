@@ -73,14 +73,6 @@ const schema = yup.object().shape({
     .string<PaymentType>()
     .nullable()
     .required('El tipo de método de pago es requerido'),
-  // .oneOf([
-  //   PaymentType.CARD,
-  //   PaymentType.CASH,
-  //   PaymentType.CHECK,
-  //   PaymentType.CREDIT,
-  //   PaymentType.OTHER,
-  //   PaymentType.TRANSFER,
-  // ]),
   active: yup.bool().default(true),
 });
 

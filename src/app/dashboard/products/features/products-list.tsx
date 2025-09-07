@@ -9,19 +9,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { DataTable } from '../features/data-table';
+import { DataTable } from './data-table';
 import { Button } from '@/components/ui/button';
 import { Sheet } from '@/components/ui/sheet';
 
-import { Store } from '@/generated/prisma';
-import { useAllStores } from '@/hooks/useStores';
+import { Product } from '@/generated/prisma';
+import { useAllProducts } from '@/hooks/useProducts';
 
-import NewStore from './new-store';
+import NewProduct from './new-product';
 
-const StoresList = () => {
-  const stores = useAllStores();
+const ProductsList = () => {
+  const products = useAllProducts();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [itemSelected, setItemSelected] = useState<Store | null>(null);
+  const [itemSelected, setItemSelected] = useState<Product | null>(null);
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
@@ -29,10 +29,10 @@ const StoresList = () => {
         <div className="px-4 lg:px-6">
           <Card className="@container/card">
             <CardHeader>
-              <CardTitle>Tiendas</CardTitle>
+              <CardTitle>Productos</CardTitle>
               <CardDescription>
                 <span className="hidden @[540px]/card:block">
-                  Listado de todas las tiendas
+                  Listado de todos los productos
                 </span>
                 {/* <span className='@[540px]/card:hidden'>Last 3 months</span> */}
               </CardDescription>
@@ -44,10 +44,10 @@ const StoresList = () => {
                     setSheetOpen(true);
                   }}
                 >
-                  Crear nueva tienda
+                  Crear nuevo producto
                 </Button>
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  <NewStore
+                  <NewProduct
                     setSheetOpen={setSheetOpen}
                     itemSelected={itemSelected}
                     setItemSelected={setItemSelected}
@@ -57,8 +57,8 @@ const StoresList = () => {
             </CardHeader>
             <CardContent>
               <DataTable
-                loading={stores.isLoading}
-                data={stores.data ?? []}
+                loading={products.isLoading}
+                data={products.data ?? []}
                 setSheetOpen={setSheetOpen}
                 setItemSelected={setItemSelected}
               />
@@ -70,4 +70,4 @@ const StoresList = () => {
   );
 };
 
-export default StoresList;
+export default ProductsList;

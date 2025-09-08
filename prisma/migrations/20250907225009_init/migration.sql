@@ -16,9 +16,9 @@ CREATE TYPE "public"."PurchaseStatus" AS ENUM ('PENDING', 'RECEIVED', 'CANCELLED
 -- CreateTable
 CREATE TABLE "public"."organizations" (
     "id" TEXT NOT NULL,
-    "clerkOrgId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "nit" TEXT,
     "phone" TEXT,
     "address" TEXT,
     "city" TEXT,
@@ -131,9 +131,9 @@ CREATE TABLE "public"."products" (
     "sku" TEXT,
     "categoryId" TEXT,
     "brandId" TEXT,
-    "unitMeasureId" TEXT NOT NULL,
-    "costPrice" DECIMAL(10,2) NOT NULL,
-    "salePrice" DECIMAL(10,2) NOT NULL,
+    "unitMeasureId" TEXT,
+    "costPrice" DOUBLE PRECISION NOT NULL,
+    "salePrice" DOUBLE PRECISION NOT NULL,
     "minStock" INTEGER NOT NULL DEFAULT 0,
     "currentStock" INTEGER NOT NULL DEFAULT 0,
     "alcoholGrade" DOUBLE PRECISION,
@@ -211,12 +211,13 @@ CREATE TABLE "public"."payment_methods" (
 -- CreateTable
 CREATE TABLE "public"."sales" (
     "id" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "storeId" TEXT NOT NULL,
     "saleNumber" TEXT NOT NULL,
     "customerId" TEXT,
     "userId" TEXT NOT NULL,
-    "subtotal" DECIMAL(10,2) NOT NULL,
-    "total" DECIMAL(10,2) NOT NULL,
+    "subtotal" DOUBLE PRECISION NOT NULL,
+    "total" DOUBLE PRECISION NOT NULL,
     "status" "public"."SaleStatus" NOT NULL DEFAULT 'PAID',
     "saleDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "dueDate" TIMESTAMP(3),
@@ -237,8 +238,8 @@ CREATE TABLE "public"."sale_items" (
     "productId" TEXT NOT NULL,
     "unitMeasureId" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
-    "unitPrice" DECIMAL(10,2) NOT NULL,
-    "subtotal" DECIMAL(10,2) NOT NULL,
+    "unitPrice" DOUBLE PRECISION NOT NULL,
+    "subtotal" DOUBLE PRECISION NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -252,7 +253,7 @@ CREATE TABLE "public"."sale_payments" (
     "id" TEXT NOT NULL,
     "saleId" TEXT NOT NULL,
     "paymentMethodId" TEXT NOT NULL,
-    "amount" DECIMAL(10,2) NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
     "reference" TEXT,
     "notes" TEXT,
     "paymentDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -267,9 +268,10 @@ CREATE TABLE "public"."sale_payments" (
 -- CreateTable
 CREATE TABLE "public"."purchases" (
     "id" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "supplierId" TEXT NOT NULL,
     "purchaseNumber" TEXT NOT NULL,
-    "total" DECIMAL(10,2) NOT NULL,
+    "total" DOUBLE PRECISION NOT NULL,
     "status" "public"."PurchaseStatus" NOT NULL DEFAULT 'PENDING',
     "purchaseDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "receivedDate" TIMESTAMP(3),
@@ -288,8 +290,8 @@ CREATE TABLE "public"."purchase_items" (
     "purchaseId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
-    "unitPrice" DECIMAL(10,2) NOT NULL,
-    "subtotal" DECIMAL(10,2) NOT NULL,
+    "unitPrice" DOUBLE PRECISION NOT NULL,
+    "subtotal" DOUBLE PRECISION NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -331,9 +333,6 @@ CREATE TABLE "public"."system_configs" (
 
     CONSTRAINT "system_configs_pkey" PRIMARY KEY ("id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "organizations_clerkOrgId_key" ON "public"."organizations"("clerkOrgId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "stores_organizationId_name_key" ON "public"."stores"("organizationId", "name");
@@ -408,7 +407,7 @@ ALTER TABLE "public"."products" ADD CONSTRAINT "products_categoryId_fkey" FOREIG
 ALTER TABLE "public"."products" ADD CONSTRAINT "products_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "public"."organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."products" ADD CONSTRAINT "products_unitMeasureId_fkey" FOREIGN KEY ("unitMeasureId") REFERENCES "public"."unit_measures"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."products" ADD CONSTRAINT "products_unitMeasureId_fkey" FOREIGN KEY ("unitMeasureId") REFERENCES "public"."unit_measures"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."customers" ADD CONSTRAINT "customers_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "public"."organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

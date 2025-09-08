@@ -15,7 +15,6 @@ import {
 import { useStore } from '@/store';
 import { Product } from '@/generated/prisma';
 import { deleteProductImage } from '@/actions/product';
-import { CreateProductInput } from '@/interfaces';
 
 // Tipos para los filtros de productos
 interface ProductFilters {
@@ -178,7 +177,10 @@ export const useCreateProduct = () => {
 
   return useMutation({
     mutationFn: async (
-      productData: CreateProductInput
+      productData: Omit<
+        Product,
+        'id' | 'organizationId' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'
+      >
     ) => {
       if (!user?.organizationId) {
         throw new Error('Usuario no tiene organización asignada');
@@ -222,7 +224,12 @@ export const useUpdateProduct = () => {
       updateData,
     }: {
       productId: string;
-      updateData: Partial<CreateProductInput>;
+      updateData: Partial<
+        Omit<
+          Product,
+          'id' | 'organizationId' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'
+        >
+      >;
     }) => {
       if (!user?.organizationId) {
         throw new Error('Usuario no tiene organización asignada');

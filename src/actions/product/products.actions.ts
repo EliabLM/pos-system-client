@@ -2,7 +2,7 @@
 
 import { utapi } from '@/server/uploadThing';
 import { Product, Prisma } from '@/generated/prisma';
-import { ActionResponse, CreateProductInput, ProductWithIncludesNumberPrice } from '@/interfaces';
+import { ActionResponse, ProductWithIncludesNumberPrice } from '@/interfaces';
 import {
   prisma,
   checkAdminRole,
@@ -73,7 +73,10 @@ const productInclude: Prisma.ProductInclude = {
 export const createProduct = async (
   orgId: string,
   userId: string,
-  productData: CreateProductInput
+  productData: Omit<
+    Product,
+    'id' | 'organizationId' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'
+  >
 ): Promise<ActionResponse<Product | null>> => {
   try {
     const isAdmin = await checkAdminRole(userId);
@@ -222,8 +225,6 @@ export const createProduct = async (
     return { status: 500, message: 'Error interno del servidor', data: null };
   }
 };
-
-
 
 // GET MANY
 export const getProductsByOrgId = async (
@@ -402,7 +403,12 @@ export const getProductBySku = async (
 export const updateProduct = async (
   productId: string,
   userId: string,
-  updateData: Partial<CreateProductInput>
+  updateData: Partial<
+    Omit<
+      Product,
+      'id' | 'organizationId' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'
+    >
+  >
 ): Promise<ActionResponse<Product | null>> => {
   try {
     const isAdmin = await checkAdminRole(userId);

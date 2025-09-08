@@ -150,7 +150,7 @@ model Product {
   sku            String?
   categoryId     String?
   brandId        String?
-  unitMeasureId  String
+  unitMeasureId  String?
   costPrice      Float
   salePrice      Float
   minStock       Int             @default(0)
@@ -168,7 +168,7 @@ model Product {
   brand          Brand?          @relation(fields: [brandId], references: [id])
   category       Category?       @relation(fields: [categoryId], references: [id])
   organization   Organization    @relation(fields: [organizationId], references: [id])
-  unitMeasure    UnitMeasure     @relation(fields: [unitMeasureId], references: [id])
+  unitMeasure    UnitMeasure?    @relation(fields: [unitMeasureId], references: [id])
   purchaseItems  PurchaseItem[]
   saleItems      SaleItem[]
   stockMovements StockMovement[]

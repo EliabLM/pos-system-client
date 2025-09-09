@@ -3,6 +3,9 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Building2, Phone, MapPin, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,10 +23,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useRegister } from '@/hooks/auth/useRegister';
-import Swal from 'sweetalert2';
 import { Textarea } from '@/components/ui/textarea';
-import { useRouter } from 'next/navigation';
+
+import { useRegister } from '@/hooks/auth/useRegister';
 import { createStore } from '@/actions/store';
 import { createSlug } from '@/utils/createSlug';
 
@@ -72,6 +74,7 @@ const RegisterStorePage = () => {
   });
 
   const onSubmit = async (data: SignUpFormData) => {
+    debugger;
     try {
       setIsSubmitting(true);
 

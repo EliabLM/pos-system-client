@@ -9,6 +9,7 @@ import {
   checkOrgId,
   emptyOrgIdResponse,
 } from '../utils';
+import { clerkClient } from '@clerk/nextjs/server';
 
 const userInclude: Prisma.UserInclude = {
   organization: true,
@@ -402,10 +403,7 @@ export const updateUser = async (
   userId: string,
   adminUserId: string,
   updateData: Partial<
-    Omit<
-      User,
-      'id' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'
-    >
+    Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'>
   >
 ): Promise<ActionResponse<User | null>> => {
   try {
@@ -486,7 +484,10 @@ export const updateUser = async (
     }
 
     // Verificar referencias si se están actualizando
-    if (updateData.organizationId && updateData.organizationId !== existingUser.organizationId) {
+    if (
+      updateData.organizationId &&
+      updateData.organizationId !== existingUser.organizationId
+    ) {
       const organization = await prisma.organization.findFirst({
         where: {
           id: updateData.organizationId,
@@ -572,6 +573,54 @@ export const updateUser = async (
           message: 'Una de las referencias especificadas no existe',
           data: null,
         };
+      }
+    }
+
+    return { status: 500, message: 'Error interno del servidor', data: null };
+  }
+};
+
+// UPDATE USER ROLE
+export const updateUserOrg = async (
+  userId: string,
+  orgId: string
+): Promise<ActionResponse<User | null>> => {
+  try {
+    if (!userId)
+      return {
+        status: 400,
+        message: 'ID del usuario es requerido',
+        data: null,
+      };
+
+    const existingUser = await prisma.user.findFirst({
+      where: { id: userId, isDeleted: false },
+    });
+
+    if (!existingUser) {
+      return { status: 404, message: 'Usuario no encontrado', data: null };
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        organizationId: orgId,
+        updatedAt: new Date(),
+      },
+      include: userInclude,
+    });
+
+    return {
+      status: 200,
+      message: 'Organización del usuario actualizada exitosamente',
+      data: updatedUser,
+    };
+  } catch (error) {
+    console.error('Error updating user organization:', error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return { status: 404, message: 'Usuario no encontrado', data: null };
       }
     }
 
@@ -742,7 +791,9 @@ export const softDeleteUser = async (
     if (salesCount > 0 || stockMovementsCount > 0) {
       return {
         status: 409,
-        message: `No se puede eliminar el usuario. Tiene ${salesCount + stockMovementsCount} transacción(es) asociada(s)`,
+        message: `No se puede eliminar el usuario. Tiene ${
+          salesCount + stockMovementsCount
+        } transacción(es) asociada(s)`,
         data: null,
       };
     }
@@ -819,6 +870,28 @@ export const restoreUser = async (
   }
 };
 
+// DELETE CLERK USER
+export const deleteClerkUser = async (
+  clerkId: string
+): Promise<ActionResponse> => {
+  try {
+    const client = await clerkClient();
+    await client.users.deleteUser(clerkId);
+    return {
+      status: 200,
+      message: 'Usuario eliminado correctamente',
+      data: null,
+    };
+  } catch (error: any) {
+    console.error('Error eliminando usuario:', error);
+    return {
+      status: 200,
+      message: error.message || 'Error eliminando usuario',
+      data: null,
+    };
+  }
+};
+
 // HARD DELETE
 export const deleteUser = async (
   userId: string,
@@ -869,7 +942,8 @@ export const deleteUser = async (
       if (error.code === 'P2003') {
         return {
           status: 409,
-          message: 'No se puede eliminar el usuario debido a relaciones existentes',
+          message:
+            'No se puede eliminar el usuario debido a relaciones existentes',
           data: null,
         };
       }

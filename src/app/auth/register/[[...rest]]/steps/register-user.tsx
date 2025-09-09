@@ -28,9 +28,8 @@ import {
 import { useRegister } from '@/hooks/auth/useRegister';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
-import { createUserAction } from '@/actions/user/create-user';
 import { GENERIC_ERROR_MESSAGE } from '@/constants';
-import { deleteUserByClerkId } from '@/actions/user/delete-clerk-user';
+import { useRegisterUser, useDeleteClerkUser } from '@/hooks/useUsers';
 
 // Schema de validación con Yup
 const signUpSchema = yup.object({
@@ -88,6 +87,8 @@ const RegisterUserPage = ({
   const { tempUser, handleNext, setTempUser } = useRegister();
   const { signUp, isLoaded, setActive } = useSignUp();
   const { user } = useUser();
+  const createMutation = useRegisterUser();
+  const deleteClerkUserMutation = useDeleteClerkUser();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -181,6 +182,7 @@ const RegisterUserPage = ({
   };
 
   const handleVerification = async (e: React.FormEvent) => {
+    debugger;
     e.preventDefault();
     if (!isLoaded) return;
 
@@ -200,29 +202,36 @@ const RegisterUserPage = ({
             text: GENERIC_ERROR_MESSAGE,
           });
 
-          await deleteUserByClerkId(completeSignUp.createdUserId ?? '');
+          await deleteClerkUserMutation.mutateAsync({
+            clerkId: completeSignUp.createdUserId ?? '',
+          });
           setVerificationStep(false);
           setVerificationCode('');
 
           return;
         }
 
-        const result = await createUserAction({
+        const result = await createMutation.mutateAsync({
           clerkId: completeSignUp.createdUserId,
           email: tempUser.email,
           firstName: tempUser.firstName,
           lastName: tempUser.lastName,
           role: 'ADMIN',
           username: tempUser.username,
+          isActive: true,
+          organizationId: null,
+          storeId: null,
         });
 
-        if (result.status === 'ERROR' || !result.data) {
+        if (result === null) {
           await Swal.fire({
             icon: 'error',
             text: GENERIC_ERROR_MESSAGE,
           });
 
-          await deleteUserByClerkId(completeSignUp.createdUserId);
+          await deleteClerkUserMutation.mutateAsync({
+            clerkId: completeSignUp.createdUserId,
+          });
           setVerificationStep(false);
           setVerificationCode('');
 
@@ -232,7 +241,7 @@ const RegisterUserPage = ({
         setTempUser({
           ...tempUser,
           clerkId: completeSignUp.createdUserId,
-          id: result.data.id,
+          id: result?.id ?? '',
         });
 
         handleNext();
@@ -260,7 +269,9 @@ const RegisterUserPage = ({
         text: GENERIC_ERROR_MESSAGE,
       });
 
-      await deleteUserByClerkId(tempUser?.clerkId ?? '');
+      await deleteClerkUserMutation.mutateAsync({
+        clerkId: tempUser?.clerkId ?? '',
+      });
       setVerificationStep(false);
       setVerificationCode('');
     } finally {

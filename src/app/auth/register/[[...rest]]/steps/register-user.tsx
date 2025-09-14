@@ -110,7 +110,6 @@ const RegisterUserPage = ({
   });
 
   const onSubmit = async (data: SignUpFormData) => {
-    debugger;
     if (!isLoaded) return;
 
     try {
@@ -182,7 +181,6 @@ const RegisterUserPage = ({
   };
 
   const handleVerification = async (e: React.FormEvent) => {
-    debugger;
     e.preventDefault();
     if (!isLoaded) return;
 

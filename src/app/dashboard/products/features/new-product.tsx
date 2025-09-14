@@ -168,7 +168,7 @@ const NewProduct = ({
           currentStock: data.currentStock,
           minStock: data.minStock,
           image: imageUrl ?? null,
-          unitMeasureId: 'cmf8v47gw0000n7eocq5kn7si', //TODO Crear unidad de medida por defecto (UN)
+          unitMeasureId: null, //TODO Crear unidad de medida por defecto (UN)
           isActive: data.active,
           alcoholGrade: null,
           color: null,

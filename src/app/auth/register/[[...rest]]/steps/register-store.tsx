@@ -74,7 +74,6 @@ const RegisterStorePage = () => {
   });
 
   const onSubmit = async (data: SignUpFormData) => {
-    debugger;
     try {
       setIsSubmitting(true);
 

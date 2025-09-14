@@ -123,19 +123,19 @@ export const createProduct = async (
     }
 
     // Verificar que unitMeasureId existe
-    if (productData.unitMeasureId) {
-      const unitMeasure = await prisma.unitMeasure.findUnique({
-        where: { id: productData.unitMeasureId },
-      });
+    // if (productData.unitMeasureId) {
+    //   const unitMeasure = await prisma.unitMeasure.findUnique({
+    //     where: { id: productData.unitMeasureId },
+    //   });
 
-      if (!unitMeasure) {
-        return {
-          status: 400,
-          message: 'La unidad de medida especificada no existe',
-          data: null,
-        };
-      }
-    }
+    //   if (!unitMeasure) {
+    //     return {
+    //       status: 400,
+    //       message: 'La unidad de medida especificada no existe',
+    //       data: null,
+    //     };
+    //   }
+    // }
 
     // Verificar que categoryId existe si se proporciona
     if (productData.categoryId) {
@@ -507,19 +507,19 @@ export const updateProduct = async (
       }
     }
 
-    if (updateData.unitMeasureId && updateData.unitMeasureId !== existingProduct.unitMeasureId) {
-      const unitMeasure = await prisma.unitMeasure.findUnique({
-        where: { id: updateData.unitMeasureId },
-      });
+    // if (updateData.unitMeasureId && updateData.unitMeasureId !== existingProduct.unitMeasureId) {
+    //   const unitMeasure = await prisma.unitMeasure.findUnique({
+    //     where: { id: updateData.unitMeasureId },
+    //   });
 
-      if (!unitMeasure) {
-        return {
-          status: 400,
-          message: 'La unidad de medida especificada no existe',
-          data: null,
-        };
-      }
-    }
+    //   if (!unitMeasure) {
+    //     return {
+    //       status: 400,
+    //       message: 'La unidad de medida especificada no existe',
+    //       data: null,
+    //     };
+    //   }
+    // }
 
     // *** NUEVO BLOQUE: Gestionar cambio de imagen ***
     const oldImageUrl = existingProduct.image;

@@ -112,8 +112,6 @@ const RegisterOrganizationPage = () => {
   });
 
   const onSubmit = async (data: SignUpFormData) => {
-    debugger;
-
     try {
       setIsSubmitting(true);
 

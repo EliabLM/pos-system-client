@@ -180,7 +180,19 @@ const NewProduct = ({
         toast.success('Producto creado exitosamente');
       }
 
-      form.reset();
+      form.resetField('name');
+      form.resetField('description');
+      form.resetField('description');
+      form.resetField('image');
+      form.resetField('barcode');
+      form.resetField('sku');
+      form.resetField('costPrice');
+      form.resetField('salePrice');
+      form.resetField('minStock');
+      form.resetField('currentStock');
+      form.resetField('categoryId');
+      form.resetField('brandId');
+      form.resetField('active');
       setSheetOpen(false);
       setItemSelected(null);
     } catch (error) {

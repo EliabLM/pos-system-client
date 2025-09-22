@@ -96,7 +96,7 @@ const validateSaleItems = (
   }
 };
 
-export const calculateSaleTotals = (
+export const calculateSaleTotals = async (
   items: { quantity: number; unitPrice: number }[]
 ) => {
   const subtotal = items.reduce(
@@ -217,7 +217,7 @@ export const createSale = async (
     }
 
     // Calcular totales
-    const { subtotal, total } = calculateSaleTotals(saleItems);
+    const { subtotal, total } = await calculateSaleTotals(saleItems);
 
     // Validar pagos si se proporcionan
     if (salePayments && salePayments.length > 0) {

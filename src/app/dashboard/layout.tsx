@@ -1,14 +1,40 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { SiteHeader } from '@/components/site-header';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+
+import { useStore } from '@/store';
+import { getUserByClerkId } from '@/actions/user';
+import { User } from '@/interfaces';
 
 const DashboardLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+  const { user } = useUser();
+  const setUser = useStore((state) => state.setUser);
+
+  useEffect(() => {
+    if (!user) {
+      setUser(null);
+      return;
+    }
+
+    getUserByClerkId(user.id)
+      .then((res) => {
+        const result = res.data as User;
+        setUser(result);
+      })
+      .catch((error) => {
+        console.error('🚀 ~ getUserByClerkId ~ error:', error);
+      });
+  }, [user]);
+
   return (
     <SidebarProvider
       style={
@@ -18,7 +44,7 @@ const DashboardLayout = ({
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant='inset' />
+      <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
         {children}

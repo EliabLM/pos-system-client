@@ -1,4 +1,4 @@
-import { Category, Prisma, Product } from "@/generated/prisma";
+import { Prisma, Product } from "@/generated/prisma";
 
 export interface TempUser {
   username: string;
@@ -97,3 +97,7 @@ export type ProductWithIncludesNumberPrice = Omit<
   salePrice: number;
   costPrice: number;
 };
+
+export type Metadata = {
+  onboardingComplete: boolean
+}

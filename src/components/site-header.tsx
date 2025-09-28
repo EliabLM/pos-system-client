@@ -21,9 +21,11 @@ import { User } from '@/interfaces';
 
 export function SiteHeader() {
   const { setTheme } = useTheme();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const dbUser = useStore((state) => state.user);
   const setUser = useStore((state) => state.setUser);
+
+  if (!isLoaded) return <div>Cargando...</div>;
 
   useEffect(() => {
     if (!user) return;

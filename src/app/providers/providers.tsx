@@ -22,10 +22,15 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <ClerkProvider localization={esMX}>
+    <ClerkProvider
+      localization={esMX}
+      appearance={{ variables: { colorPrimary: '#00c950' } }}
+      signInUrl="/auth/login"
+      signUpUrl="/auth/register"
+    >
       <ThemeProvider
-        attribute='class'
-        defaultTheme='system'
+        attribute="class"
+        defaultTheme="system"
         enableSystem
         disableTransitionOnChange
       >

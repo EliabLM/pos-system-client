@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Sale } from '@/generated/prisma';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,14 +13,13 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { useSales } from '@/hooks/useSales';
-import { Sale } from '@/generated/prisma';
-import { Sheet } from '@/components/ui/sheet';
+import { useRouter } from 'next/navigation';
 
 export const SaleList = () => {
   const sales = useSales();
+  const router = useRouter();
   console.log('🚀 ~ SaleList ~ sales:', sales);
 
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [itemSelected, setItemSelected] = useState<Sale | null>(null);
 
   return (
@@ -40,18 +40,11 @@ export const SaleList = () => {
                 <Button
                   onClick={() => {
                     setItemSelected(null);
-                    setSheetOpen(true);
+                    router.push('/dashboard/sales/new');
                   }}
                 >
-                  Crear nuevo producto
+                  Crear nueva venta
                 </Button>
-                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  {/* <NewProduct
-                    setSheetOpen={setSheetOpen}
-                    itemSelected={itemSelected}
-                    setItemSelected={setItemSelected}
-                  /> */}
-                </Sheet>
               </CardAction>
             </CardHeader>
             <CardContent>

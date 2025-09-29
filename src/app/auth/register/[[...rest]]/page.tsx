@@ -1,5 +1,4 @@
 import { SignUp } from '@clerk/nextjs';
-import { RegisterForm } from './register-form';
 
 const RegisterPage = () => {
   return (

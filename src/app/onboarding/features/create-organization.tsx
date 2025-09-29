@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -12,6 +14,8 @@ import {
   Check,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,13 +37,13 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 
-import { useRegister } from '@/hooks/auth/useRegister';
 import { useCreateOrganization } from '@/hooks/useOrganizations';
-import { useUpdateUserOrg } from '@/hooks/useUsers';
+import { useRegisterUser, useUpdateUserOrg } from '@/hooks/useUsers';
 
-import { useStore } from '@/store';
 import { GENERIC_ERROR_MESSAGE } from '@/constants';
 import { createSlug } from '@/utils/createSlug';
+import { completeOnboarding, getUserByClerkId } from '@/actions/user';
+import { User } from '@/generated/prisma';
 
 // Schema de validación con Yup
 const onboardingSchema = yup.object({
@@ -86,11 +90,12 @@ const onboardingSchema = yup.object({
 type SignUpFormData = yup.InferType<typeof onboardingSchema>;
 
 const RegisterOrganizationPage = () => {
-  const { handleNext } = useRegister();
-  const { tempUser, setTempUser } = useStore();
+  const { user } = useUser();
+  const router = useRouter();
 
   const createOrgMutation = useCreateOrganization();
   const updateUserMutation = useUpdateUserOrg();
+  const registerUserMutation = useRegisterUser();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingSubdomain, setIsCheckingSubdomain] = useState(false);
@@ -112,14 +117,46 @@ const RegisterOrganizationPage = () => {
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
+      debugger;
+      console.log('🚀 ~ onSubmit ~ user:', user);
+      if (!user) return;
+
       setIsSubmitting(true);
 
       //todo - check subdomain
 
+      const dbUser = await getUserByClerkId(user.id);
+
+      let createdUser: User | null;
+      if (!dbUser.data) {
+        createdUser = await registerUserMutation.mutateAsync({
+          clerkId: user.id,
+          email: user?.primaryEmailAddress?.emailAddress ?? '',
+          firstName: user.firstName ?? '',
+          lastName: user.lastName ?? '',
+          role: 'ADMIN',
+          isActive: true,
+          organizationId: null,
+          storeId: null,
+          username: user.username ?? '',
+        });
+      } else {
+        createdUser = dbUser.data;
+      }
+
+      if (!createdUser) {
+        await Swal.fire({
+          icon: 'error',
+          text: GENERIC_ERROR_MESSAGE,
+        });
+
+        return;
+      }
+
       const resOrgDb = await createOrgMutation.mutateAsync({
-        userId: tempUser?.id ?? '',
+        userId: createdUser.id,
         organizationData: {
-          email: tempUser?.email ?? '',
+          email: user?.primaryEmailAddress?.emailAddress ?? '',
           name: data.companyName,
           address: data.address,
           phone: data.phone,
@@ -130,8 +167,9 @@ const RegisterOrganizationPage = () => {
           taxId: null,
         },
       });
+      console.log('🚀 ~ onSubmit ~ resOrgDb:', resOrgDb);
 
-      if (resOrgDb === null || !tempUser) {
+      if (resOrgDb === null) {
         await Swal.fire({
           icon: 'error',
           text: GENERIC_ERROR_MESSAGE,
@@ -140,15 +178,16 @@ const RegisterOrganizationPage = () => {
         return;
       }
 
-      setTempUser({ ...tempUser, organizationId: resOrgDb.id });
-
       // Actualizar user con orgId
       await updateUserMutation.mutateAsync({
-        userId: tempUser.id,
+        userId: createdUser.id,
         orgId: resOrgDb.id,
       });
 
-      handleNext();
+      // Completar onboarding
+      await completeOnboarding();
+
+      router.replace('/dashboard');
     } catch (error) {
       // TODO - validar errores
       console.error('🚀 ~ onSubmit ~ error:', error);
@@ -180,7 +219,7 @@ const RegisterOrganizationPage = () => {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900">
-            ¡Bienvenido, {tempUser?.firstName} {tempUser?.lastName}! 👋
+            ¡Bienvenido, {user?.firstName} {user?.lastName}! 👋
           </CardTitle>
           <CardDescription className="text-lg text-gray-600 mt-2">
             Vamos a configurar los datos de tu empresa para comenzar

@@ -1,5 +1,7 @@
 'use server';
 
+import { auth, clerkClient } from '@clerk/nextjs/server'
+
 import { User, Prisma } from '@/generated/prisma';
 import { ActionResponse } from '@/interfaces';
 import { prisma } from '../utils';
@@ -77,3 +79,25 @@ export const registerUser = async (
     return { status: 500, message: 'Error interno del servidor', data: null };
   }
 };
+
+
+export const completeOnboarding = async () => {
+  const { isAuthenticated, userId } = await auth()
+
+  if (!isAuthenticated) {
+    return { message: 'No Logged In User' }
+  }
+
+  const client = await clerkClient()
+
+  try {
+    const res = await client.users.updateUser(userId, {
+      publicMetadata: {
+        onboardingComplete: true,
+      },
+    })
+    return { message: res.publicMetadata }
+  } catch (err) {
+    return { error: 'There was an error updating the user metadata.' }
+  }
+}

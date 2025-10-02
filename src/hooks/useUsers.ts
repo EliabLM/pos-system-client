@@ -103,7 +103,7 @@ export const useAllUsers = (
 
       return response.data;
     },
-    enabled: !!user?.id && user?.role === 'SUPER_ADMIN',
+    enabled: !!user?.id && user?.role === 'ADMIN',
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
   });

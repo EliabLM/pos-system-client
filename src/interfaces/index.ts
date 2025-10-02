@@ -20,6 +20,7 @@ export interface User {
   firstName: string;
   lastName: string;
   role: string;
+  emailVerified: boolean;
   isActive: boolean;
   isDeleted: boolean;
   createdAt: Date;

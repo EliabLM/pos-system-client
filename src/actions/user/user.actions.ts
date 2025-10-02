@@ -130,6 +130,26 @@ export const createUser = async (
           data: null,
         };
       }
+
+      // Verificar que la tienda no tenga ya un vendedor asignado (solo para rol SELLER)
+      if (userData.role === 'SELLER') {
+        const existingSellerInStore = await prisma.user.findFirst({
+          where: {
+            storeId: userData.storeId,
+            role: 'SELLER',
+            isDeleted: false,
+            isActive: true,
+          },
+        });
+
+        if (existingSellerInStore) {
+          return {
+            status: 409,
+            message: 'La tienda ya tiene un vendedor asignado',
+            data: null,
+          };
+        }
+      }
     }
 
     const newUser = await prisma.user.create({
@@ -520,6 +540,27 @@ export const updateUser = async (
           data: null,
         };
       }
+
+      // Verificar que la tienda no tenga vendedor asignado si el usuario es SELLER
+      if (existingUser.role === 'SELLER') {
+        const existingSellerInStore = await prisma.user.findFirst({
+          where: {
+            storeId: updateData.storeId,
+            role: 'SELLER',
+            isDeleted: false,
+            isActive: true,
+            id: { not: userId },
+          },
+        });
+
+        if (existingSellerInStore) {
+          return {
+            status: 409,
+            message: 'La tienda ya tiene un vendedor asignado',
+            data: null,
+          };
+        }
+      }
     }
 
     const updatedUser = await prisma.user.update({
@@ -571,6 +612,78 @@ export const updateUser = async (
         return {
           status: 400,
           message: 'Una de las referencias especificadas no existe',
+          data: null,
+        };
+      }
+    }
+
+    return { status: 500, message: 'Error interno del servidor', data: null };
+  }
+};
+
+// UPDATE CLERK ID BY EMAIL (for webhook or manual update)
+export const updateClerkIdByEmail = async (
+  email: string,
+  clerkId: string
+): Promise<ActionResponse<User | null>> => {
+  try {
+    if (!email)
+      return {
+        status: 400,
+        message: 'Email es requerido',
+        data: null,
+      };
+
+    if (!clerkId)
+      return {
+        status: 400,
+        message: 'Clerk ID es requerido',
+        data: null,
+      };
+
+    // Buscar usuario con clerkId pendiente
+    const user = await prisma.user.findFirst({
+      where: {
+        email,
+        clerkId: {
+          startsWith: 'pending_',
+        },
+        isDeleted: false,
+      },
+    });
+
+    if (!user) {
+      return {
+        status: 404,
+        message: 'Usuario con clerkId pendiente no encontrado',
+        data: null,
+      };
+    }
+
+    // Actualizar el clerkId
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        clerkId,
+        emailVerified: true,
+        updatedAt: new Date(),
+      },
+      include: userInclude,
+    });
+
+    return {
+      status: 200,
+      message: 'Clerk ID actualizado exitosamente',
+      data: updatedUser,
+    };
+  } catch (error) {
+    console.error('Error updating clerk ID:', error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return {
+          status: 409,
+          message: 'Ya existe un usuario con ese Clerk ID',
           data: null,
         };
       }

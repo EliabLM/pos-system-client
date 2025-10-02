@@ -216,6 +216,7 @@ const RegisterUserPage = ({
           lastName: tempUser.lastName,
           role: 'ADMIN',
           username: tempUser.username,
+          emailVerified: true,
           isActive: true,
           organizationId: null,
           storeId: null,

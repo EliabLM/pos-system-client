@@ -73,6 +73,7 @@ model User {
   firstName      String
   lastName       String
   role           UserRole        @default(SELLER)
+  emailVerified  Boolean         @default(false)
   isActive       Boolean         @default(true)
   isDeleted      Boolean         @default(false)
   createdAt      DateTime        @default(now())

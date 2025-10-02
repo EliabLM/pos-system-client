@@ -135,6 +135,7 @@ const RegisterOrganizationPage = () => {
           firstName: user.firstName ?? '',
           lastName: user.lastName ?? '',
           role: 'ADMIN',
+          emailVerified: user.primaryEmailAddress?.verification?.status === 'verified',
           isActive: true,
           organizationId: null,
           storeId: null,

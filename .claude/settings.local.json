@@ -6,7 +6,9 @@
       "Bash(echo $APPDATA)",
       "Bash(claude mcp:*)",
       "Bash(npx prisma migrate dev:*)",
-      "Bash(npx prisma generate:*)"
+      "Bash(npx prisma generate:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(pnpm add:*)"
     ],
     "deny": [],
     "ask": []

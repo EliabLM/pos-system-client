@@ -15,7 +15,10 @@ export default function LoginPage() {
          </a>
          <LoginForm />
        </div> */}
-      <SignIn />
+      <SignIn
+        fallbackRedirectUrl="/"
+        forceRedirectUrl="/"
+      />
     </div>
   );
 }

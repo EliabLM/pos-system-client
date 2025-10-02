@@ -272,20 +272,20 @@ model Sale {
 }
 
 model SaleItem {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   saleId        String
   productId     String
-  unitMeasureId String
+  unitMeasureId String?
   quantity      Int
   unitPrice     Float
   subtotal      Float
-  isDeleted     Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  isDeleted     Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   deletedAt     DateTime?
-  product       Product     @relation(fields: [productId], references: [id])
-  sale          Sale        @relation(fields: [saleId], references: [id])
-  unitMeasure   UnitMeasure @relation(fields: [unitMeasureId], references: [id])
+  product       Product      @relation(fields: [productId], references: [id])
+  sale          Sale         @relation(fields: [saleId], references: [id])
+  unitMeasure   UnitMeasure? @relation(fields: [unitMeasureId], references: [id])
 
   @@map("sale_items")
 }

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(echo $APPDATA)",
+      "Bash(claude mcp:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma generate:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

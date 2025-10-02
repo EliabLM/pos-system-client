@@ -120,7 +120,7 @@ export const addSaleItem = async (
         where: { saleId, isDeleted: false },
       });
 
-      const { subtotal, total } = calculateSaleTotals(saleItems);
+      const { subtotal, total } = await calculateSaleTotals(saleItems);
 
       await tx.sale.update({
         where: { id: saleId },
@@ -288,7 +288,7 @@ export const updateSaleItem = async (
         where: { saleId: existingItem.saleId, isDeleted: false },
       });
 
-      const { subtotal, total } = calculateSaleTotals(saleItems);
+      const { subtotal, total } = await calculateSaleTotals(saleItems);
 
       await tx.sale.update({
         where: { id: existingItem.saleId },
@@ -413,7 +413,7 @@ export const deleteSaleItem = async (
         where: { saleId: existingItem.saleId, isDeleted: false },
       });
 
-      const { subtotal, total } = calculateSaleTotals(remainingSaleItems);
+      const { subtotal, total } = await calculateSaleTotals(remainingSaleItems);
 
       await tx.sale.update({
         where: { id: existingItem.saleId },

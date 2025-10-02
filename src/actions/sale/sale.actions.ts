@@ -256,58 +256,64 @@ export const createSale = async (
     // Generar número de venta
     const saleNumber = await generateSaleNumber(saleData.storeId);
 
-    // Crear venta en transacción
-    const newSale = await prisma.$transaction(async (tx) => {
-      // Crear la venta
-      const sale = await tx.sale.create({
-        data: {
-          ...saleData,
-          organizationId: orgId,
-          saleNumber,
-          subtotal,
-          total,
-        },
-      });
-
-      // Crear items de venta y actualizar stock
-      for (const itemData of saleItems) {
-        await tx.saleItem.create({
+    // Crear venta en transacción con timeout aumentado
+    const newSale = await prisma.$transaction(
+      async (tx) => {
+        // Crear la venta
+        const sale = await tx.sale.create({
           data: {
-            ...itemData,
-            saleId: sale.id,
-            subtotal: itemData.quantity * itemData.unitPrice,
+            ...saleData,
+            organizationId: orgId,
+            saleNumber,
+            subtotal,
+            total,
           },
         });
 
-        // Crear movimiento y actualizar producto
-        await createStockMovement(orgId, userId, {
-          productId: itemData.productId,
-          userId: userId,
-          storeId: saleData.storeId,
-          type: 'OUT',
-          quantity: itemData.quantity,
-          reason: `Venta ${sale.saleNumber}`,
-          reference: sale.id,
-        });
-      }
-
-      // Crear pagos si se proporcionan
-      if (salePayments && salePayments.length > 0) {
-        for (const paymentData of salePayments) {
-          await tx.salePayment.create({
+        // Crear items de venta y actualizar stock
+        for (const itemData of saleItems) {
+          await tx.saleItem.create({
             data: {
-              ...paymentData,
+              ...itemData,
               saleId: sale.id,
+              subtotal: itemData.quantity * itemData.unitPrice,
             },
           });
-        }
-      }
 
-      return tx.sale.findUnique({
-        where: { id: sale.id },
-        include: saleInclude,
-      });
-    });
+          // Crear movimiento y actualizar producto
+          await createStockMovement(orgId, userId, {
+            productId: itemData.productId,
+            userId: userId,
+            storeId: saleData.storeId,
+            type: 'OUT',
+            quantity: itemData.quantity,
+            reason: `Venta ${sale.saleNumber}`,
+            reference: sale.id,
+          });
+        }
+
+        // Crear pagos si se proporcionan
+        if (salePayments && salePayments.length > 0) {
+          for (const paymentData of salePayments) {
+            await tx.salePayment.create({
+              data: {
+                ...paymentData,
+                saleId: sale.id,
+              },
+            });
+          }
+        }
+
+        return tx.sale.findUnique({
+          where: { id: sale.id },
+          include: saleInclude,
+        });
+      },
+      {
+        maxWait: 10000, // Tiempo máximo de espera para adquirir la transacción: 10s
+        timeout: 30000, // Tiempo máximo de ejecución de la transacción: 30s
+      }
+    );
 
     return {
       status: 201,
@@ -629,38 +635,44 @@ export const cancelSale = async (
       };
     }
 
-    // Cancelar venta y restaurar stock en transacción
-    const cancelledSale = await prisma.$transaction(async (tx) => {
-      // Actualizar status de la venta
-      const sale = await tx.sale.update({
-        where: { id: saleId },
-        data: {
-          status: 'CANCELLED',
-          notes: reason
-            ? `${existingSale.notes || ''}\nCANCELADO: ${reason}`
-            : existingSale.notes,
-          updatedAt: new Date(),
-        },
-      });
-
-      // Restaurar stock de productos
-      for (const item of existingSale.saleItems) {
-        await createStockMovement(existingSale.organizationId, userId, {
-          productId: item.productId,
-          userId: userId,
-          storeId: existingSale.storeId,
-          type: 'IN',
-          quantity: item.quantity,
-          reason: `Cancelación de venta ${existingSale.saleNumber}`,
-          reference: saleId,
+    // Cancelar venta y restaurar stock en transacción con timeout aumentado
+    const cancelledSale = await prisma.$transaction(
+      async (tx) => {
+        // Actualizar status de la venta
+        const sale = await tx.sale.update({
+          where: { id: saleId },
+          data: {
+            status: 'CANCELLED',
+            notes: reason
+              ? `${existingSale.notes || ''}\nCANCELADO: ${reason}`
+              : existingSale.notes,
+            updatedAt: new Date(),
+          },
         });
-      }
 
-      return tx.sale.findUnique({
-        where: { id: saleId },
-        include: saleInclude,
-      });
-    });
+        // Restaurar stock de productos
+        for (const item of existingSale.saleItems) {
+          await createStockMovement(existingSale.organizationId, userId, {
+            productId: item.productId,
+            userId: userId,
+            storeId: existingSale.storeId,
+            type: 'IN',
+            quantity: item.quantity,
+            reason: `Cancelación de venta ${existingSale.saleNumber}`,
+            reference: saleId,
+          });
+        }
+
+        return tx.sale.findUnique({
+          where: { id: saleId },
+          include: saleInclude,
+        });
+      },
+      {
+        maxWait: 10000, // Tiempo máximo de espera para adquirir la transacción: 10s
+        timeout: 30000, // Tiempo máximo de ejecución de la transacción: 30s
+      }
+    );
 
     return {
       status: 200,

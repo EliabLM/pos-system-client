@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sale } from '@/generated/prisma';
 
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,6 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { useSales } from '@/hooks/useSales';
-import { useRouter } from 'next/navigation';
 
 export const SaleList = () => {
   const sales = useSales();

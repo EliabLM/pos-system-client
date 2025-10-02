@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import {
   closestCenter,
   DndContext,
@@ -73,7 +74,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ProductActionComponent } from './action-component';
-import Image from 'next/image';
 import { ProductWithIncludesNumberPrice } from '@/interfaces';
 
 const getStockStatus = (stock: number, minStock: number) => {

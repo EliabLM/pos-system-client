@@ -14,13 +14,16 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { useSales } from '@/hooks/useSales';
+import { DataTable } from './data-table';
 
 export const SaleList = () => {
   const sales = useSales();
   const router = useRouter();
-  console.log('🚀 ~ SaleList ~ sales:', sales);
 
   const [itemSelected, setItemSelected] = useState<Sale | null>(null);
+
+  // Extraer el array de ventas del objeto de respuesta
+  const salesData = sales.data?.sales ?? [];
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
@@ -33,7 +36,6 @@ export const SaleList = () => {
                 <span className="hidden @[540px]/card:block">
                   Listado de todas las ventas
                 </span>
-                {/* <span className='@[540px]/card:hidden'>Last 3 months</span> */}
               </CardDescription>
 
               <CardAction>
@@ -48,12 +50,10 @@ export const SaleList = () => {
               </CardAction>
             </CardHeader>
             <CardContent>
-              {/* <DataTable
+              <DataTable
                 loading={sales.isLoading}
-                data={sales.data ?? []}
-                setSheetOpen={setSheetOpen}
-                setItemSelected={setItemSelected}
-              /> */}
+                data={salesData}
+              />
             </CardContent>
           </Card>
         </div>

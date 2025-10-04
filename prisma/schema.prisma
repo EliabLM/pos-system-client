@@ -64,27 +64,203 @@ model Store {
 }
 
 model User {
-  id             String          @id @default(cuid())
+  id String @id @default(cuid())
+
+  // Multi-tenancy
   organizationId String?
   storeId        String?
-  clerkId        String          @unique
-  email          String
-  username       String
-  firstName      String
-  lastName       String
-  role           UserRole        @default(SELLER)
-  emailVerified  Boolean         @default(false)
-  isActive       Boolean         @default(true)
-  isDeleted      Boolean         @default(false)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  deletedAt      DateTime?
+
+  // Credenciales de autenticación
+  email    String
+  password String // Hash bcrypt
+  username String
+
+  // Información personal
+  firstName String
+  lastName  String
+
+  // Control de acceso
+  role          UserRole @default(SELLER)
+  emailVerified Boolean  @default(false)
+
+  // Soft delete pattern
+  isActive  Boolean   @default(true)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Campos de seguridad adicionales
+  lastLoginAt       DateTime?
+  passwordChangedAt DateTime? // Para invalidar tokens antiguos
+  loginAttempts     Int       @default(0)
+  lockedUntil       DateTime? // Account lockout por intentos fallidos
+
+  // Relaciones existentes
   sales          Sale[]
   stockMovements StockMovement[]
   organization   Organization?   @relation(fields: [organizationId], references: [id])
   store          Store?          @relation(fields: [storeId], references: [id])
 
+  // Nuevas relaciones de autenticación
+  sessions           Session[]
+  passwordResets     PasswordReset[]
+  emailVerifications EmailVerification[]
+  auditLogs          AuditLog[]
+
+  // Índices compuestos para performance y seguridad
+  @@unique([email, deletedAt], name: "unique_email_per_deletion")
+  @@unique([username, deletedAt], name: "unique_username_per_deletion")
+  @@index([organizationId, isDeleted, isActive])
+  @@index([email, isDeleted])
+  @@index([lastLoginAt])
   @@map("users")
+}
+
+// ============================================
+// MODELO SESSION - MANEJO DE JWT/SESIONES
+// ============================================
+model Session {
+  id     String @id @default(cuid())
+  userId String
+
+  // Token y seguridad
+  token     String   @unique // Hash del JWT o session ID
+  expiresAt DateTime
+
+  // Metadata de seguridad
+  ipAddress String? @db.VarChar(45) // IPv6 max length
+  userAgent String? @db.VarChar(500)
+  deviceId  String? // Fingerprint del dispositivo
+
+  // Control de sesión
+  isActive  Boolean   @default(true)
+  revokedAt DateTime? // Para invalidación explícita
+  revokedBy String? // userId que revocó (admin)
+
+  // Metadata adicional
+  lastActivityAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Índices para queries eficientes
+  @@index([userId, isActive])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([lastActivityAt])
+  @@map("sessions")
+}
+
+// ============================================
+// MODELO PASSWORD RESET - RECUPERACIÓN
+// ============================================
+model PasswordReset {
+  id     String @id @default(cuid())
+  userId String
+
+  // Token de reset
+  token     String   @unique
+  expiresAt DateTime
+
+  // Control de uso
+  used   Boolean   @default(false)
+  usedAt DateTime?
+
+  // Metadata de seguridad
+  ipAddress String? @db.VarChar(45)
+  userAgent String? @db.VarChar(500)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Índices
+  @@index([userId, used])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("password_resets")
+}
+
+// ============================================
+// MODELO EMAIL VERIFICATION - VERIFICACIÓN
+// ============================================
+model EmailVerification {
+  id     String @id @default(cuid())
+  userId String
+
+  // Token de verificación
+  token     String   @unique
+  expiresAt DateTime
+
+  // Email a verificar (permite cambio de email)
+  email String
+
+  // Control de uso
+  verified   Boolean   @default(false)
+  verifiedAt DateTime?
+
+  // Metadata
+  ipAddress String? @db.VarChar(45)
+  userAgent String? @db.VarChar(500)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Índices
+  @@index([userId, verified])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([email])
+  @@map("email_verifications")
+}
+
+// ============================================
+// MODELO AUDIT LOG - TRAZABILIDAD
+// ============================================
+model AuditLog {
+  id     String  @id @default(cuid())
+  userId String? // Nullable para acciones del sistema
+
+  // Información del evento
+  action   AuditAction
+  entity   String // Nombre de la tabla/entidad afectada
+  entityId String? // ID del registro afectado
+
+  // Detalles del cambio
+  oldValues Json? // Estado anterior
+  newValues Json? // Estado nuevo
+
+  // Metadata de seguridad
+  ipAddress String? @db.VarChar(45)
+  userAgent String? @db.VarChar(500)
+
+  // Contexto adicional
+  organizationId String? // Para filtrar por organización
+  metadata       Json? // Datos adicionales flexibles
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  // Relación
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Índices para consultas
+  @@index([userId])
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 model Category {
@@ -415,4 +591,32 @@ enum PurchaseStatus {
   PENDING
   RECEIVED
   CANCELLED
+}
+
+// ============================================
+// ENUM AUDIT ACTION - ACCIONES DE AUDITORÍA
+// ============================================
+enum AuditAction {
+  // Autenticación
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  EMAIL_VERIFIED
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+
+  // CRUD genérico
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  RESTORE
+
+  // Acciones específicas
+  ROLE_CHANGED
+  ORGANIZATION_CHANGED
+  STORE_CHANGED
+  SESSION_REVOKED
 }

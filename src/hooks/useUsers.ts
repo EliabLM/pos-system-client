@@ -5,7 +5,6 @@ import {
   getUsersByOrgId,
   getAllUsers,
   getUserById,
-  getUserByClerkId,
   getUserByEmail,
   updateUserRole,
   toggleUserStatus,
@@ -14,7 +13,6 @@ import {
   restoreUser,
   deleteUser,
   registerUser,
-  deleteClerkUser,
   updateUserOrg,
 } from '@/actions/user';
 import { useStore } from '@/store';
@@ -129,29 +127,6 @@ export const useUserById = (userId: string) => {
     enabled: !!userId,
     staleTime: 3 * 60 * 1000, // 3 minutos
     gcTime: 5 * 60 * 1000, // 5 minutos
-  });
-};
-
-// Hook para obtener usuario por Clerk ID
-export const useUserByClerkId = (clerkId: string) => {
-  return useQuery({
-    queryKey: ['user', 'clerk', clerkId],
-    queryFn: async () => {
-      if (!clerkId) {
-        throw new Error('Clerk ID requerido');
-      }
-
-      const response = await getUserByClerkId(clerkId);
-
-      if (response.status !== 200) {
-        throw new Error(response.message);
-      }
-
-      return response.data;
-    },
-    enabled: !!clerkId,
-    staleTime: 3 * 60 * 1000, // 3 minutos
-    gcTime: 5 * 60 * 1000,
   });
 };
 
@@ -320,12 +295,7 @@ export const useUpdateUser = () => {
         queryKey: ['allUsers'],
       });
 
-      // Invalidar búsquedas por clerk ID y email si se actualizaron
-      if (updatedUser?.clerkId) {
-        queryClient.invalidateQueries({
-          queryKey: ['user', 'clerk', updatedUser.clerkId],
-        });
-      }
+      // Invalidar búsqueda por email si se actualizó
       if (updatedUser?.email) {
         queryClient.invalidateQueries({
           queryKey: ['user', 'email', updatedUser.email],
@@ -525,12 +495,7 @@ export const useRestoreUser = () => {
         queryKey: ['allUsers'],
       });
 
-      // Restaurar búsquedas por clerk ID y email
-      if (data?.clerkId) {
-        queryClient.invalidateQueries({
-          queryKey: ['user', 'clerk', data.clerkId],
-        });
-      }
+      // Restaurar búsqueda por email
       if (data?.email) {
         queryClient.invalidateQueries({
           queryKey: ['user', 'email', data.email],
@@ -539,41 +504,6 @@ export const useRestoreUser = () => {
     },
     onError: (error) => {
       console.error('Error restaurando el usuario:', error);
-    },
-  });
-};
-
-// Hook para eliminar usuario en Clerk
-export const useDeleteClerkUser = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ clerkId }: { clerkId: string }) => {
-      const response = await deleteClerkUser(clerkId);
-
-      if (response.status !== 200) {
-        throw new Error(response.message);
-      }
-
-      return response.data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ['users'],
-      });
-      // Remover específicamente este usuario del cache
-      queryClient.removeQueries({
-        queryKey: ['user'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['users', 'role'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['allUsers'],
-      });
-    },
-    onError: (error) => {
-      console.error('Error eliminando permanentemente el usuario:', error);
     },
   });
 };

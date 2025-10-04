@@ -8,7 +8,7 @@
  * Server action para registro de nuevos usuarios
  */
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { prisma } from '@/actions/utils';
 import { ActionResponse } from '@/interfaces';
 import {
@@ -18,7 +18,6 @@ import {
   normalizeEmail,
   createSession,
   AuthError,
-  AuthErrorCode,
 } from '@/lib/auth';
 
 // Configuración de cookies
@@ -128,36 +127,106 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       throw error;
     }
 
-    // 4. Verificar que el email no existe (considerar soft delete)
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        email: normalizedEmail,
-        isDeleted: false, // Solo usuarios activos
-      },
-    });
+    // 4. Verificar que el email no existe (multi-tenant aware)
+    // Si el usuario NO tiene organizationId (primer usuario creando org), verificar globalmente
+    // Si el usuario TIENE organizationId (usuario adicional), verificar solo en esa org
+    if (data.organizationId) {
+      // Usuario adicional en organización existente - verificar solo en esa org
+      const existingUserByEmail = await prisma.user.findFirst({
+        where: {
+          email: normalizedEmail,
+          organizationId: data.organizationId,
+          isDeleted: false,
+        },
+      });
 
-    if (existingUser) {
-      return {
-        status: 409,
-        message: 'A user with this email already exists',
-        data: null,
-      };
-    }
+      if (existingUserByEmail) {
+        return {
+          status: 409,
+          message: 'A user with this email already exists in this organization',
+          data: null,
+        };
+      }
 
-    // Verificar si existe un usuario eliminado con este email
-    const deletedUser = await prisma.user.findFirst({
-      where: {
-        email: normalizedEmail,
-        isDeleted: true,
-      },
-    });
+      const existingUserByUsername = await prisma.user.findFirst({
+        where: {
+          username: data.username.trim(),
+          organizationId: data.organizationId,
+          isDeleted: false,
+        },
+      });
 
-    if (deletedUser) {
-      return {
-        status: 409,
-        message: 'This email was previously used. Please contact support to reactivate your account',
-        data: null,
-      };
+      if (existingUserByUsername) {
+        return {
+          status: 409,
+          message: 'A user with this username already exists in this organization',
+          data: null,
+        };
+      }
+
+      // Verificar si existe un usuario eliminado con este email en esta org
+      const deletedUser = await prisma.user.findFirst({
+        where: {
+          email: normalizedEmail,
+          organizationId: data.organizationId,
+          isDeleted: true,
+        },
+      });
+
+      if (deletedUser) {
+        return {
+          status: 409,
+          message: 'This email was previously used in this organization. Please contact support to reactivate your account',
+          data: null,
+        };
+      }
+    } else {
+      // Primer usuario (creando organización) - verificar globalmente
+      const existingUserByEmail = await prisma.user.findFirst({
+        where: {
+          email: normalizedEmail,
+          isDeleted: false,
+        },
+      });
+
+      if (existingUserByEmail) {
+        return {
+          status: 409,
+          message: 'A user with this email already exists',
+          data: null,
+        };
+      }
+
+      const existingUserByUsername = await prisma.user.findFirst({
+        where: {
+          username: data.username.trim(),
+          isDeleted: false,
+        },
+      });
+
+      if (existingUserByUsername) {
+        return {
+          status: 409,
+          message: 'A user with this username already exists',
+          data: null,
+        };
+      }
+
+      // Verificar si existe un usuario eliminado con este email
+      const deletedUser = await prisma.user.findFirst({
+        where: {
+          email: normalizedEmail,
+          isDeleted: true,
+        },
+      });
+
+      if (deletedUser) {
+        return {
+          status: 409,
+          message: 'This email was previously used. Please contact support to reactivate your account',
+          data: null,
+        };
+      }
     }
 
     // 5. Hash password con bcrypt
@@ -173,12 +242,12 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
         email: normalizedEmail,
         username: data.username.trim(),
         password: hashedPassword,
-        role: 'SELLER', // Role por defecto
+        role: data.organizationId ? 'SELLER' : 'ADMIN', // ADMIN si no tiene org (primer usuario), SELLER si ya tiene org
         organizationId: data.organizationId || null,
         storeId: data.storeId || null,
         isActive: true,
         isDeleted: false,
-        emailVerified: false, // Requerir verificación de email
+        emailVerified: false, // Requerir verificación de email (opcional por ahora)
         passwordChangedAt: new Date(),
       },
       select: {
@@ -256,10 +325,4 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       data: null,
     };
   }
-}
-
-// Importar headers dinámicamente para evitar errores de servidor
-async function headers() {
-  const { headers } = await import('next/headers');
-  return headers();
 }

@@ -2,13 +2,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth, useSignIn } from '@clerk/nextjs';
 import { Loader2Icon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import Swal from 'sweetalert2';
-import { isClerkAPIResponseError } from '@clerk/nextjs/errors';
+import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -28,6 +26,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { loginUser } from '@/actions/auth';
+import { useStore } from '@/store';
 
 const schema = yup.object().shape({
   email: yup
@@ -46,11 +46,11 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
-  const { isLoaded, signIn, setActive } = useSignIn();
-  const { signOut } = useAuth();
   const router = useRouter();
+  const setUser = useStore((state) => state.setUser);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
 
   const form = useForm<LoginFormData>({
     criteriaMode: 'firstError',
@@ -63,81 +63,40 @@ export function LoginForm({
     resolver: yupResolver(schema),
   });
 
-  if (!isLoaded) return null;
-
   const handleLoginWithEmailAndPassword = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
 
-      const result = await signIn.create({
-        identifier: data.email,
-        password: data.password,
-      });
+      // Create FormData for the server action
+      const formData = new FormData();
+      formData.append('email', data.email);
+      formData.append('password', data.password);
 
-      if (result.status !== 'complete') {
-        Swal.fire({
-          icon: 'error',
-          text: 'Ha ocurrido un error, por favor intente de nuevo.',
-        });
+      // Call the login server action
+      const result = await loginUser(formData);
 
-        return;
-      }
+      if (result.status === 200 && result.data?.user) {
+        // Login successful - save user to Zustand store
+        setUser(result.data.user);
 
-      if (result.status === 'complete') {
-        console.log('Login exitoso');
-        await setActive({
-          session: result.createdSessionId,
-        });
+        // Show success toast
+        toast.success(result.message || 'Inicio de sesión exitoso');
 
-        router.replace('/dashboard');
+        // Redirect based on organizationId
+        if (result.data.user.organizationId) {
+          // User has organization - go to dashboard
+          router.push('/dashboard');
+        } else {
+          // User doesn't have organization - go to onboarding
+          router.push('/onboarding');
+        }
+      } else {
+        // Login failed - show error toast
+        toast.error(result.message || 'Error al iniciar sesión');
       }
     } catch (error) {
-      console.error('🚀 ~ handleLoginWithEmailAndPassword ~ error:', error);
-      if (isClerkAPIResponseError(error) && error.errors) {
-        const firstError = error.errors?.[0];
-
-        if (
-          firstError.code === 'form_password_incorrect' ||
-          firstError.code === 'form_identifier_not_found'
-        ) {
-          Swal.fire({
-            icon: 'error',
-            text: 'El usuario o la contraseña son incorrectos',
-          });
-
-          return;
-        }
-
-        if (firstError.code === 'session_exists') {
-          Swal.fire({
-            icon: 'error',
-            text: 'Ya existe una sesión activa',
-          }).then(() => {
-            signOut({ redirectUrl: '/auth/login' });
-          });
-
-          return;
-        }
-
-        return;
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLoginWithGoogle = async (e: React.FormEvent) => {
-    try {
-      e.preventDefault();
-      setIsLoading(true);
-
-      const result = await signIn.authenticateWithRedirect({
-        strategy: 'oauth_google',
-        redirectUrl: '/sso-callback', // ruta definida en Clerk
-        redirectUrlComplete: '/dashboard',
-      });
-    } catch (error) {
-      console.error('🚀 ~ handleLoginWithGoogle ~ error:', error);
+      console.error('Login error:', error);
+      toast.error('Ocurrió un error inesperado. Por favor intente nuevamente.');
     } finally {
       setIsLoading(false);
     }
@@ -161,9 +120,9 @@ export function LoginForm({
                     type="button"
                     variant="outline"
                     className="w-full"
-                    onClick={handleLoginWithGoogle}
+                    disabled
                   >
-                    {isLoading ? (
+                    {isLoadingGoogle ? (
                       <>
                         <Loader2Icon className="animate-spin" /> Cargando
                       </>

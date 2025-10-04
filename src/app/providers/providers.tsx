@@ -2,8 +2,6 @@
 import React from 'react';
 import { useState } from 'react';
 
-import { ClerkProvider } from '@clerk/nextjs';
-import { esMX } from '@clerk/localizations';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { ThemeProvider } from '@/components/theme-provider';
@@ -22,24 +20,17 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <ClerkProvider
-      localization={esMX}
-      appearance={{ variables: { colorPrimary: '#00c950' } }}
-      signInUrl="/auth/login"
-      signUpUrl="/auth/register"
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
     >
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <QueryClientProvider client={queryClient}>
-          {children}
-          <Toaster richColors />
-        </QueryClientProvider>
-      </ThemeProvider>
-    </ClerkProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <Toaster richColors />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 

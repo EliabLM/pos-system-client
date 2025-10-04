@@ -9,7 +9,12 @@
       "Bash(npx prisma generate:*)",
       "Bash(npx shadcn@latest add:*)",
       "Bash(pnpm add:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(pnpm exec next lint:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(tasklist)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

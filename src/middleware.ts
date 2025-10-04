@@ -24,6 +24,7 @@ const PUBLIC_ROUTES = [
  * Rutas protegidas que requieren autenticación
  */
 const PROTECTED_ROUTES = [
+  '/',
   '/dashboard',
   '/onboarding',
 ];

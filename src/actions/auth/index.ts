@@ -21,3 +21,6 @@ export {
   isAuthenticated,
   getCurrentUserId,
 } from './getCurrentUser';
+
+// Refresh Token
+export { refreshToken } from './refreshToken';

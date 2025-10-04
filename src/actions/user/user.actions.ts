@@ -9,7 +9,6 @@ import {
   checkOrgId,
   emptyOrgIdResponse,
 } from '../utils';
-import { clerkClient } from '@clerk/nextjs/server';
 
 const userInclude: Prisma.UserInclude = {
   organization: true,
@@ -44,22 +43,6 @@ export const createUser = async (
     if (!isAdmin) return unauthorizedResponse();
 
     if (checkOrgId(orgId)) return emptyOrgIdResponse();
-
-    // Verificar unicidad de clerkId
-    const existingUserByClerkId = await prisma.user.findFirst({
-      where: {
-        clerkId: userData.clerkId,
-        isDeleted: false,
-      },
-    });
-
-    if (existingUserByClerkId) {
-      return {
-        status: 409,
-        message: 'Ya existe un usuario con ese Clerk ID',
-        data: null,
-      };
-    }
 
     // Verificar unicidad de email
     const existingUserByEmail = await prisma.user.findFirst({
@@ -168,13 +151,6 @@ export const createUser = async (
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
         const target = error.meta?.target as string[];
-        if (target?.includes('clerkId')) {
-          return {
-            status: 409,
-            message: 'Ya existe un usuario con ese Clerk ID',
-            data: null,
-          };
-        }
         if (target?.includes('email')) {
           return {
             status: 409,
@@ -348,41 +324,6 @@ export const getUserById = async (
   }
 };
 
-// GET BY CLERK ID
-export const getUserByClerkId = async (
-  clerkId: string
-): Promise<ActionResponse<User | null>> => {
-  try {
-    if (!clerkId)
-      return {
-        status: 400,
-        message: 'Clerk ID es requerido',
-        data: null,
-      };
-
-    const user = await prisma.user.findFirst({
-      where: {
-        clerkId,
-        isDeleted: false,
-        isActive: true,
-      },
-      include: userInclude,
-    });
-
-    if (!user)
-      return { status: 404, message: 'Usuario no encontrado', data: null };
-
-    return {
-      status: 200,
-      message: 'Usuario obtenido exitosamente',
-      data: user,
-    };
-  } catch (error) {
-    console.error('Error fetching user by clerk ID:', error);
-    return { status: 500, message: 'Error interno del servidor', data: null };
-  }
-};
-
 // GET BY EMAIL
 export const getUserByEmail = async (
   email: string
@@ -444,25 +385,6 @@ export const updateUser = async (
 
     if (!existingUser) {
       return { status: 404, message: 'Usuario no encontrado', data: null };
-    }
-
-    // Verificar unicidad de clerkId si se está actualizando
-    if (updateData.clerkId && updateData.clerkId !== existingUser.clerkId) {
-      const duplicateUserByClerkId = await prisma.user.findFirst({
-        where: {
-          clerkId: updateData.clerkId,
-          isDeleted: false,
-          id: { not: userId },
-        },
-      });
-
-      if (duplicateUserByClerkId) {
-        return {
-          status: 409,
-          message: 'Ya existe un usuario con ese Clerk ID',
-          data: null,
-        };
-      }
     }
 
     // Verificar unicidad de email si se está actualizando
@@ -583,13 +505,6 @@ export const updateUser = async (
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
         const target = error.meta?.target as string[];
-        if (target?.includes('clerkId')) {
-          return {
-            status: 409,
-            message: 'Ya existe un usuario con ese Clerk ID',
-            data: null,
-          };
-        }
         if (target?.includes('email')) {
           return {
             status: 409,
@@ -612,78 +527,6 @@ export const updateUser = async (
         return {
           status: 400,
           message: 'Una de las referencias especificadas no existe',
-          data: null,
-        };
-      }
-    }
-
-    return { status: 500, message: 'Error interno del servidor', data: null };
-  }
-};
-
-// UPDATE CLERK ID BY EMAIL (for webhook or manual update)
-export const updateClerkIdByEmail = async (
-  email: string,
-  clerkId: string
-): Promise<ActionResponse<User | null>> => {
-  try {
-    if (!email)
-      return {
-        status: 400,
-        message: 'Email es requerido',
-        data: null,
-      };
-
-    if (!clerkId)
-      return {
-        status: 400,
-        message: 'Clerk ID es requerido',
-        data: null,
-      };
-
-    // Buscar usuario con clerkId pendiente
-    const user = await prisma.user.findFirst({
-      where: {
-        email,
-        clerkId: {
-          startsWith: 'pending_',
-        },
-        isDeleted: false,
-      },
-    });
-
-    if (!user) {
-      return {
-        status: 404,
-        message: 'Usuario con clerkId pendiente no encontrado',
-        data: null,
-      };
-    }
-
-    // Actualizar el clerkId
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        clerkId,
-        emailVerified: true,
-        updatedAt: new Date(),
-      },
-      include: userInclude,
-    });
-
-    return {
-      status: 200,
-      message: 'Clerk ID actualizado exitosamente',
-      data: updatedUser,
-    };
-  } catch (error) {
-    console.error('Error updating clerk ID:', error);
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        return {
-          status: 409,
-          message: 'Ya existe un usuario con ese Clerk ID',
           data: null,
         };
       }
@@ -904,9 +747,8 @@ export const softDeleteUser = async (
     if (salesCount > 0 || stockMovementsCount > 0) {
       return {
         status: 409,
-        message: `No se puede eliminar el usuario. Tiene ${
-          salesCount + stockMovementsCount
-        } transacción(es) asociada(s)`,
+        message: `No se puede eliminar el usuario. Tiene ${salesCount + stockMovementsCount
+          } transacción(es) asociada(s)`,
         data: null,
       };
     }
@@ -980,28 +822,6 @@ export const restoreUser = async (
     }
 
     return { status: 500, message: 'Error interno del servidor', data: null };
-  }
-};
-
-// DELETE CLERK USER
-export const deleteClerkUser = async (
-  clerkId: string
-): Promise<ActionResponse> => {
-  try {
-    const client = await clerkClient();
-    await client.users.deleteUser(clerkId);
-    return {
-      status: 200,
-      message: 'Usuario eliminado correctamente',
-      data: null,
-    };
-  } catch (error: any) {
-    console.error('Error eliminando usuario:', error);
-    return {
-      status: 200,
-      message: error.message || 'Error eliminando usuario',
-      data: null,
-    };
   }
 };
 

@@ -222,12 +222,14 @@ export function validatePassword(
   }
 
   // Verificar secuencias (ej: "1234", "abcd")
-  if (hasSequentialChars(password)) {
-    errors.push('Password cannot contain sequential characters');
-  }
+  // if (hasSequentialChars(password)) {
+  //   errors.push('Password cannot contain sequential characters');
+  // }
 
   // Calcular fuerza del password
   const strength = calculatePasswordStrength(password, errors.length === 0);
+
+  console.log({ errors, strength })
 
   return {
     valid: errors.length === 0,
@@ -342,9 +344,9 @@ export function getPasswordSuggestions(password: string): string[] {
     suggestions.push('Avoid common passwords. Use a unique combination');
   }
 
-  if (hasSequentialChars(password)) {
-    suggestions.push('Avoid sequential characters (e.g., "1234", "abcd")');
-  }
+  // if (hasSequentialChars(password)) {
+  //   suggestions.push('Avoid sequential characters (e.g., "1234", "abcd")');
+  // }
 
   const uniqueChars = new Set(password).size;
   if (uniqueChars < password.length * 0.5) {
@@ -396,11 +398,12 @@ export function validatePasswordComplete(
 
   // Validar fuerza
   const result = validatePassword(password, requirements);
+  console.log("🚀 ~ validatePasswordComplete ~ result:", result)
 
   if (!result.valid) {
     throw new AuthError(
       AuthErrorCode.WEAK_PASSWORD,
-      'Password does not meet security requirements',
+      result.errors[0] || 'Password does not meet security requirements',
       { errors: result.errors }
     );
   }

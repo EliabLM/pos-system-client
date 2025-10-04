@@ -1,16 +1,16 @@
-import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
-import { Metadata } from '@/interfaces';
+import { getUserFromHeaders } from '@/lib/auth/server';
 
 export default async function OnboardingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await currentUser();
-  const metadata = user?.publicMetadata as Metadata;
+  const user = await getUserFromHeaders();
 
-  if (metadata?.onboardingComplete === true) {
+  // If no user, middleware will redirect to login
+  // If user has organizationId, they've completed onboarding
+  if (user?.organizationId) {
     redirect('/dashboard');
   }
 

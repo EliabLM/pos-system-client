@@ -36,7 +36,7 @@ import { useActiveStores } from '@/hooks/useStores';
 import { User, UserRole } from '@/generated/prisma';
 import { useStore } from '@/store';
 
-const schema = yup.object().shape({
+const createSchema = yup.object().shape({
   firstName: yup
     .string()
     .min(2, 'Debe ingresar mínimo 2 caracteres')
@@ -49,13 +49,50 @@ const schema = yup.object().shape({
     .string()
     .email('Debe ingresar un email válido')
     .required('El email es requerido'),
+  username: yup
+    .string()
+    .min(3, 'Debe ingresar mínimo 3 caracteres')
+    .required('El nombre de usuario es requerido'),
+  password: yup
+    .string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])/,
+      'Debe contener mayúscula, minúscula, número y carácter especial'
+    )
+    .required('La contraseña es requerida'),
   storeId: yup
     .string()
     .required('La tienda es requerida para vendedores'),
   active: yup.bool().default(true),
 });
 
-type UserFormData = yup.InferType<typeof schema>;
+const editSchema = yup.object().shape({
+  firstName: yup
+    .string()
+    .min(2, 'Debe ingresar mínimo 2 caracteres')
+    .required('El nombre es requerido'),
+  lastName: yup
+    .string()
+    .min(2, 'Debe ingresar mínimo 2 caracteres')
+    .required('El apellido es requerido'),
+  email: yup
+    .string()
+    .email('Debe ingresar un email válido')
+    .required('El email es requerido'),
+  username: yup
+    .string()
+    .min(3, 'Debe ingresar mínimo 3 caracteres')
+    .required('El nombre de usuario es requerido'),
+  storeId: yup
+    .string()
+    .required('La tienda es requerida para vendedores'),
+  active: yup.bool().default(true),
+});
+
+type CreateUserFormData = yup.InferType<typeof createSchema>;
+type EditUserFormData = yup.InferType<typeof editSchema>;
+type UserFormData = CreateUserFormData | EditUserFormData;
 
 const NewUser = ({
   setSheetOpen,
@@ -73,18 +110,29 @@ const NewUser = ({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<UserFormData>({
+  const form = useForm<CreateUserFormData | EditUserFormData>({
     criteriaMode: 'firstError',
-    defaultValues: {
-      firstName: itemSelected?.firstName ?? '',
-      lastName: itemSelected?.lastName ?? '',
-      email: itemSelected?.email ?? '',
-      storeId: itemSelected?.storeId ?? '',
-      active: itemSelected?.isActive ?? true,
-    },
+    defaultValues: itemSelected
+      ? {
+          firstName: itemSelected.firstName,
+          lastName: itemSelected.lastName,
+          email: itemSelected.email,
+          username: itemSelected.username,
+          storeId: itemSelected.storeId ?? '',
+          active: itemSelected.isActive,
+        }
+      : {
+          firstName: '',
+          lastName: '',
+          email: '',
+          username: '',
+          password: '',
+          storeId: '',
+          active: true,
+        },
     mode: 'all',
     reValidateMode: 'onChange',
-    resolver: yupResolver(schema),
+    resolver: yupResolver(itemSelected ? editSchema : createSchema) as any,
   });
 
   const onSubmit = async (data: UserFormData) => {
@@ -104,7 +152,7 @@ const NewUser = ({
           updateData: {
             firstName: data.firstName,
             lastName: data.lastName,
-            email: data.email,
+            username: data.username,
             storeId: data.storeId,
             isActive: data.active,
           },
@@ -112,45 +160,26 @@ const NewUser = ({
 
         toast.success('Usuario actualizado exitosamente');
       } else {
-        // Crear invitación en Clerk (sin contraseña)
-        const clerkResponse = await fetch('/api/clerk/create-user', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            firstName: data.firstName,
-            lastName: data.lastName,
-            emailAddress: data.email,
-          }),
-        });
-
-        if (!clerkResponse.ok) {
-          const errorData = await clerkResponse.json();
-          throw new Error(errorData.error || 'Error al crear invitación en Clerk');
-        }
-
-        const clerkData = await clerkResponse.json();
-
-        // Generar username a partir del email
-        const username = data.email.split('@')[0];
-
-        // Crear el usuario en la base de datos
-        // El clerkId se obtendrá cuando el usuario acepte la invitación
+        // Crear nuevo usuario con contraseña
+        const createData = data as CreateUserFormData;
         await createMutation.mutateAsync({
-          clerkId: `pending_${clerkData.id}`, // Temporal hasta que acepte la invitación
           organizationId: currentUser?.organizationId || null,
-          storeId: data.storeId,
-          email: data.email,
-          username: username,
-          firstName: data.firstName,
-          lastName: data.lastName,
+          storeId: createData.storeId,
+          email: createData.email,
+          password: createData.password,
+          username: createData.username,
+          firstName: createData.firstName,
+          lastName: createData.lastName,
           role: 'SELLER', // Siempre SELLER
           emailVerified: false,
-          isActive: data.active,
+          isActive: createData.active,
+          lastLoginAt: null,
+          passwordChangedAt: null,
+          loginAttempts: 0,
+          lockedUntil: null,
         });
 
-        toast.success('Invitación enviada exitosamente. El usuario recibirá un email para activar su cuenta.');
+        toast.success('Usuario creado exitosamente');
       }
 
       form.reset();
@@ -173,6 +202,7 @@ const NewUser = ({
       form.setValue('firstName', itemSelected.firstName);
       form.setValue('lastName', itemSelected.lastName);
       form.setValue('email', itemSelected.email);
+      form.setValue('username', itemSelected.username);
       form.setValue('storeId', itemSelected.storeId ?? '');
       form.setValue('active', itemSelected.isActive);
     }
@@ -241,6 +271,44 @@ const NewUser = ({
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nombre de usuario *</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="juanperez"
+                    {...field}
+                    disabled={!!itemSelected}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {!itemSelected && (
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contraseña *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <FormItem>

@@ -1,17 +1,12 @@
 import {
-  Sale,
   SaleItem,
-  SalePayment,
   Prisma,
-  SaleStatus,
 } from '@/generated/prisma';
 import { ActionResponse } from '@/interfaces';
 import {
   prisma,
   checkAdminRole,
   unauthorizedResponse,
-  checkOrgId,
-  emptyOrgIdResponse,
 } from '../utils';
 import { calculateSaleTotals } from '../sale/sale.actions';
 

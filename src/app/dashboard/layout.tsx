@@ -1,39 +1,71 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { SiteHeader } from '@/components/site-header';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 import { useStore } from '@/store';
-import { getUserByClerkId } from '@/actions/user';
-import { User } from '@/interfaces';
+import { getCurrentUser } from '@/actions/auth';
 
 const DashboardLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const { user } = useUser();
+  const router = useRouter();
   const setUser = useStore((state) => state.setUser);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      setUser(null);
-      return;
-    }
+    const fetchUser = async () => {
+      try {
+        const result = await getCurrentUser();
 
-    getUserByClerkId(user.id)
-      .then((res) => {
-        const result = res.data as User;
-        setUser(result);
-      })
-      .catch((error) => {
-        console.error('🚀 ~ getUserByClerkId ~ error:', error);
-      });
-  }, [user]);
+        // Handle authentication errors
+        if (result.status === 401) {
+          // Not authenticated or session expired
+          setUser(null);
+          router.push('/auth/login');
+          return;
+        }
+
+        // Handle account deactivation
+        if (result.status === 403) {
+          setUser(null);
+          router.push('/auth/login');
+          return;
+        }
+
+        // Handle success
+        if (result.status === 200 && result.data?.user) {
+          setUser(result.data.user);
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        setUser(null);
+        router.push('/auth/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [router, setUser]);
+
+  // Show loading state while fetching user
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider

@@ -13,8 +13,6 @@ import {
   Loader2,
   Check,
 } from 'lucide-react';
-import Swal from 'sweetalert2';
-import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -38,12 +36,14 @@ import {
 } from '@/components/ui/form';
 
 import { useCreateOrganization } from '@/hooks/useOrganizations';
-import { useRegisterUser, useUpdateUserOrg } from '@/hooks/useUsers';
+import { useUpdateUserOrg } from '@/hooks/useUsers';
 
 import { GENERIC_ERROR_MESSAGE } from '@/constants';
 import { createSlug } from '@/utils/createSlug';
-import { completeOnboarding, getUserByClerkId } from '@/actions/user';
+import { getCurrentUser, refreshToken } from '@/actions/auth';
 import { User } from '@/generated/prisma';
+import { useStore } from '@/store';
+import { toast } from 'sonner';
 
 // Schema de validación con Yup
 const onboardingSchema = yup.object({
@@ -90,18 +90,41 @@ const onboardingSchema = yup.object({
 type SignUpFormData = yup.InferType<typeof onboardingSchema>;
 
 const RegisterOrganizationPage = () => {
-  const { user } = useUser();
   const router = useRouter();
+  const setUser = useStore((state) => state.setUser);
 
   const createOrgMutation = useCreateOrganization();
   const updateUserMutation = useUpdateUserOrg();
-  const registerUserMutation = useRegisterUser();
 
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingSubdomain, setIsCheckingSubdomain] = useState(false);
   const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(
     null
   );
+
+  // Fetch current user on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const result = await getCurrentUser();
+        if (result.status === 200 && result.data?.user) {
+          setCurrentUser(result.data.user);
+        } else {
+          // User not authenticated, redirect to login
+          router.push('/auth/login');
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        router.push('/auth/login');
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUser();
+  }, [router]);
 
   const form = useForm<SignUpFormData>({
     resolver: yupResolver(onboardingSchema),
@@ -117,47 +140,20 @@ const RegisterOrganizationPage = () => {
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
-      debugger;
-      console.log('🚀 ~ onSubmit ~ user:', user);
-      if (!user) return;
-
-      setIsSubmitting(true);
-
-      //todo - check subdomain
-
-      const dbUser = await getUserByClerkId(user.id);
-
-      let createdUser: User | null;
-      if (!dbUser.data) {
-        createdUser = await registerUserMutation.mutateAsync({
-          clerkId: user.id,
-          email: user?.primaryEmailAddress?.emailAddress ?? '',
-          firstName: user.firstName ?? '',
-          lastName: user.lastName ?? '',
-          role: 'ADMIN',
-          emailVerified: user.primaryEmailAddress?.verification?.status === 'verified',
-          isActive: true,
-          organizationId: null,
-          storeId: null,
-          username: user.username ?? '',
-        });
-      } else {
-        createdUser = dbUser.data;
-      }
-
-      if (!createdUser) {
-        await Swal.fire({
-          icon: 'error',
-          text: GENERIC_ERROR_MESSAGE,
-        });
-
+      if (!currentUser) {
+        toast.error('Usuario no autenticado');
         return;
       }
 
+      setIsSubmitting(true);
+
+      // TODO - check subdomain availability
+
+      // Create organization
       const resOrgDb = await createOrgMutation.mutateAsync({
-        userId: createdUser.id,
+        userId: currentUser.id,
         organizationData: {
-          email: user?.primaryEmailAddress?.emailAddress ?? '',
+          email: currentUser.email,
           name: data.companyName,
           address: data.address,
           phone: data.phone,
@@ -168,30 +164,38 @@ const RegisterOrganizationPage = () => {
           taxId: null,
         },
       });
-      console.log('🚀 ~ onSubmit ~ resOrgDb:', resOrgDb);
 
       if (resOrgDb === null) {
-        await Swal.fire({
-          icon: 'error',
-          text: GENERIC_ERROR_MESSAGE,
-        });
-
+        toast.error(GENERIC_ERROR_MESSAGE);
         return;
       }
 
-      // Actualizar user con orgId
+      // Update user with organizationId
       await updateUserMutation.mutateAsync({
-        userId: createdUser.id,
+        userId: currentUser.id,
         orgId: resOrgDb.id,
       });
 
-      // Completar onboarding
-      await completeOnboarding();
+      // Refrescar token JWT con organizationId actualizado
+      const refreshResult = await refreshToken(currentUser.id);
 
+      if (refreshResult.status !== 200) {
+        toast.error('Error al actualizar la sesión. Por favor inicia sesión nuevamente.');
+        router.push('/auth/login');
+        return;
+      }
+
+      // Actualizar usuario en el store de Zustand
+      if (refreshResult.data?.user) {
+        setUser(refreshResult.data.user);
+      }
+
+      // Success! Redirect to dashboard
+      toast.success('¡Organización creada exitosamente!');
       router.replace('/dashboard');
     } catch (error) {
-      // TODO - validar errores
-      console.error('🚀 ~ onSubmit ~ error:', error);
+      console.error('Error creating organization:', error);
+      toast.error(GENERIC_ERROR_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
@@ -210,6 +214,23 @@ const RegisterOrganizationPage = () => {
     }
   }, [watchedCompanyName, form, watchedSubdomain]);
 
+  // Show loading state while fetching user
+  if (isLoadingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user after loading, return null (will be redirected)
+  if (!currentUser) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center  py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-2xl">
@@ -220,7 +241,7 @@ const RegisterOrganizationPage = () => {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900">
-            ¡Bienvenido, {user?.firstName} {user?.lastName}! 👋
+            ¡Bienvenido, {currentUser.firstName} {currentUser.lastName}! 👋
           </CardTitle>
           <CardDescription className="text-lg text-gray-600 mt-2">
             Vamos a configurar los datos de tu empresa para comenzar

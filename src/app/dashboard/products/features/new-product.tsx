@@ -519,6 +519,7 @@ const NewProduct = ({
                   type="button"
                   variant="outline"
                   onClick={() => setItemSelected(null)}
+                  disabled={isLoading}
                 >
                   Cerrar
                 </Button>

@@ -1,7 +1,5 @@
 'use server';
 
-import { auth, clerkClient } from '@clerk/nextjs/server'
-
 import { User, Prisma } from '@/generated/prisma';
 import { ActionResponse } from '@/interfaces';
 import { prisma } from '../utils';
@@ -14,18 +12,18 @@ export const registerUser = async (
   >
 ): Promise<ActionResponse<User | null>> => {
   try {
-    // Verificar unicidad de clerkId
-    const existingUserByClerkId = await prisma.user.findFirst({
+    // Verificar unicidad de email
+    const existingUserByEmail = await prisma.user.findFirst({
       where: {
-        clerkId: userData.clerkId,
+        email: userData.email,
         isDeleted: false,
       },
     });
 
-    if (existingUserByClerkId) {
+    if (existingUserByEmail) {
       return {
         status: 409,
-        message: 'Ya existe un usuario con ese Clerk ID',
+        message: 'Ya existe un usuario con ese email',
         data: null,
       };
     }
@@ -45,13 +43,6 @@ export const registerUser = async (
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
         const target = error.meta?.target as string[];
-        if (target?.includes('clerkId')) {
-          return {
-            status: 409,
-            message: 'Ya existe un usuario con ese Clerk ID',
-            data: null,
-          };
-        }
         if (target?.includes('email')) {
           return {
             status: 409,
@@ -79,25 +70,3 @@ export const registerUser = async (
     return { status: 500, message: 'Error interno del servidor', data: null };
   }
 };
-
-
-export const completeOnboarding = async () => {
-  const { isAuthenticated, userId } = await auth()
-
-  if (!isAuthenticated) {
-    return { message: 'No Logged In User' }
-  }
-
-  const client = await clerkClient()
-
-  try {
-    const res = await client.users.updateUser(userId, {
-      publicMetadata: {
-        onboardingComplete: true,
-      },
-    })
-    return { message: res.publicMetadata }
-  } catch (err) {
-    return { error: 'There was an error updating the user metadata.' }
-  }
-}

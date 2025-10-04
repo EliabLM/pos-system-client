@@ -44,7 +44,6 @@ export {
   requireActiveOrganization,
 
   // Verificaciones
-  hasRole,
   hasOrganization,
   canAccessStore,
   isResourceOwner,

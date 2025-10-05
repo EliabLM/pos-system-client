@@ -57,7 +57,7 @@ const StoresList = () => {
             </CardHeader>
             <CardContent>
               <DataTable
-                loading={stores.isLoading}
+                loading={stores.isFetching}
                 data={stores.data ?? []}
                 setSheetOpen={setSheetOpen}
                 setItemSelected={setItemSelected}

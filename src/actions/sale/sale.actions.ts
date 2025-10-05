@@ -303,6 +303,23 @@ export const createSale = async (
           }
         }
 
+        // Actualizar saleNumber in store
+        const store = await prisma.store.findUnique({
+          where: { id: saleData.storeId },
+        });
+
+        let nextNumber: number = 1;
+
+        if (store?.lastSaleNumber) {
+          nextNumber = store.lastSaleNumber + 1;
+        }
+        await tx.store.update({
+          where: { id: saleData.storeId },
+          data: {
+            lastSaleNumber: nextNumber
+          }
+        })
+
         return tx.sale.findUnique({
           where: { id: sale.id },
           include: saleInclude,

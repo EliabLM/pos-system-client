@@ -44,6 +44,7 @@ import {
   useReactTable,
   VisibilityState,
 } from '@tanstack/react-table';
+import { RefreshCcw } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,7 @@ import {
 } from '@/components/ui/table';
 import { Store } from '@/generated/prisma';
 import { StoreActionComponent } from './action-component';
+import { useAllStores } from '@/hooks/useStores';
 
 const getColumns = ({
   setItemSelected,
@@ -198,6 +200,7 @@ export function DataTable({
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setItemSelected: React.Dispatch<React.SetStateAction<Store | null>>;
 }) {
+  const { refetch } = useAllStores();
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -257,6 +260,9 @@ export function DataTable({
     <div className="w-full flex-col justify-start gap-6">
       <div className="flex items-center justify-end mb-4 ">
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCcw />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -321,16 +327,7 @@ export function DataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : loading ? (
+                {loading ? (
                   <TableRow>
                     <TableCell
                       colSpan={
@@ -341,6 +338,15 @@ export function DataTable({
                       Cargando...
                     </TableCell>
                   </TableRow>
+                ) : table.getRowModel().rows?.length ? (
+                  <SortableContext
+                    items={dataIds}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {table.getRowModel().rows.map((row) => (
+                      <DraggableRow key={row.id} row={row} />
+                    ))}
+                  </SortableContext>
                 ) : (
                   <TableRow>
                     <TableCell

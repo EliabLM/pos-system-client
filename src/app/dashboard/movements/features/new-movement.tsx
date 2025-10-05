@@ -8,7 +8,7 @@ import {
   IconArrowDown,
   IconAdjustments,
   IconAlertCircle,
-  IconInfoCircle
+  IconInfoCircle,
 } from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
@@ -112,15 +112,30 @@ const NewMovement = ({
   };
 
   const movementTypes = [
-    { value: 'IN', label: 'Entrada', icon: <IconArrowUp className="size-4" />, color: 'text-green-600' },
-    { value: 'OUT', label: 'Salida', icon: <IconArrowDown className="size-4" />, color: 'text-red-600' },
-    { value: 'ADJUSTMENT', label: 'Ajuste', icon: <IconAdjustments className="size-4" />, color: 'text-blue-600' },
+    {
+      value: 'IN',
+      label: 'Entrada',
+      icon: <IconArrowUp className="size-4" />,
+      color: 'text-green-600',
+    },
+    {
+      value: 'OUT',
+      label: 'Salida',
+      icon: <IconArrowDown className="size-4" />,
+      color: 'text-red-600',
+    },
+    {
+      value: 'ADJUSTMENT',
+      label: 'Ajuste',
+      icon: <IconAdjustments className="size-4" />,
+      color: 'text-blue-600',
+    },
   ];
 
   // Calculate projected stock
   const selectedProduct = useMemo(() => {
     const productId = form.watch('productId');
-    return products.data?.find(p => p.id === productId);
+    return products.data?.find((p) => p.id === productId);
   }, [form.watch('productId'), products.data]);
 
   const projectedStock = useMemo(() => {
@@ -145,7 +160,12 @@ const NewMovement = ({
 
   const showLowStockWarning = useMemo(() => {
     const type = form.watch('type');
-    return type === 'OUT' && selectedProduct && projectedStock !== null && projectedStock < 0;
+    return (
+      type === 'OUT' &&
+      selectedProduct &&
+      projectedStock !== null &&
+      projectedStock < 0
+    );
   }, [form.watch('type'), selectedProduct, projectedStock]);
 
   return (
@@ -155,14 +175,15 @@ const NewMovement = ({
           <SheetHeader>
             <SheetTitle>Nuevo movimiento de inventario</SheetTitle>
             <SheetDescription>
-              Registra un movimiento de inventario. Los movimientos son permanentes y no se pueden editar una vez creados.
+              Registra un movimiento de inventario. Los movimientos son
+              permanentes y no se pueden editar una vez creados.
             </SheetDescription>
           </SheetHeader>
-          <div className='grid flex-1 auto-rows-min gap-6 px-4 py-6'>
-            <div className='grid gap-3'>
+          <div className="grid flex-1 auto-rows-min gap-6 px-4 py-6">
+            <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name='productId'
+                name="productId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Producto</FormLabel>
@@ -173,7 +194,7 @@ const NewMovement = ({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder='Selecciona un producto' />
+                          <SelectValue placeholder="Selecciona un producto" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -190,10 +211,10 @@ const NewMovement = ({
               />
             </div>
 
-            <div className='grid gap-3'>
+            <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name='type'
+                name="type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo de movimiento</FormLabel>
@@ -203,7 +224,7 @@ const NewMovement = ({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder='Selecciona el tipo' />
+                          <SelectValue placeholder="Selecciona el tipo" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -220,7 +241,8 @@ const NewMovement = ({
                     <FormDescription>
                       {field.value === 'IN' && 'Aumenta el stock del producto'}
                       {field.value === 'OUT' && 'Reduce el stock del producto'}
-                      {field.value === 'ADJUSTMENT' && 'Establece el stock a un valor exacto'}
+                      {field.value === 'ADJUSTMENT' &&
+                        'Establece el stock a un valor exacto'}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -228,19 +250,19 @@ const NewMovement = ({
               />
             </div>
 
-            <div className='grid gap-3'>
+            <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name='quantity'
+                name="quantity"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Cantidad</FormLabel>
                     <FormControl>
                       <Input
-                        id='quantity'
-                        type='number'
-                        min='1'
-                        placeholder='0'
+                        id="quantity"
+                        type="number"
+                        min="1"
+                        placeholder="0"
                         {...field}
                         onChange={(e) =>
                           field.onChange(parseInt(e.target.value) || 0)
@@ -253,17 +275,17 @@ const NewMovement = ({
               />
             </div>
 
-            <div className='grid gap-3'>
+            <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name='reason'
+                name="reason"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Razón (opcional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        id='reason'
-                        placeholder='Describe el motivo del movimiento'
+                        id="reason"
+                        placeholder="Describe el motivo del movimiento"
                         {...field}
                         value={field.value ?? ''}
                       />
@@ -274,18 +296,18 @@ const NewMovement = ({
               />
             </div>
 
-            <div className='grid gap-3'>
+            <div className="grid gap-3">
               <FormField
                 control={form.control}
-                name='reference'
+                name="reference"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Referencia (opcional)</FormLabel>
                     <FormControl>
                       <Input
-                        id='reference'
-                        type='text'
-                        placeholder='Número de factura, orden, etc.'
+                        id="reference"
+                        type="text"
+                        placeholder="Número de factura, orden, etc."
                         {...field}
                         value={field.value ?? ''}
                       />
@@ -310,13 +332,18 @@ const NewMovement = ({
                   {projectedStock !== null && (
                     <>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Stock proyectado:</span>
+                        <span className="text-sm font-medium">
+                          Stock proyectado:
+                        </span>
                         <Badge
-                          variant={projectedStock < 0 ? 'destructive' : 'default'}
+                          variant={
+                            projectedStock < 0 ? 'destructive' : 'default'
+                          }
                           className={`font-mono ${
                             projectedStock > selectedProduct.currentStock
                               ? 'bg-green-500 hover:bg-green-600 text-white'
-                              : projectedStock < selectedProduct.currentStock && projectedStock >= 0
+                              : projectedStock < selectedProduct.currentStock &&
+                                projectedStock >= 0
                               ? 'bg-red-500 hover:bg-red-600 text-white'
                               : ''
                           }`}
@@ -330,9 +357,12 @@ const NewMovement = ({
                           <IconInfoCircle className="size-4 text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">
                             {form.watch('type') === 'IN'
-                              ? `Se agregarán ${form.watch('quantity') || 0} unidades`
-                              : `Se restarán ${form.watch('quantity') || 0} unidades`
-                            }
+                              ? `Se agregarán ${
+                                  form.watch('quantity') || 0
+                                } unidades`
+                              : `Se restarán ${
+                                  form.watch('quantity') || 0
+                                } unidades`}
                           </span>
                         </div>
                       )}
@@ -347,8 +377,9 @@ const NewMovement = ({
               <Alert variant="destructive">
                 <IconAlertCircle className="size-4" />
                 <AlertDescription>
-                  <strong>Stock insuficiente:</strong> La salida resultaría en un stock negativo
-                  ({projectedStock} unidades). Verifica la cantidad antes de continuar.
+                  <strong>Stock insuficiente:</strong> La salida resultaría en
+                  un stock negativo ({projectedStock} unidades). Verifica la
+                  cantidad antes de continuar.
                 </AlertDescription>
               </Alert>
             )}
@@ -356,12 +387,12 @@ const NewMovement = ({
 
           <SheetFooter className="mt-6">
             <SheetClose asChild>
-              <Button type='button' variant='outline'>
+              <Button type="button" variant="outline" disabled={isLoading}>
                 Cancelar
               </Button>
             </SheetClose>
             <Button
-              type='submit'
+              type="submit"
               disabled={isLoading || products.isLoading || showLowStockWarning}
             >
               {isLoading ? 'Registrando...' : 'Registrar movimiento'}

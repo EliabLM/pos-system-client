@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { RefreshCcw } from 'lucide-react';
 import {
   closestCenter,
   DndContext,
@@ -73,6 +74,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { StockMovement } from '@/generated/prisma';
+import { useStockMovements } from '@/hooks/useStockMovement';
 
 // Helper function to format date
 const formatDate = (date: Date) => {
@@ -162,9 +164,7 @@ const getColumns = (): ColumnDef<StockMovementWithRelations>[] => {
       accessorKey: 'createdAt',
       header: 'Fecha',
       cell: ({ row }) => (
-        <div className="text-sm">
-          {formatDate(row.original.createdAt)}
-        </div>
+        <div className="text-sm">{formatDate(row.original.createdAt)}</div>
       ),
       enableHiding: false,
     },
@@ -172,9 +172,7 @@ const getColumns = (): ColumnDef<StockMovementWithRelations>[] => {
       accessorKey: 'product.name',
       header: 'Producto',
       cell: ({ row }) => (
-        <div className="font-medium">
-          {row.original.product?.name ?? 'N/A'}
-        </div>
+        <div className="font-medium">{row.original.product?.name ?? 'N/A'}</div>
       ),
       enableHiding: false,
     },
@@ -201,7 +199,15 @@ const getColumns = (): ColumnDef<StockMovementWithRelations>[] => {
         const isNegative = type === 'OUT';
 
         return (
-          <div className={`font-medium ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-blue-600'}`}>
+          <div
+            className={`font-medium ${
+              isPositive
+                ? 'text-green-600'
+                : isNegative
+                ? 'text-red-600'
+                : 'text-blue-600'
+            }`}
+          >
             {isPositive && '+'}
             {isNegative && '-'}
             {quantity}
@@ -222,18 +228,14 @@ const getColumns = (): ColumnDef<StockMovementWithRelations>[] => {
       accessorKey: 'newStock',
       header: 'Stock Nuevo',
       cell: ({ row }) => (
-        <div className="text-sm font-medium">
-          {row.original.newStock}
-        </div>
+        <div className="text-sm font-medium">{row.original.newStock}</div>
       ),
     },
     {
       accessorKey: 'reason',
       header: 'Razón',
       cell: ({ row }) => (
-        <div className="text-sm">
-          {row.original.reason ?? '-'}
-        </div>
+        <div className="text-sm">{row.original.reason ?? '-'}</div>
       ),
       enableHiding: true,
     },
@@ -288,10 +290,14 @@ function DraggableRow({ row }: { row: Row<StockMovementWithRelations> }) {
 export function DataTable({
   data,
   loading,
+  showFilters,
 }: {
   data: StockMovementWithRelations[];
   loading: boolean;
+  showFilters: boolean;
 }) {
+  const { refetch } = useStockMovements({});
+
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -299,7 +305,7 @@ export function DataTable({
     []
   );
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: 'createdAt', desc: true }
+    { id: 'createdAt', desc: true },
   ]);
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
@@ -353,6 +359,16 @@ export function DataTable({
     <div className="w-full flex-col justify-start gap-6">
       <div className="flex items-center justify-end mb-4 ">
         <div className="flex items-center gap-2">
+          {!showFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={showFilters}
+              onClick={() => refetch()}
+            >
+              <RefreshCcw />
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -417,16 +433,7 @@ export function DataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : loading ? (
+                {loading ? (
                   <TableRow>
                     <TableCell
                       colSpan={getColumns().length}
@@ -435,6 +442,15 @@ export function DataTable({
                       Cargando...
                     </TableCell>
                   </TableRow>
+                ) : table.getRowModel().rows?.length ? (
+                  <SortableContext
+                    items={dataIds}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {table.getRowModel().rows.map((row) => (
+                      <DraggableRow key={row.id} row={row} />
+                    ))}
+                  </SortableContext>
                 ) : (
                   <TableRow>
                     <TableCell

@@ -229,8 +229,6 @@ export function validatePassword(
   // Calcular fuerza del password
   const strength = calculatePasswordStrength(password, errors.length === 0);
 
-  console.log({ errors, strength })
-
   return {
     valid: errors.length === 0,
     errors,
@@ -398,7 +396,6 @@ export function validatePasswordComplete(
 
   // Validar fuerza
   const result = validatePassword(password, requirements);
-  console.log("🚀 ~ validatePasswordComplete ~ result:", result)
 
   if (!result.valid) {
     throw new AuthError(

@@ -87,6 +87,7 @@ export const createStockMovement = async (
         break;
       case 'ADJUSTMENT':
         newStock = stockMovementData.quantity;
+        break;
       default:
         return {
           status: 400,

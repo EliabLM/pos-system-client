@@ -117,7 +117,6 @@ export const RegisterForm = ({
 
       // Llamar al server action de registro
       const result = await registerUser(formData);
-      console.log('🚀 ~ onSubmit ~ result:', result);
 
       if (result.status === 201) {
         // Registro exitoso

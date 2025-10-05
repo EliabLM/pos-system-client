@@ -63,7 +63,7 @@ export function validateEmail(
   if (!email || email.trim().length === 0) {
     throw new AuthError(
       AuthErrorCode.INVALID_EMAIL,
-      'Email cannot be empty'
+      'El correo electrónico no puede estar vacío'
     );
   }
 
@@ -74,7 +74,7 @@ export function validateEmail(
   if (normalizedEmail.length > maxLength) {
     throw new AuthError(
       AuthErrorCode.INVALID_EMAIL,
-      `Email cannot be longer than ${maxLength} characters`,
+      `El correo electrónico no puede tener más de ${maxLength} caracteres`,
       { length: normalizedEmail.length }
     );
   }
@@ -83,7 +83,7 @@ export function validateEmail(
   if (!EMAIL_REGEX.test(normalizedEmail)) {
     throw new AuthError(
       AuthErrorCode.INVALID_EMAIL,
-      'Invalid email format',
+      'Formato de correo electrónico inválido',
       { email: normalizedEmail }
     );
   }
@@ -94,7 +94,7 @@ export function validateEmail(
     if (DISPOSABLE_EMAIL_DOMAINS.includes(domain)) {
       throw new AuthError(
         AuthErrorCode.INVALID_EMAIL,
-        'Disposable email addresses are not allowed',
+        'No se permiten direcciones de correo electrónico desechables',
         { domain }
       );
     }
@@ -181,44 +181,44 @@ export function validatePassword(
   if (!password || password.trim().length === 0) {
     return {
       valid: false,
-      errors: ['Password cannot be empty'],
+      errors: ['La contraseña no puede estar vacía'],
     };
   }
 
   // Validar longitud mínima
   if (password.length < reqs.minLength) {
-    errors.push(`Password must be at least ${reqs.minLength} characters long`);
+    errors.push(`La contraseña debe tener al menos ${reqs.minLength} caracteres`);
   }
 
   // Validar mayúsculas
   if (reqs.requireUppercase && !/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
+    errors.push('La contraseña debe contener al menos una letra mayúscula');
   }
 
   // Validar minúsculas
   if (reqs.requireLowercase && !/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
+    errors.push('La contraseña debe contener al menos una letra minúscula');
   }
 
   // Validar números
   if (reqs.requireNumber && !/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
+    errors.push('La contraseña debe contener al menos un número');
   }
 
   // Validar caracteres especiales
   if (reqs.requireSpecialChar && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-    errors.push('Password must contain at least one special character');
+    errors.push('La contraseña debe contener al menos un carácter especial');
   }
 
   // Verificar passwords comunes
   const lowerPassword = password.toLowerCase();
   if (COMMON_PASSWORDS.includes(lowerPassword)) {
-    errors.push('This password is too common. Please choose a more unique password');
+    errors.push('Esta contraseña es muy común. Por favor elija una contraseña más única');
   }
 
   // Verificar patrones repetitivos (ej: "aaaa", "1111")
   if (/(.)\1{3,}/.test(password)) {
-    errors.push('Password cannot contain repetitive characters');
+    errors.push('La contraseña no puede contener caracteres repetitivos');
   }
 
   // Verificar secuencias (ej: "1234", "abcd")
@@ -321,36 +321,36 @@ export function getPasswordSuggestions(password: string): string[] {
   const suggestions: string[] = [];
 
   if (password.length < 12) {
-    suggestions.push('Consider making your password at least 12 characters long');
+    suggestions.push('Considere hacer su contraseña de al menos 12 caracteres');
   }
 
   if (!/[A-Z]/.test(password)) {
-    suggestions.push('Add uppercase letters for better security');
+    suggestions.push('Agregue letras mayúsculas para mejor seguridad');
   }
 
   if (!/[a-z]/.test(password)) {
-    suggestions.push('Add lowercase letters for better security');
+    suggestions.push('Agregue letras minúsculas para mejor seguridad');
   }
 
   if (!/\d/.test(password)) {
-    suggestions.push('Add numbers for better security');
+    suggestions.push('Agregue números para mejor seguridad');
   }
 
   if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-    suggestions.push('Add special characters for better security');
+    suggestions.push('Agregue caracteres especiales para mejor seguridad');
   }
 
   if (COMMON_PASSWORDS.includes(password.toLowerCase())) {
-    suggestions.push('Avoid common passwords. Use a unique combination');
+    suggestions.push('Evite contraseñas comunes. Use una combinación única');
   }
 
   // if (hasSequentialChars(password)) {
-  //   suggestions.push('Avoid sequential characters (e.g., "1234", "abcd")');
+  //   suggestions.push('Evite caracteres secuenciales (ej: "1234", "abcd")');
   // }
 
   const uniqueChars = new Set(password).size;
   if (uniqueChars < password.length * 0.5) {
-    suggestions.push('Use a wider variety of characters');
+    suggestions.push('Use una mayor variedad de caracteres');
   }
 
   return suggestions;
@@ -371,7 +371,7 @@ export function verifyPasswordMatch(
   if (password !== confirmPassword) {
     throw new AuthError(
       AuthErrorCode.PASSWORD_MISMATCH,
-      'Passwords do not match'
+      'Las contraseñas no coinciden'
     );
   }
 
@@ -403,7 +403,7 @@ export function validatePasswordComplete(
   if (!result.valid) {
     throw new AuthError(
       AuthErrorCode.WEAK_PASSWORD,
-      result.errors[0] || 'Password does not meet security requirements',
+      result.errors[0] || 'La contraseña no cumple con los requisitos de seguridad',
       { errors: result.errors }
     );
   }
@@ -443,11 +443,11 @@ export function estimateCrackTime(password: string): string {
   const days = hours / 24;
   const years = days / 365;
 
-  if (years > 1000) return '1000+ years';
-  if (years > 100) return '100+ years';
-  if (years > 1) return `${Math.floor(years)} years`;
-  if (days > 1) return `${Math.floor(days)} days`;
-  if (hours > 1) return `${Math.floor(hours)} hours`;
-  if (minutes > 1) return `${Math.floor(minutes)} minutes`;
-  return 'less than a minute';
+  if (years > 1000) return '1000+ años';
+  if (years > 100) return '100+ años';
+  if (years > 1) return `${Math.floor(years)} años`;
+  if (days > 1) return `${Math.floor(days)} días`;
+  if (hours > 1) return `${Math.floor(hours)} horas`;
+  if (minutes > 1) return `${Math.floor(minutes)} minutos`;
+  return 'menos de un minuto';
 }

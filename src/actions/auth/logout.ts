@@ -42,7 +42,7 @@ export async function logoutUser(): Promise<ActionResponse> {
 
       return {
         status: 200,
-        message: 'Logout successful (no active session)',
+        message: 'Cierre de sesión exitoso (sin sesión activa)',
         data: null,
       };
     }
@@ -62,7 +62,7 @@ export async function logoutUser(): Promise<ActionResponse> {
     // 4. Return success
     return {
       status: 200,
-      message: 'Logout successful',
+      message: 'Cierre de sesión exitoso',
       data: null,
     };
   } catch (error) {
@@ -86,7 +86,7 @@ export async function logoutUser(): Promise<ActionResponse> {
 
     return {
       status: 500,
-      message: 'Failed to logout. Please try again',
+      message: 'Error al cerrar sesión. Por favor intente nuevamente',
       data: null,
     };
   }
@@ -115,7 +115,7 @@ export async function logoutAllDevices(): Promise<ActionResponse> {
     if (userResponse.status !== 200 || !userResponse.data) {
       return {
         status: 401,
-        message: 'User not authenticated',
+        message: 'Usuario no autenticado',
         data: null,
       };
     }
@@ -132,7 +132,7 @@ export async function logoutAllDevices(): Promise<ActionResponse> {
 
     return {
       status: 200,
-      message: `Logged out from ${sessionsInvalidated} device(s) successfully`,
+      message: `Sesión cerrada exitosamente en ${sessionsInvalidated} dispositivo(s)`,
       data: {
         sessionsInvalidated,
       },
@@ -150,7 +150,7 @@ export async function logoutAllDevices(): Promise<ActionResponse> {
 
     return {
       status: 500,
-      message: 'Failed to logout from all devices',
+      message: 'Error al cerrar sesión en todos los dispositivos',
       data: null,
     };
   }

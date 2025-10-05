@@ -71,14 +71,14 @@ export async function createSession(
     if (!user || user.isDeleted) {
       throw new AuthError(
         AuthErrorCode.USER_NOT_FOUND,
-        'User not found or has been deleted'
+        'Usuario no encontrado o ha sido eliminado'
       );
     }
 
     if (!user.isActive) {
       throw new AuthError(
         AuthErrorCode.USER_INACTIVE,
-        'User account is inactive'
+        'La cuenta de usuario está inactiva'
       );
     }
 
@@ -155,7 +155,7 @@ export async function createSession(
 
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to create session',
+      'Error al crear sesión',
       { originalError: error }
     );
   }
@@ -183,7 +183,7 @@ export async function validateSession(token: string): Promise<SessionData | null
     if (!payload) {
       throw new AuthError(
         AuthErrorCode.INVALID_TOKEN,
-        'Invalid token'
+        'Token inválido'
       );
     }
 
@@ -198,7 +198,7 @@ export async function validateSession(token: string): Promise<SessionData | null
     if (!session) {
       throw new AuthError(
         AuthErrorCode.SESSION_NOT_FOUND,
-        'Session not found'
+        'Sesión no encontrada'
       );
     }
 
@@ -206,7 +206,7 @@ export async function validateSession(token: string): Promise<SessionData | null
     if (!session.isActive) {
       throw new AuthError(
         AuthErrorCode.SESSION_REVOKED,
-        'Session has been revoked'
+        'La sesión ha sido revocada'
       );
     }
 
@@ -220,7 +220,7 @@ export async function validateSession(token: string): Promise<SessionData | null
 
       throw new AuthError(
         AuthErrorCode.SESSION_EXPIRED,
-        'Session has expired'
+        'La sesión ha expirado'
       );
     }
 
@@ -238,7 +238,7 @@ export async function validateSession(token: string): Promise<SessionData | null
 
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to validate session',
+      'Error al validar sesión',
       { originalError: error }
     );
   }
@@ -272,7 +272,7 @@ export async function invalidateSession(token: string): Promise<boolean> {
   } catch (error) {
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to invalidate session',
+      'Error al invalidar sesión',
       { originalError: error }
     );
   }
@@ -303,7 +303,7 @@ export async function invalidateAllUserSessions(userId: string): Promise<number>
   } catch (error) {
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to invalidate user sessions',
+      'Error al invalidar sesiones del usuario',
       { originalError: error }
     );
   }
@@ -366,7 +366,7 @@ export async function cleanExpiredSessions(): Promise<CleanupSessionsResult> {
   } catch (error) {
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to cleanup expired sessions',
+      'Error al limpiar sesiones expiradas',
       { originalError: error }
     );
   }
@@ -399,7 +399,7 @@ export async function getUserActiveSessions(userId: string): Promise<SessionData
   } catch (error) {
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to get user sessions',
+      'Error al obtener sesiones del usuario',
       { originalError: error }
     );
   }
@@ -457,7 +457,7 @@ export async function renewSession(
   } catch (error) {
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to renew session',
+      'Error al renovar sesión',
       { originalError: error }
     );
   }

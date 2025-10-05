@@ -34,7 +34,7 @@ export async function hashPassword(
     if (!password || password.trim().length === 0) {
       throw new AuthError(
         AuthErrorCode.INVALID_PASSWORD,
-        'Password cannot be empty'
+        'La contraseña no puede estar vacía'
       );
     }
 
@@ -44,7 +44,7 @@ export async function hashPassword(
     if (saltRounds < 10 || saltRounds > 15) {
       throw new AuthError(
         AuthErrorCode.INTERNAL_ERROR,
-        'Salt rounds must be between 10 and 15',
+        'Los rounds de salt deben estar entre 10 y 15',
         { saltRounds }
       );
     }
@@ -60,7 +60,7 @@ export async function hashPassword(
 
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to hash password',
+      'Error al hashear contraseña',
       { originalError: error }
     );
   }
@@ -92,14 +92,14 @@ export async function comparePassword(
     if (!password || password.trim().length === 0) {
       throw new AuthError(
         AuthErrorCode.INVALID_PASSWORD,
-        'Password cannot be empty'
+        'La contraseña no puede estar vacía'
       );
     }
 
     if (!hash || hash.trim().length === 0) {
       throw new AuthError(
         AuthErrorCode.INVALID_PASSWORD,
-        'Hash cannot be empty'
+        'El hash no puede estar vacío'
       );
     }
 
@@ -107,7 +107,7 @@ export async function comparePassword(
     if (!hash.startsWith('$2b$') && !hash.startsWith('$2a$')) {
       throw new AuthError(
         AuthErrorCode.INVALID_PASSWORD,
-        'Invalid bcrypt hash format'
+        'Formato de hash bcrypt inválido'
       );
     }
 
@@ -133,7 +133,7 @@ export async function comparePassword(
 
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to compare password',
+      'Error al comparar contraseña',
       { originalError: error }
     );
   }
@@ -178,7 +178,7 @@ export async function generateSalt(rounds: number = DEFAULT_SALT_ROUNDS): Promis
   } catch (error) {
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to generate salt',
+      'Error al generar salt',
       { originalError: error }
     );
   }

@@ -101,7 +101,7 @@ export async function requireAuth(): Promise<User> {
   if (!user) {
     throw new AuthorizationError(
       'UNAUTHORIZED',
-      'Authentication required. Please login to continue.'
+      'Se requiere autenticación. Por favor inicie sesión para continuar.'
     );
   }
 
@@ -125,7 +125,7 @@ export async function requireAdmin(): Promise<User> {
   if (user.role !== 'ADMIN') {
     throw new AuthorizationError(
       'FORBIDDEN',
-      'Admin access required. This action is restricted to administrators.',
+      'Se requiere acceso de administrador. Esta acción está restringida a administradores.',
       { userRole: user.role }
     );
   }
@@ -151,14 +151,14 @@ export async function requireOrganization(orgId: string): Promise<User> {
   if (!user.organizationId) {
     throw new AuthorizationError(
       'FORBIDDEN',
-      'User must belong to an organization to access this resource.'
+      'El usuario debe pertenecer a una organización para acceder a este recurso.'
     );
   }
 
   if (user.organizationId !== orgId) {
     throw new AuthorizationError(
       'FORBIDDEN',
-      'Access denied. You do not have permission to access this organization.',
+      'Acceso denegado. No tiene permiso para acceder a esta organización.',
       {
         userOrganizationId: user.organizationId,
         requiredOrganizationId: orgId,
@@ -257,7 +257,7 @@ export async function requireStoreAccess(storeId: string): Promise<User> {
   if (!hasAccess) {
     throw new AuthorizationError(
       'FORBIDDEN',
-      'Access denied. You do not have permission to access this store.',
+      'Acceso denegado. No tiene permiso para acceder a esta tienda.',
       {
         userId: user.id,
         userStoreId: user.storeId,
@@ -323,7 +323,7 @@ export async function requireResourceOwner(resourceUserId: string): Promise<User
   if (!isOwner) {
     throw new AuthorizationError(
       'FORBIDDEN',
-      'Access denied. You can only modify your own resources.',
+      'Acceso denegado. Solo puede modificar sus propios recursos.',
       {
         userId: user.id,
         resourceUserId,
@@ -372,7 +372,7 @@ export async function requireUserOrganization(): Promise<User> {
   if (!user.organizationId) {
     throw new AuthorizationError(
       'FORBIDDEN',
-      'Organization required. Please complete onboarding first.'
+      'Se requiere organización. Por favor complete el proceso de configuración inicial primero.'
     );
   }
 
@@ -426,14 +426,14 @@ export async function requireActiveOrganization(): Promise<User> {
   if (!organization || organization.isDeleted) {
     throw new AuthorizationError(
       'NOT_FOUND',
-      'Organization not found.'
+      'Organización no encontrada.'
     );
   }
 
   if (!organization.isActive) {
     throw new AuthorizationError(
       'FORBIDDEN',
-      'Organization is inactive. Please contact support.',
+      'La organización está inactiva. Por favor contacte a soporte.',
       { organizationId: user.organizationId }
     );
   }

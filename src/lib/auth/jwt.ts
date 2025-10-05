@@ -24,14 +24,14 @@ function getJWTSecret(): string {
   if (!secret) {
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'JWT_SECRET is not defined in environment variables'
+      'JWT_SECRET no está definido en las variables de entorno'
     );
   }
 
   if (secret.length < 32) {
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'JWT_SECRET must be at least 32 characters long',
+      'JWT_SECRET debe tener al menos 32 caracteres',
       { length: secret.length }
     );
   }
@@ -65,7 +65,7 @@ export function generateToken(
     if (!payload.userId || !payload.email) {
       throw new AuthError(
         AuthErrorCode.INVALID_TOKEN,
-        'Token payload must include userId and email',
+        'El payload del token debe incluir userId y email',
         { payload }
       );
     }
@@ -92,7 +92,7 @@ export function generateToken(
 
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to generate token',
+      'Error al generar token',
       { originalError: error }
     );
   }
@@ -117,7 +117,7 @@ export function verifyToken(token: string): JWTPayload | null {
     if (!token || token.trim().length === 0) {
       throw new AuthError(
         AuthErrorCode.INVALID_TOKEN,
-        'Token cannot be empty'
+        'El token no puede estar vacío'
       );
     }
 
@@ -130,7 +130,7 @@ export function verifyToken(token: string): JWTPayload | null {
     if (!decoded.userId || !decoded.email) {
       throw new AuthError(
         AuthErrorCode.MALFORMED_TOKEN,
-        'Token payload is missing required fields',
+        'El payload del token está faltando campos requeridos',
         { decoded }
       );
     }
@@ -145,7 +145,7 @@ export function verifyToken(token: string): JWTPayload | null {
     if (error instanceof jwt.TokenExpiredError) {
       throw new AuthError(
         AuthErrorCode.EXPIRED_TOKEN,
-        'Token has expired',
+        'El token ha expirado',
         { expiredAt: error.expiredAt }
       );
     }
@@ -153,14 +153,14 @@ export function verifyToken(token: string): JWTPayload | null {
     if (error instanceof jwt.JsonWebTokenError) {
       throw new AuthError(
         AuthErrorCode.INVALID_TOKEN,
-        'Token is invalid',
+        'El token es inválido',
         { message: error.message }
       );
     }
 
     throw new AuthError(
       AuthErrorCode.INTERNAL_ERROR,
-      'Failed to verify token',
+      'Error al verificar token',
       { originalError: error }
     );
   }
@@ -194,7 +194,7 @@ export function safeVerifyToken(token: string): VerifyTokenResult {
       payload: null,
       error: new AuthError(
         AuthErrorCode.INTERNAL_ERROR,
-        'Unexpected error verifying token',
+        'Error inesperado al verificar token',
         { originalError: error }
       ),
     };

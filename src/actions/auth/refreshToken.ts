@@ -29,7 +29,7 @@ export async function refreshToken(userId: string): Promise<ActionResponse> {
     if (!userId) {
       return {
         status: 400,
-        message: 'User ID is required',
+        message: 'El ID de usuario es requerido',
         data: null,
       };
     }
@@ -73,7 +73,7 @@ export async function refreshToken(userId: string): Promise<ActionResponse> {
     if (!user) {
       return {
         status: 404,
-        message: 'User not found or inactive',
+        message: 'Usuario no encontrado o inactivo',
         data: null,
       };
     }
@@ -106,7 +106,7 @@ export async function refreshToken(userId: string): Promise<ActionResponse> {
 
     return {
       status: 200,
-      message: 'Token refreshed successfully',
+      message: 'Token actualizado exitosamente',
       data: {
         user,
         sessionId: session.id,
@@ -117,7 +117,7 @@ export async function refreshToken(userId: string): Promise<ActionResponse> {
 
     return {
       status: 500,
-      message: 'Failed to refresh token. Please try again later',
+      message: 'Error al actualizar token. Por favor intente más tarde',
       data: null,
     };
   }

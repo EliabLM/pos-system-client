@@ -59,7 +59,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
     if (!data.email || !data.password) {
       return {
         status: 400,
-        message: 'Email and password are required',
+        message: 'El correo electrónico y la contraseña son requeridos',
         data: null,
       };
     }
@@ -71,7 +71,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
       if (error instanceof AuthError) {
         return {
           status: 400,
-          message: 'Invalid email format',
+          message: 'Formato de correo electrónico inválido',
           data: null,
         };
       }
@@ -122,7 +122,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
     if (!user) {
       return {
         status: 401,
-        message: 'Invalid email or password',
+        message: 'Correo electrónico o contraseña inválidos',
         data: null,
       };
     }
@@ -131,7 +131,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
     if (!user.isActive) {
       return {
         status: 403,
-        message: 'Your account has been deactivated. Please contact support',
+        message: 'Su cuenta ha sido desactivada. Por favor contacte a soporte',
         data: null,
       };
     }
@@ -144,7 +144,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
 
       return {
         status: 423,
-        message: `Account locked due to too many failed login attempts. Try again in ${minutesRemaining} minutes`,
+        message: `Cuenta bloqueada por demasiados intentos fallidos de inicio de sesión. Intente nuevamente en ${minutesRemaining} minutos`,
         data: {
           lockedUntil: user.lockedUntil,
           minutesRemaining,
@@ -184,7 +184,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
       if (shouldLock) {
         return {
           status: 423,
-          message: `Account locked due to too many failed login attempts. Try again in ${LOCK_DURATION_MINUTES} minutes`,
+          message: `Cuenta bloqueada por demasiados intentos fallidos de inicio de sesión. Intente nuevamente en ${LOCK_DURATION_MINUTES} minutos`,
           data: {
             attemptsRemaining: 0,
           },
@@ -193,7 +193,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
 
       return {
         status: 401,
-        message: 'Invalid email or password',
+        message: 'Correo electrónico o contraseña inválidos',
         data: {
           attemptsRemaining: MAX_LOGIN_ATTEMPTS - newLoginAttempts,
         },
@@ -216,7 +216,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
     if (user.organizationId && user.organization && !user.organization.isActive) {
       return {
         status: 403,
-        message: 'Your organization has been deactivated. Please contact support',
+        message: 'Su organización ha sido desactivada. Por favor contacte a soporte',
         data: null,
       };
     }
@@ -225,7 +225,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
     if (user.storeId && user.store && !user.store.isActive) {
       return {
         status: 403,
-        message: 'Your store has been deactivated. Please contact your administrator',
+        message: 'Su tienda ha sido desactivada. Por favor contacte a su administrador',
         data: null,
       };
     }
@@ -257,7 +257,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
 
     return {
       status: 200,
-      message: 'Login successful',
+      message: 'Inicio de sesión exitoso',
       data: {
         user: userWithoutPassword,
         sessionId: session.id,
@@ -276,7 +276,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse> {
 
     return {
       status: 500,
-      message: 'Failed to login. Please try again later',
+      message: 'Error al iniciar sesión. Por favor intente más tarde',
       data: null,
     };
   }

@@ -41,7 +41,7 @@ export async function getCurrentUser(): Promise<ActionResponse> {
     if (!token) {
       return {
         status: 401,
-        message: 'Not authenticated',
+        message: 'No autenticado',
         data: null,
       };
     }
@@ -54,7 +54,7 @@ export async function getCurrentUser(): Promise<ActionResponse> {
       if (!payload) {
         return {
           status: 401,
-          message: 'Invalid authentication token',
+          message: 'Token de autenticación inválido',
           data: null,
         };
       }
@@ -153,7 +153,7 @@ export async function getCurrentUser(): Promise<ActionResponse> {
 
       return {
         status: 401,
-        message: 'User not found or has been deleted',
+        message: 'Usuario no encontrado o ha sido eliminado',
         data: null,
       };
     }
@@ -170,7 +170,7 @@ export async function getCurrentUser(): Promise<ActionResponse> {
 
       return {
         status: 403,
-        message: 'Account has been deactivated',
+        message: 'La cuenta ha sido desactivada',
         data: null,
       };
     }
@@ -179,7 +179,7 @@ export async function getCurrentUser(): Promise<ActionResponse> {
     if (user.organizationId && user.organization && !user.organization.isActive) {
       return {
         status: 403,
-        message: 'Your organization has been deactivated',
+        message: 'Su organización ha sido desactivada',
         data: {
           user,
           organizationDeactivated: true,
@@ -191,7 +191,7 @@ export async function getCurrentUser(): Promise<ActionResponse> {
     if (user.storeId && user.store && !user.store.isActive) {
       return {
         status: 403,
-        message: 'Your store has been deactivated',
+        message: 'Su tienda ha sido desactivada',
         data: {
           user,
           storeDeactivated: true,
@@ -202,7 +202,7 @@ export async function getCurrentUser(): Promise<ActionResponse> {
     // 5. Return user con organization y store data
     return {
       status: 200,
-      message: 'User retrieved successfully',
+      message: 'Usuario obtenido exitosamente',
       data: {
         user,
         session: {
@@ -224,7 +224,7 @@ export async function getCurrentUser(): Promise<ActionResponse> {
 
     return {
       status: 500,
-      message: 'Failed to retrieve user information',
+      message: 'Error al obtener información del usuario',
       data: null,
     };
   }
@@ -244,7 +244,7 @@ export async function isAuthenticated(): Promise<ActionResponse> {
     if (!token) {
       return {
         status: 200,
-        message: 'Not authenticated',
+        message: 'No autenticado',
         data: { authenticated: false },
       };
     }
@@ -255,7 +255,7 @@ export async function isAuthenticated(): Promise<ActionResponse> {
       if (!payload) {
         return {
           status: 200,
-          message: 'Invalid token',
+          message: 'Token inválido',
           data: { authenticated: false },
         };
       }
@@ -264,7 +264,7 @@ export async function isAuthenticated(): Promise<ActionResponse> {
 
       return {
         status: 200,
-        message: 'Authenticated',
+        message: 'Autenticado',
         data: {
           authenticated: true,
           userId: payload.userId,
@@ -278,7 +278,7 @@ export async function isAuthenticated(): Promise<ActionResponse> {
 
         return {
           status: 200,
-          message: 'Session invalid',
+          message: 'Sesión inválida',
           data: { authenticated: false },
         };
       }
@@ -289,7 +289,7 @@ export async function isAuthenticated(): Promise<ActionResponse> {
 
     return {
       status: 200,
-      message: 'Authentication check failed',
+      message: 'Verificación de autenticación fallida',
       data: { authenticated: false },
     };
   }

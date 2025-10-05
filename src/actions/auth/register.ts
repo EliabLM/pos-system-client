@@ -66,7 +66,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
     if (!data.firstName || data.firstName.trim().length === 0) {
       return {
         status: 400,
-        message: 'First name is required',
+        message: 'El nombre es requerido',
         data: null,
       };
     }
@@ -74,7 +74,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
     if (!data.lastName || data.lastName.trim().length === 0) {
       return {
         status: 400,
-        message: 'Last name is required',
+        message: 'El apellido es requerido',
         data: null,
       };
     }
@@ -82,7 +82,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
     if (!data.username || data.username.trim().length === 0) {
       return {
         status: 400,
-        message: 'Username is required',
+        message: 'El nombre de usuario es requerido',
         data: null,
       };
     }
@@ -143,7 +143,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       if (existingUserByEmail) {
         return {
           status: 409,
-          message: 'A user with this email already exists in this organization',
+          message: 'Ya existe un usuario con este correo electrónico en esta organización',
           data: null,
         };
       }
@@ -159,7 +159,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       if (existingUserByUsername) {
         return {
           status: 409,
-          message: 'A user with this username already exists in this organization',
+          message: 'Ya existe un usuario con este nombre de usuario en esta organización',
           data: null,
         };
       }
@@ -176,7 +176,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       if (deletedUser) {
         return {
           status: 409,
-          message: 'This email was previously used in this organization. Please contact support to reactivate your account',
+          message: 'Este correo electrónico fue usado previamente en esta organización. Por favor contacte a soporte para reactivar su cuenta',
           data: null,
         };
       }
@@ -192,7 +192,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       if (existingUserByEmail) {
         return {
           status: 409,
-          message: 'A user with this email already exists',
+          message: 'Ya existe un usuario con este correo electrónico',
           data: null,
         };
       }
@@ -207,7 +207,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       if (existingUserByUsername) {
         return {
           status: 409,
-          message: 'A user with this username already exists',
+          message: 'Ya existe un usuario con este nombre de usuario',
           data: null,
         };
       }
@@ -223,7 +223,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       if (deletedUser) {
         return {
           status: 409,
-          message: 'This email was previously used. Please contact support to reactivate your account',
+          message: 'Este correo electrónico fue usado previamente. Por favor contacte a soporte para reactivar su cuenta',
           data: null,
         };
       }
@@ -302,7 +302,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
     // 9. Return success con user data (sin password)
     return {
       status: 201,
-      message: 'User registered successfully',
+      message: 'Usuario registrado exitosamente',
       data: {
         user: newUser,
         sessionId: session.id,
@@ -321,7 +321,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
 
     return {
       status: 500,
-      message: 'Failed to register user. Please try again later',
+      message: 'Error al registrar usuario. Por favor intente más tarde',
       data: null,
     };
   }

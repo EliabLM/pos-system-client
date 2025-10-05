@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useStore } from '@/store';
 import { logoutUser } from '@/actions/auth';
+import { performLogoutCleanup } from '@/lib/logout-cleanup';
 import { toast } from 'sonner';
 
 export function NavUser() {
@@ -35,7 +36,6 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const queryClient = useQueryClient();
 
-  const setUser = useStore((state) => state.setUser);
   const user = useStore((state) => state.user);
 
   const handleLogout = async () => {
@@ -43,11 +43,8 @@ export function NavUser() {
       const result = await logoutUser();
 
       if (result.status === 200) {
-        // Clear user from store
-        setUser(null);
-
-        // Clear Tanstack Query cache
-        queryClient.clear();
+        // Perform complete cleanup: clear query cache and sessionStorage
+        performLogoutCleanup(queryClient);
 
         // Show success message
         toast.success('Sesión cerrada exitosamente');

@@ -3,6 +3,7 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   IconUser,
   IconSettings,
@@ -23,21 +24,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useStore } from '@/store';
 import { logoutUser } from '@/actions/auth';
+import { performLogoutCleanup } from '@/lib/logout-cleanup';
 import { toast } from 'sonner';
 
 export function SiteHeader() {
   const router = useRouter();
   const { setTheme } = useTheme();
+  const queryClient = useQueryClient();
   const dbUser = useStore((state) => state.user);
-  const setUser = useStore((state) => state.setUser);
 
   const handleLogout = async () => {
     try {
       const result = await logoutUser();
 
       if (result.status === 200) {
-        // Clear user from store
-        setUser(null);
+        // Perform complete cleanup: clear query cache and sessionStorage
+        performLogoutCleanup(queryClient);
 
         // Show success message
         toast.success('Sesión cerrada exitosamente');

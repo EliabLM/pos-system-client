@@ -38,8 +38,6 @@ export const createStockMovement = async (
   >
 ): Promise<ActionResponse<StockMovement | null>> => {
   try {
-    const isAdmin = await checkAdminRole(userId);
-    if (!isAdmin) return unauthorizedResponse();
 
     if (checkOrgId(orgId)) return emptyOrgIdResponse();
 

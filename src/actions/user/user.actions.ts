@@ -9,6 +9,7 @@ import {
   checkOrgId,
   emptyOrgIdResponse,
 } from '../utils';
+import bcrypt from 'bcrypt';
 
 const userInclude: Prisma.UserInclude = {
   organization: true,
@@ -135,8 +136,14 @@ export const createUser = async (
       }
     }
 
+    // Hash de la contraseña antes de guardar
+    const hashedPassword = await bcrypt.hash(userData.password, 12);
+
     const newUser = await prisma.user.create({
-      data: userData,
+      data: {
+        ...userData,
+        password: hashedPassword,
+      },
       include: userInclude,
     });
 

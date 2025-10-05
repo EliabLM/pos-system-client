@@ -134,8 +134,7 @@ export const createSale = async (
   >[]
 ): Promise<ActionResponse<Sale | null>> => {
   try {
-    const isAdmin = await checkAdminRole(userId);
-    if (!isAdmin) return unauthorizedResponse();
+
 
     if (checkOrgId(orgId)) return emptyOrgIdResponse();
 

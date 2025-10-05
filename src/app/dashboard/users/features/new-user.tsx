@@ -33,7 +33,7 @@ import {
 
 import { useCreateUser, useUpdateUser } from '@/hooks/useUsers';
 import { useActiveStores } from '@/hooks/useStores';
-import { User, UserRole } from '@/generated/prisma';
+import { User } from '@/generated/prisma';
 import { useStore } from '@/store';
 
 const createSchema = yup.object().shape({
@@ -61,9 +61,7 @@ const createSchema = yup.object().shape({
       'Debe contener mayúscula, minúscula, número y carácter especial'
     )
     .required('La contraseña es requerida'),
-  storeId: yup
-    .string()
-    .required('La tienda es requerida para vendedores'),
+  storeId: yup.string().required('La tienda es requerida para vendedores'),
   active: yup.bool().default(true),
 });
 
@@ -84,9 +82,7 @@ const editSchema = yup.object().shape({
     .string()
     .min(3, 'Debe ingresar mínimo 3 caracteres')
     .required('El nombre de usuario es requerido'),
-  storeId: yup
-    .string()
-    .required('La tienda es requerida para vendedores'),
+  storeId: yup.string().required('La tienda es requerida para vendedores'),
   active: yup.bool().default(true),
 });
 
@@ -210,20 +206,20 @@ const NewUser = ({
 
   return (
     <SheetContent className="md:max-w-[570px] overflow-y-auto">
-      <SheetHeader>
-        <SheetTitle>
-          {itemSelected ? 'Editar usuario' : 'Crear nuevo usuario'}
-        </SheetTitle>
-        <SheetDescription>
-          {itemSelected
-            ? 'Actualiza la información del usuario'
-            : 'Completa el formulario para crear un nuevo usuario'}
-        </SheetDescription>
-      </SheetHeader>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
+          <SheetHeader>
+            <SheetTitle>
+              {itemSelected ? 'Editar usuario' : 'Crear nuevo usuario'}
+            </SheetTitle>
+            <SheetDescription>
+              {itemSelected
+                ? 'Actualiza la información del usuario'
+                : 'Completa el formulario para crear un nuevo usuario'}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 flex-1 auto-rows-min gap-6 px-4">
             <FormField
               control={form.control}
               name="firstName"
@@ -251,70 +247,71 @@ const NewUser = ({
                 </FormItem>
               )}
             />
-          </div>
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="usuario@ejemplo.com"
-                    {...field}
-                    disabled={!!itemSelected}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre de usuario *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="juanperez"
-                    {...field}
-                    disabled={!!itemSelected}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {!itemSelected && (
             <FormField
               control={form.control}
-              name="password"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contraseña *</FormLabel>
+                  <FormLabel>Email *</FormLabel>
                   <FormControl>
                     <Input
-                      type="password"
-                      placeholder="••••••••"
+                      type="email"
+                      placeholder="usuario@ejemplo.com"
                       {...field}
+                      disabled={!!itemSelected}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          )}
 
-          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre de usuario *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="juanperez"
+                      {...field}
+                      disabled={!!itemSelected}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {!itemSelected && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contraseña *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormItem>
               <FormLabel>Rol</FormLabel>
               <FormControl>
-                <Input value="Vendedor" disabled />
+                <Input
+                  value={itemSelected ? itemSelected.role : 'Vendedor'}
+                  disabled
+                />
               </FormControl>
             </FormItem>
 
@@ -349,42 +346,49 @@ const NewUser = ({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="active"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Estado activo</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      {field.value ? 'Usuario activo' : 'Usuario inactivo'}
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
           </div>
 
-          <FormField
-            control={form.control}
-            name="active"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Estado activo</FormLabel>
-                  <div className="text-sm text-muted-foreground">
-                    {field.value ? 'Usuario activo' : 'Usuario inactivo'}
-                  </div>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
           <SheetFooter className="mt-6">
-            <SheetClose asChild>
-              <Button type="button" variant="outline">
-                Cancelar
-              </Button>
-            </SheetClose>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading
-                ? 'Guardando...'
-                : itemSelected
+            <div className="flex gap-4">
+              <SheetClose asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isLoading}
+                  onClick={() => setItemSelected(null)}
+                >
+                  Cancelar
+                </Button>
+              </SheetClose>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading
+                  ? 'Guardando...'
+                  : itemSelected
                   ? 'Actualizar'
                   : 'Crear usuario'}
-            </Button>
+              </Button>
+            </div>
           </SheetFooter>
         </form>
       </Form>

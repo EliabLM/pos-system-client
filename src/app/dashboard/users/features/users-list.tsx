@@ -44,10 +44,9 @@ const UsersList = () => {
               <CardAction>
                 {isAdmin && (
                   <Button
-                    disabled
                     onClick={() => {
                       setItemSelected(null);
-                      // setSheetOpen(true);
+                      setSheetOpen(true);
                     }}
                   >
                     Crear nuevo usuario

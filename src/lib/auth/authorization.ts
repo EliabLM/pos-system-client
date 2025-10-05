@@ -10,7 +10,8 @@
 import { cookies } from 'next/headers';
 import { prisma } from '@/actions/utils';
 import { User, UserRole } from '@/generated/prisma';
-import { verifyToken, AuthError, AuthErrorCode } from './jwt';
+import { verifyToken } from './jwt';
+import { AuthError, AuthErrorCode } from './types';
 
 // Configuración
 const COOKIE_NAME = 'auth-token';
@@ -218,7 +219,7 @@ export async function canAccessStore(storeId: string): Promise<boolean> {
       const store = await prisma.store.findFirst({
         where: {
           id: storeId,
-          organizationId: user.organizationId,
+          organizationId: user.organizationId || undefined,
           isDeleted: false,
         },
       });

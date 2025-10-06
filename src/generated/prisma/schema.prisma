@@ -1,0 +1,623 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organization {
+  id             String          @id @default(cuid())
+  name           String
+  email          String
+  nit            String?
+  phone          String?
+  address        String?
+  city           String?
+  department     String?
+  taxId          String?
+  isActive       Boolean         @default(true)
+  isDeleted      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  brands         Brand[]
+  categories     Category[]
+  customers      Customer[]
+  paymentMethods PaymentMethod[]
+  products       Product[]
+  stockMovements StockMovement[]
+  stores         Store[]
+  suppliers      Supplier[]
+  systemConfigs  SystemConfig[]
+  unitMeasures   UnitMeasure[]
+  users          User[]
+
+  @@map("organizations")
+}
+
+model Store {
+  id               String       @id @default(cuid())
+  organizationId   String
+  name             String
+  description      String?
+  address          String
+  city             String?
+  department       String?
+  phone            String?
+  saleNumberPrefix String       @default("")
+  lastSaleNumber   Int          @default(0)
+  isActive         Boolean      @default(true)
+  isDeleted        Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  deletedAt        DateTime?
+  sales            Sale[]
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  users            User[]
+
+  @@unique([organizationId, name], name: "unique_store_name_per_org")
+  @@map("stores")
+}
+
+model User {
+  id String @id @default(cuid())
+
+  // Multi-tenancy
+  organizationId String?
+  storeId        String?
+
+  // Credenciales de autenticación
+  email    String
+  password String // Hash bcrypt
+  username String
+
+  // Información personal
+  firstName String
+  lastName  String
+
+  // Control de acceso
+  role          UserRole @default(SELLER)
+  emailVerified Boolean  @default(false)
+
+  // Soft delete pattern
+  isActive  Boolean   @default(true)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Campos de seguridad adicionales
+  lastLoginAt       DateTime?
+  passwordChangedAt DateTime? // Para invalidar tokens antiguos
+  loginAttempts     Int       @default(0)
+  lockedUntil       DateTime? // Account lockout por intentos fallidos
+
+  // Relaciones existentes
+  sales          Sale[]
+  stockMovements StockMovement[]
+  organization   Organization?   @relation(fields: [organizationId], references: [id])
+  store          Store?          @relation(fields: [storeId], references: [id])
+
+  // Nuevas relaciones de autenticación
+  sessions           Session[]
+  passwordResets     PasswordReset[]
+  emailVerifications EmailVerification[]
+  auditLogs          AuditLog[]
+
+  // Índices compuestos para performance y seguridad
+  @@unique([email, deletedAt], name: "unique_email_per_deletion")
+  @@unique([username, deletedAt], name: "unique_username_per_deletion")
+  @@index([organizationId, isDeleted, isActive])
+  @@index([email, isDeleted])
+  @@index([lastLoginAt])
+  @@map("users")
+}
+
+// ============================================
+// MODELO SESSION - MANEJO DE JWT/SESIONES
+// ============================================
+model Session {
+  id     String @id @default(cuid())
+  userId String
+
+  // Token y seguridad
+  token     String   @unique // Hash del JWT o session ID
+  expiresAt DateTime
+
+  // Metadata de seguridad
+  ipAddress String? @db.VarChar(45) // IPv6 max length
+  userAgent String? @db.VarChar(500)
+  deviceId  String? // Fingerprint del dispositivo
+
+  // Control de sesión
+  isActive  Boolean   @default(true)
+  revokedAt DateTime? // Para invalidación explícita
+  revokedBy String? // userId que revocó (admin)
+
+  // Metadata adicional
+  lastActivityAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Índices para queries eficientes
+  @@index([userId, isActive])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([lastActivityAt])
+  @@map("sessions")
+}
+
+// ============================================
+// MODELO PASSWORD RESET - RECUPERACIÓN
+// ============================================
+model PasswordReset {
+  id     String @id @default(cuid())
+  userId String
+
+  // Token de reset
+  token     String   @unique
+  expiresAt DateTime
+
+  // Control de uso
+  used   Boolean   @default(false)
+  usedAt DateTime?
+
+  // Metadata de seguridad
+  ipAddress String? @db.VarChar(45)
+  userAgent String? @db.VarChar(500)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Índices
+  @@index([userId, used])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("password_resets")
+}
+
+// ============================================
+// MODELO EMAIL VERIFICATION - VERIFICACIÓN
+// ============================================
+model EmailVerification {
+  id     String @id @default(cuid())
+  userId String
+
+  // Token de verificación
+  token     String   @unique
+  expiresAt DateTime
+
+  // Email a verificar (permite cambio de email)
+  email String
+
+  // Control de uso
+  verified   Boolean   @default(false)
+  verifiedAt DateTime?
+
+  // Metadata
+  ipAddress String? @db.VarChar(45)
+  userAgent String? @db.VarChar(500)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relación
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Índices
+  @@index([userId, verified])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([email])
+  @@map("email_verifications")
+}
+
+// ============================================
+// MODELO AUDIT LOG - TRAZABILIDAD
+// ============================================
+model AuditLog {
+  id     String  @id @default(cuid())
+  userId String? // Nullable para acciones del sistema
+
+  // Información del evento
+  action   AuditAction
+  entity   String // Nombre de la tabla/entidad afectada
+  entityId String? // ID del registro afectado
+
+  // Detalles del cambio
+  oldValues Json? // Estado anterior
+  newValues Json? // Estado nuevo
+
+  // Metadata de seguridad
+  ipAddress String? @db.VarChar(45)
+  userAgent String? @db.VarChar(500)
+
+  // Contexto adicional
+  organizationId String? // Para filtrar por organización
+  metadata       Json? // Datos adicionales flexibles
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  // Relación
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Índices para consultas
+  @@index([userId])
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Category {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+
+  @@unique([organizationId, name, deletedAt], name: "unique_category_name_per_org")
+  @@map("categories")
+}
+
+model Brand {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  logo           String?
+  description    String?
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
+
+  @@unique([organizationId, name, deletedAt], name: "unique_brand_name_per_org")
+  @@map("brands")
+}
+
+model UnitMeasure {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  abbreviation   String
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  products       Product[]
+  saleItems      SaleItem[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, name, deletedAt], name: "unique_unit_name_per_org")
+  @@unique([organizationId, abbreviation, deletedAt], name: "unique_unit_abbrev_per_org")
+  @@map("unit_measures")
+}
+
+model Product {
+  id             String          @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  image          String?
+  barcode        String?
+  sku            String?
+  categoryId     String?
+  brandId        String?
+  unitMeasureId  String?
+  costPrice      Float
+  salePrice      Float
+  minStock       Int             @default(0)
+  currentStock   Int             @default(0)
+  alcoholGrade   Float?
+  volume         Float?
+  size           String?
+  color          String?
+  model          String?
+  isActive       Boolean         @default(true)
+  isDeleted      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  brand          Brand?          @relation(fields: [brandId], references: [id])
+  category       Category?       @relation(fields: [categoryId], references: [id])
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  unitMeasure    UnitMeasure?    @relation(fields: [unitMeasureId], references: [id])
+  purchaseItems  PurchaseItem[]
+  saleItems      SaleItem[]
+  stockMovements StockMovement[]
+
+  @@unique([organizationId, barcode, deletedAt], name: "unique_barcode_per_org")
+  @@unique([organizationId, sku, deletedAt], name: "unique_sku_per_org")
+  @@map("products")
+}
+
+model Customer {
+  id             String       @id @default(cuid())
+  organizationId String
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  address        String?
+  city           String?
+  department     String?
+  document       String?
+  documentType   String?
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  sales          Sale[]
+
+  @@unique([organizationId, email, deletedAt], name: "unique_customer_email_per_org")
+  @@unique([organizationId, document, deletedAt], name: "unique_customer_document_per_org")
+  @@map("customers")
+}
+
+model Supplier {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  contactName    String?
+  email          String?
+  phone          String?
+  address        String?
+  city           String?
+  department     String?
+  taxId          String?
+  isActive       Boolean      @default(true)
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  purchases      Purchase[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, taxId, deletedAt], name: "unique_supplier_taxid_per_org")
+  @@map("suppliers")
+}
+
+model PaymentMethod {
+  id             String        @id @default(cuid())
+  organizationId String
+  name           String
+  type           PaymentType
+  isActive       Boolean       @default(true)
+  isDeleted      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  salePayments   SalePayment[]
+
+  @@unique([organizationId, name, deletedAt], name: "unique_payment_method_per_org")
+  @@map("payment_methods")
+}
+
+model Sale {
+  id             String        @id @default(cuid())
+  organizationId String
+  storeId        String
+  saleNumber     String
+  customerId     String?
+  userId         String
+  subtotal       Float
+  total          Float
+  status         SaleStatus    @default(PAID)
+  saleDate       DateTime      @default(now())
+  dueDate        DateTime?
+  paidDate       DateTime?
+  notes          String?
+  isDeleted      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  saleItems      SaleItem[]
+  salePayments   SalePayment[]
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  store          Store         @relation(fields: [storeId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+
+  @@unique([storeId, saleNumber, deletedAt], name: "unique_sale_number_per_store")
+  @@map("sales")
+}
+
+model SaleItem {
+  id            String       @id @default(cuid())
+  saleId        String
+  productId     String
+  unitMeasureId String?
+  quantity      Int
+  unitPrice     Float
+  subtotal      Float
+  isDeleted     Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+  product       Product      @relation(fields: [productId], references: [id])
+  sale          Sale         @relation(fields: [saleId], references: [id])
+  unitMeasure   UnitMeasure? @relation(fields: [unitMeasureId], references: [id])
+
+  @@map("sale_items")
+}
+
+model SalePayment {
+  id              String        @id @default(cuid())
+  saleId          String
+  paymentMethodId String
+  amount          Float
+  reference       String?
+  notes           String?
+  paymentDate     DateTime      @default(now())
+  isDeleted       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  sale            Sale          @relation(fields: [saleId], references: [id])
+
+  @@map("sale_payments")
+}
+
+model Purchase {
+  id             String         @id @default(cuid())
+  organizationId String
+  supplierId     String
+  purchaseNumber String
+  total          Float
+  status         PurchaseStatus @default(PENDING)
+  purchaseDate   DateTime       @default(now())
+  receivedDate   DateTime?
+  notes          String?
+  isDeleted      Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+  purchaseItems  PurchaseItem[]
+  supplier       Supplier       @relation(fields: [supplierId], references: [id])
+
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id         String    @id @default(cuid())
+  purchaseId String
+  productId  String
+  quantity   Int
+  unitPrice  Float
+  subtotal   Float
+  isDeleted  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  product    Product   @relation(fields: [productId], references: [id])
+  purchase   Purchase  @relation(fields: [purchaseId], references: [id])
+
+  @@map("purchase_items")
+}
+
+model StockMovement {
+  id             String            @id @default(cuid())
+  organizationId String
+  productId      String
+  storeId        String?
+  type           StockMovementType
+  quantity       Int
+  previousStock  Int
+  newStock       Int
+  reason         String?
+  userId         String?
+  reference      String?
+  createdAt      DateTime          @default(now())
+  organization   Organization      @relation(fields: [organizationId], references: [id])
+  product        Product           @relation(fields: [productId], references: [id])
+  user           User?             @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, productId, createdAt])
+  @@map("stock_movements")
+}
+
+model SystemConfig {
+  id             String       @id @default(cuid())
+  organizationId String
+  key            String
+  value          String
+  type           String       @default("STRING")
+  description    String?
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, key, deletedAt], name: "unique_system_config_per_org")
+  @@map("system_configs")
+}
+
+enum UserRole {
+  ADMIN
+  SELLER
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+enum PaymentType {
+  CASH
+  CARD
+  TRANSFER
+  CREDIT
+  CHECK
+  OTHER
+}
+
+enum SaleStatus {
+  PAID
+  PENDING
+  OVERDUE
+  CANCELLED
+}
+
+enum PurchaseStatus {
+  PENDING
+  RECEIVED
+  CANCELLED
+}
+
+// ============================================
+// ENUM AUDIT ACTION - ACCIONES DE AUDITORÍA
+// ============================================
+enum AuditAction {
+  // Autenticación
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  EMAIL_VERIFIED
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+
+  // CRUD genérico
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  RESTORE
+
+  // Acciones específicas
+  ROLE_CHANGED
+  ORGANIZATION_CHANGED
+  STORE_CHANGED
+  SESSION_REVOKED
+}

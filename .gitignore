@@ -40,6 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
+# Prisma client is generated via postinstall script
+# /src/generated/prisma
 
 .vscode

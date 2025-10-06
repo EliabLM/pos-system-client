@@ -23,6 +23,8 @@ interface SaleFilters {
   dateFrom?: Date;
   dateTo?: Date;
   search?: string;
+  minAmount?: number;
+  maxAmount?: number;
 }
 
 interface SalePagination {

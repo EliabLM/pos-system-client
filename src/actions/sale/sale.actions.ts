@@ -20,15 +20,15 @@ import { createStockMovement } from '../stock-movement';
 // SALE INCLUDES
 const saleInclude: Prisma.SaleInclude = {
   store: true,
-  // customer: {
-  //   select: {
-  //     id: true,
-  //     firstName: true,
-  //     lastName: true,
-  //     email: true,
-  //     phone: true,
-  //   },
-  // },
+  customer: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+    },
+  },
   user: {
     select: {
       id: true,
@@ -379,6 +379,8 @@ export const getSalesByOrgId = async (
     dateFrom?: Date;
     dateTo?: Date;
     search?: string;
+    minAmount?: number;
+    maxAmount?: number;
   },
   includeDeleted: boolean = false,
   pagination?: {
@@ -420,10 +422,31 @@ export const getSalesByOrgId = async (
       }
     }
 
+    // Filtro por rango de montos
+    if (filters?.minAmount !== undefined || filters?.maxAmount !== undefined) {
+      whereClause.total = {};
+      if (filters.minAmount !== undefined) {
+        whereClause.total.gte = filters.minAmount;
+      }
+      if (filters.maxAmount !== undefined) {
+        whereClause.total.lte = filters.maxAmount;
+      }
+    }
+
+    // Búsqueda por texto en número de venta, notas y nombre del cliente
     if (filters?.search) {
       whereClause.OR = [
         { saleNumber: { contains: filters.search, mode: 'insensitive' } },
         { notes: { contains: filters.search, mode: 'insensitive' } },
+        {
+          customer: {
+            OR: [
+              { firstName: { contains: filters.search, mode: 'insensitive' } },
+              { lastName: { contains: filters.search, mode: 'insensitive' } },
+              { email: { contains: filters.search, mode: 'insensitive' } },
+            ],
+          },
+        },
       ];
     }
 

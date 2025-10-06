@@ -17,7 +17,9 @@
       "Bash(node:*)",
       "Bash(pnpm dev:*)",
       "Bash(find:*)",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

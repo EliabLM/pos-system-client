@@ -99,12 +99,12 @@ export const useSales = (
 };
 
 // Hook para obtener una venta específica por ID
-export const useSaleById = (saleId: string) => {
+export const useSaleById = (saleId: string | null) => {
   return useQuery({
     queryKey: ['sale', saleId],
     queryFn: async () => {
       if (!saleId) {
-        throw new Error('ID de venta requerido');
+        return null;
       }
 
       const response = await getSaleById(saleId);

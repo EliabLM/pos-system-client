@@ -75,6 +75,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Sale } from '@/generated/prisma';
+import { SaleActionComponent } from './action-component';
 
 // Tipo de venta con relaciones incluidas
 type SaleWithRelations = Sale & {
@@ -277,6 +278,19 @@ const getColumns = (): ColumnDef<SaleWithRelations>[] => {
           </Badge>
         );
       },
+    },
+    {
+      id: 'actions',
+      header: () => <div className="text-right">Acciones</div>,
+      cell: ({ row }) => {
+        return (
+          <div className="flex justify-end">
+            <SaleActionComponent item={row.original} />
+          </div>
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
     },
   ];
 };

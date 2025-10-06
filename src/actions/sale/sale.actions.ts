@@ -20,23 +20,12 @@ import { createStockMovement } from '../stock-movement';
 // SALE INCLUDES
 const saleInclude: Prisma.SaleInclude = {
   store: true,
-  customer: {
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      phone: true,
-    },
-  },
-  user: {
-    select: {
-      id: true,
-      username: true,
-      email: true,
-    },
-  },
+  customer: true, // Include complete customer data for detail view
+  user: true, // Include complete user data for detail view
   saleItems: {
+    where: {
+      isDeleted: false,
+    },
     include: {
       product: {
         include: {
@@ -49,6 +38,9 @@ const saleInclude: Prisma.SaleInclude = {
     },
   },
   salePayments: {
+    where: {
+      isDeleted: false,
+    },
     include: {
       paymentMethod: true,
     },
@@ -476,10 +468,45 @@ export const getSalesByOrgId = async (
   }
 };
 
+// Definir el tipo de include sin where clauses para una correcta inferencia de tipos
+const saleIncludeForType = {
+  store: true,
+  customer: true,
+  user: true,
+  saleItems: {
+    include: {
+      product: {
+        include: {
+          brand: true,
+          category: true,
+          unitMeasure: true,
+        },
+      },
+      unitMeasure: true,
+    },
+  },
+  salePayments: {
+    include: {
+      paymentMethod: true,
+    },
+  },
+  _count: {
+    select: {
+      saleItems: true,
+      salePayments: true,
+    },
+  },
+} as const satisfies Prisma.SaleInclude;
+
+// Tipo para venta con todas las relaciones incluidas
+export type SaleWithRelations = Prisma.SaleGetPayload<{
+  include: typeof saleIncludeForType;
+}>;
+
 // GET SALE BY ID
 export const getSaleById = async (
   saleId: string
-): Promise<ActionResponse<Sale | null>> => {
+): Promise<ActionResponse<SaleWithRelations | null>> => {
   try {
     if (!saleId) {
       return {
@@ -501,7 +528,7 @@ export const getSaleById = async (
     return {
       status: 200,
       message: 'Venta obtenida exitosamente',
-      data: sale,
+      data: sale as unknown as SaleWithRelations,
     };
   } catch (error) {
     console.error('Error fetching sale:', error);
@@ -514,7 +541,7 @@ export const getSaleBySaleNumber = async (
   orgId: string,
   storeId: string,
   saleNumber: string
-): Promise<ActionResponse<Sale | null>> => {
+): Promise<ActionResponse<SaleWithRelations | null>> => {
   try {
     if (checkOrgId(orgId)) return emptyOrgIdResponse();
 
@@ -543,7 +570,7 @@ export const getSaleBySaleNumber = async (
     return {
       status: 200,
       message: 'Venta obtenida exitosamente',
-      data: sale,
+      data: sale as unknown as SaleWithRelations,
     };
   } catch (error) {
     console.error('Error fetching sale by number:', error);

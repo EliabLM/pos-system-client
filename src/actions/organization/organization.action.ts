@@ -649,7 +649,7 @@ export const getOrganizationsByCity = async (
 // GET ORGANIZATION STATISTICS
 export const getOrganizationStatistics = async (
   organizationId: string
-): Promise<ActionResponse<any | null>> => {
+): Promise<ActionResponse<Record<string, unknown> | null>> => {
   try {
     if (!organizationId) {
       return {

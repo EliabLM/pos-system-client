@@ -46,7 +46,15 @@ interface LoginFormData {
  *   redirect('/dashboard');
  * }
  */
-export async function loginUser(formData: FormData): Promise<ActionResponse> {
+interface LoginResponse {
+  user?: Record<string, unknown>;
+  sessionId?: string;
+  attemptsRemaining?: number;
+  lockedUntil?: Date;
+  minutesRemaining?: number;
+}
+
+export async function loginUser(formData: FormData): Promise<ActionResponse<LoginResponse>> {
   try {
     // 1. Extraer y validar credenciales
     const data: LoginFormData = {

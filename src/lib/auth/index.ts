@@ -174,52 +174,58 @@ export {
  * const token = Auth.jwt.generateToken(payload);
  * const session = await Auth.session.createSession(options);
  */
+import * as cryptoModule from './crypto';
+import * as jwtModule from './jwt';
+import * as sessionModule from './session';
+import * as validationModule from './validation';
+import { AuthError, AuthErrorCode } from './types';
+
 export const Auth = {
   // Crypto
   crypto: {
-    hashPassword: require('./crypto').hashPassword,
-    comparePassword: require('./crypto').comparePassword,
-    needsRehash: require('./crypto').needsRehash,
-    generateSalt: require('./crypto').generateSalt,
-    estimateHashTime: require('./crypto').estimateHashTime,
+    hashPassword: cryptoModule.hashPassword,
+    comparePassword: cryptoModule.comparePassword,
+    needsRehash: cryptoModule.needsRehash,
+    generateSalt: cryptoModule.generateSalt,
+    estimateHashTime: cryptoModule.estimateHashTime,
   },
 
   // JWT
   jwt: {
-    generateToken: require('./jwt').generateToken,
-    verifyToken: require('./jwt').verifyToken,
-    safeVerifyToken: require('./jwt').safeVerifyToken,
-    decodeToken: require('./jwt').decodeToken,
-    isTokenExpired: require('./jwt').isTokenExpired,
-    getTokenRemainingTime: require('./jwt').getTokenRemainingTime,
-    refreshTokenIfNeeded: require('./jwt').refreshTokenIfNeeded,
+    generateToken: jwtModule.generateToken,
+    verifyToken: jwtModule.verifyToken,
+    safeVerifyToken: jwtModule.safeVerifyToken,
+    decodeToken: jwtModule.decodeToken,
+    isTokenExpired: jwtModule.isTokenExpired,
+    getTokenRemainingTime: jwtModule.getTokenRemainingTime,
+    refreshTokenIfNeeded: jwtModule.refreshTokenIfNeeded,
   },
 
   // Session
   session: {
-    createSession: require('./session').createSession,
-    validateSession: require('./session').validateSession,
-    invalidateSession: require('./session').invalidateSession,
-    invalidateAllUserSessions: require('./session').invalidateAllUserSessions,
-    cleanExpiredSessions: require('./session').cleanExpiredSessions,
-    getUserActiveSessions: require('./session').getUserActiveSessions,
-    hasActiveSession: require('./session').hasActiveSession,
-    renewSession: require('./session').renewSession,
+    createSession: sessionModule.createSession,
+    validateSession: sessionModule.validateSession,
+    invalidateSession: sessionModule.invalidateSession,
+    invalidateAllUserSessions: sessionModule.invalidateAllUserSessions,
+    cleanExpiredSessions: sessionModule.cleanExpiredSessions,
+    getUserActiveSessions: sessionModule.getUserActiveSessions,
+    hasActiveSession: sessionModule.hasActiveSession,
+    renewSession: sessionModule.renewSession,
   },
 
   // Validation
   validation: {
-    validateEmail: require('./validation').validateEmail,
-    normalizeEmail: require('./validation').normalizeEmail,
-    getEmailDomain: require('./validation').getEmailDomain,
-    validatePassword: require('./validation').validatePassword,
-    getPasswordSuggestions: require('./validation').getPasswordSuggestions,
-    verifyPasswordMatch: require('./validation').verifyPasswordMatch,
-    validatePasswordComplete: require('./validation').validatePasswordComplete,
-    estimateCrackTime: require('./validation').estimateCrackTime,
+    validateEmail: validationModule.validateEmail,
+    normalizeEmail: validationModule.normalizeEmail,
+    getEmailDomain: validationModule.getEmailDomain,
+    validatePassword: validationModule.validatePassword,
+    getPasswordSuggestions: validationModule.getPasswordSuggestions,
+    verifyPasswordMatch: validationModule.verifyPasswordMatch,
+    validatePasswordComplete: validationModule.validatePasswordComplete,
+    estimateCrackTime: validationModule.estimateCrackTime,
   },
 
   // Error handling
-  AuthError: require('./types').AuthError,
-  AuthErrorCode: require('./types').AuthErrorCode,
+  AuthError,
+  AuthErrorCode,
 } as const;

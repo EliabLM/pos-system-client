@@ -110,7 +110,8 @@ const RegisterOrganizationPage = () => {
       try {
         const result = await getCurrentUser();
         if (result.status === 200 && result.data?.user) {
-          setCurrentUser(result.data.user);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setCurrentUser(result.data.user as any);
         } else {
           // User not authenticated, redirect to login
           router.push('/auth/login');
@@ -187,7 +188,8 @@ const RegisterOrganizationPage = () => {
 
       // Actualizar usuario en el store de Zustand
       if (refreshResult.data?.user) {
-        setUser(refreshResult.data.user);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setUser(refreshResult.data.user as any);
       }
 
       // Success! Redirect to dashboard

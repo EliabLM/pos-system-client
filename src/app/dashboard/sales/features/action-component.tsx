@@ -33,8 +33,8 @@ type SaleWithRelations = Sale & {
     lastName: string;
     email: string;
   } | null;
-  saleItems?: any[];
-  salePayments?: any[];
+  saleItems?: unknown[];
+  salePayments?: unknown[];
   _count?: {
     saleItems: number;
     salePayments: number;

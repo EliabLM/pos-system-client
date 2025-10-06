@@ -535,7 +535,7 @@ export const getCustomerPurchaseHistory = async (
     page?: number;
     limit?: number;
   }
-): Promise<ActionResponse<{ sales: any[]; total: number } | null>> => {
+): Promise<ActionResponse<{ sales: unknown[]; total: number } | null>> => {
   try {
     if (!customerId) {
       return {

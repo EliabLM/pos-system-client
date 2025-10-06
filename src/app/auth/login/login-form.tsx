@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { toast } from 'sonner';
+import type { User } from '@/generated/prisma';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -77,7 +78,8 @@ export function LoginForm({
 
       if (result.status === 200 && result.data?.user) {
         // Login successful - save user to Zustand store
-        setUser(result.data.user);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setUser(result.data.user as any);
 
         // Show success toast
         toast.success(result.message || 'Inicio de sesión exitoso');

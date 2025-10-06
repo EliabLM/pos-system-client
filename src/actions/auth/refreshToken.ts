@@ -24,7 +24,13 @@ const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 días en segundos
  * @param userId - ID del usuario
  * @returns ActionResponse con el usuario actualizado
  */
-export async function refreshToken(userId: string): Promise<ActionResponse> {
+interface RefreshTokenResponse {
+  user?: Record<string, unknown>;
+  token?: string;
+  sessionId?: string;
+}
+
+export async function refreshToken(userId: string): Promise<ActionResponse<RefreshTokenResponse>> {
   try {
     if (!userId) {
       return {

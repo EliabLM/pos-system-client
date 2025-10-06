@@ -74,9 +74,9 @@ export function generateToken(
     const expiresIn = options.expiresIn ?? DEFAULT_EXPIRATION;
     const algorithm = (options.algorithm ?? DEFAULT_ALGORITHM) as jwt.Algorithm;
 
-    // Generar token usando any para evitar problemas de tipado de jsonwebtoken
+    // Generar token usando tipo explícito para evitar problemas de tipado de jsonwebtoken
     const token = jwt.sign(payload, secret, {
-      expiresIn: expiresIn as any,
+      expiresIn: expiresIn as string | number,
       algorithm,
     } as jwt.SignOptions);
 

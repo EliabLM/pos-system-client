@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
+import type { Resolver } from 'react-hook-form';
 import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -128,7 +129,7 @@ const NewUser = ({
         },
     mode: 'all',
     reValidateMode: 'onChange',
-    resolver: yupResolver(itemSelected ? editSchema : createSchema) as any,
+    resolver: yupResolver(itemSelected ? editSchema : createSchema) as Resolver<UserFormData>,
   });
 
   const onSubmit = async (data: UserFormData) => {

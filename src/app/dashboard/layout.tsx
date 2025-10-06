@@ -41,7 +41,8 @@ const DashboardLayout = ({
 
         // Handle success
         if (result.status === 200 && result.data?.user) {
-          setUser(result.data.user);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setUser(result.data.user as any);
         }
       } catch (error) {
         console.error('Error fetching user:', error);

@@ -120,7 +120,7 @@ export async function logoutAllDevices(): Promise<ActionResponse> {
       };
     }
 
-    const userId = (userResponse.data as any).user.id;
+    const userId = (userResponse.data as { user: { id: string } }).user.id;
 
     // Invalidar todas las sesiones del usuario
     const { invalidateAllUserSessions } = await import('@/lib/auth');

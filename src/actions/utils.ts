@@ -27,7 +27,7 @@ export const checkAdminRole = async (userId: string): Promise<boolean> => {
  * Crea una respuesta de error estandarizada para accesos no autorizados.
  * @returns {ActionResponse} - Un objeto de respuesta con estado 403.
  */
-export const unauthorizedResponse = (): ActionResponse => {
+export const unauthorizedResponse = <T = null>(): ActionResponse<T> => {
   return {
     status: 403,
     message: 'Acción no autorizada. Se requiere rol de Administrador.',
@@ -39,7 +39,7 @@ export const checkOrgId = (orgId: string): boolean => {
   return (!orgId || orgId.trim() === '')
 }
 
-export const emptyOrgIdResponse = (): ActionResponse => {
+export const emptyOrgIdResponse = <T = null>(): ActionResponse<T> => {
   return {
     status: 400,
     message: 'El ID de la organización es requerido',

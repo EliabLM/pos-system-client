@@ -32,7 +32,14 @@ const COOKIE_NAME = 'auth-token';
  *   console.log('Current user:', result.data.user);
  * }
  */
-export async function getCurrentUser(): Promise<ActionResponse> {
+interface GetCurrentUserResponse {
+  user?: Record<string, unknown>;
+  organizationDeactivated?: boolean;
+  storeDeactivated?: boolean;
+  session?: Record<string, unknown>;
+}
+
+export async function getCurrentUser(): Promise<ActionResponse<GetCurrentUserResponse>> {
   try {
     // 1. Get token from cookie
     const cookieStore = await cookies();

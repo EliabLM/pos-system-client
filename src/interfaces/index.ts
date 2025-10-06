@@ -47,7 +47,7 @@ export interface Organization {
   deletedAt: null;
 }
 
-export interface ActionResponse<T = any> {
+export interface ActionResponse<T = unknown> {
   status: number;
   message: string;
   data: T | null;

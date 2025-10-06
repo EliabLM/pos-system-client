@@ -1,0 +1,9 @@
+{
+  "buildCommand": "pnpm vercel-build",
+  "installCommand": "pnpm install",
+  "functions": {
+    "app/**/*.js": {
+      "includeFiles": "src/generated/prisma/**"
+    }
+  }
+}

@@ -363,6 +363,9 @@ export const createSale = async (
 // GET SALES BY ORG
 export const getSalesByOrgId = async (
   orgId: string,
+  userId: string,
+  userRole: string,
+  userStoreId?: string | null,
   filters?: {
     storeId?: string;
     customerId?: string;
@@ -388,7 +391,11 @@ export const getSalesByOrgId = async (
       isDeleted: includeDeleted ? undefined : false,
     };
 
-    if (filters?.storeId) {
+    // RBAC: SELLER users can only see sales from their assigned store
+    if (userRole === 'SELLER' && userStoreId) {
+      whereClause.storeId = userStoreId;
+    } else if (filters?.storeId) {
+      // ADMIN users can filter by any store
       whereClause.storeId = filters.storeId;
     }
 

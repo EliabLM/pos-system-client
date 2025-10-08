@@ -11,6 +11,8 @@ import { Sale } from '@/generated/prisma';
 import Swal from 'sweetalert2';
 import { toast } from 'sonner';
 import { useCancelSale } from '@/hooks/useSales';
+import { useStore } from '@/store';
+import { canEditSaleStatus, canCancelSale } from '@/lib/rbac';
 
 import {
   DropdownMenu,
@@ -58,6 +60,14 @@ export const SaleActionComponent = ({ item }: SaleActionComponentProps) => {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const cancelSaleMutation = useCancelSale();
+
+  // Get user role from store
+  const user = useStore((state) => state.user);
+  const userRole = user?.role || '';
+
+  // Check permissions based on role
+  const hasEditPermission = canEditSaleStatus(userRole);
+  const hasCancelPermission = canCancelSale(userRole);
 
   const handleViewDetail = () => {
     setDetailDialogOpen(true);
@@ -115,28 +125,39 @@ export const SaleActionComponent = ({ item }: SaleActionComponentProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
+          {/* View Detail - Always visible for all roles */}
           <DropdownMenuItem onClick={handleViewDetail} className="gap-2">
             <IconEye className="size-4" aria-hidden="true" />
             <span>Ver Detalle</span>
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={handleEdit}
-            className="gap-2"
-            disabled={item.status === 'CANCELLED'}
-          >
-            <IconEdit className="size-4" aria-hidden="true" />
-            <span>Editar</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={handleCancelSale}
-            className="gap-2"
-            disabled={item.status === 'CANCELLED'}
-          >
-            <IconBan className="size-4" aria-hidden="true" />
-            <span>Cancelar Venta</span>
-          </DropdownMenuItem>
+
+          {/* Edit - Only for ADMIN role */}
+          {hasEditPermission && (
+            <DropdownMenuItem
+              onClick={handleEdit}
+              className="gap-2"
+              disabled={item.status === 'CANCELLED'}
+            >
+              <IconEdit className="size-4" aria-hidden="true" />
+              <span>Editar</span>
+            </DropdownMenuItem>
+          )}
+
+          {/* Separator - Only show if there are mutation actions */}
+          {(hasEditPermission || hasCancelPermission) && <DropdownMenuSeparator />}
+
+          {/* Cancel Sale - Only for ADMIN role */}
+          {hasCancelPermission && (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={handleCancelSale}
+              className="gap-2"
+              disabled={item.status === 'CANCELLED'}
+            >
+              <IconBan className="size-4" aria-hidden="true" />
+              <span>Cancelar Venta</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -147,12 +168,14 @@ export const SaleActionComponent = ({ item }: SaleActionComponentProps) => {
         saleId={item.id}
       />
 
-      {/* Dialog de edición de estado de venta */}
-      <EditSaleStatusDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        saleId={item.id}
-      />
+      {/* Dialog de edición de estado de venta - Only render for ADMIN */}
+      {hasEditPermission && (
+        <EditSaleStatusDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          saleId={item.id}
+        />
+      )}
     </>
   );
 };

@@ -156,6 +156,16 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useStore((state) => state.user);
 
+  // Filter navigation items based on user role
+  const isSeller = user?.role === 'SELLER';
+
+  // For SELLER role, only show Dashboard and Sales
+  const filteredNavMain = isSeller
+    ? data.navMain.filter((item) =>
+        ['/dashboard', '/dashboard/sales'].includes(item.url)
+      )
+    : data.navMain;
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -176,8 +186,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavParametrization items={data.parametrization} />
+        <NavMain items={filteredNavMain} />
+        {/* Hide Parametrization section for SELLER role */}
+        {!isSeller && <NavParametrization items={data.parametrization} />}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

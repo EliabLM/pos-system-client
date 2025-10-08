@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { hasRouteAccess, getUnauthorizedRedirect } from '@/lib/rbac';
 
 // ============================================
 // CONFIGURACIÓN DE RUTAS
@@ -165,6 +166,18 @@ export async function middleware(request: NextRequest) {
       // Usuario sin organización intenta acceder a dashboard → redirect a onboarding
       if (isDashboardRoute(pathname) && !organizationId) {
         return redirectToOnboarding(request);
+      }
+
+      // 5. Role-based route access control
+      if (isDashboardRoute(pathname)) {
+        const hasAccess = hasRouteAccess(role, pathname);
+
+        if (!hasAccess) {
+          console.warn(`User with role ${role} attempted to access restricted route: ${pathname}`);
+          const redirectPath = getUnauthorizedRedirect();
+          const redirectUrl = new URL(redirectPath, request.url);
+          return NextResponse.redirect(redirectUrl);
+        }
       }
 
       // 3. Agregar user info a headers para acceso en server components

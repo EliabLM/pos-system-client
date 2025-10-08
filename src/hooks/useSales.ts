@@ -73,14 +73,17 @@ export const useSales = (
   const user = useStore((state) => state.user);
 
   return useQuery({
-    queryKey: ['sales', user?.organizationId, filters, includeDeleted, pagination],
+    queryKey: ['sales', user?.organizationId, user?.role, user?.storeId, filters, includeDeleted, pagination],
     queryFn: async () => {
-      if (!user?.organizationId) {
+      if (!user?.organizationId || !user?.id || !user?.role) {
         throw new Error('Usuario no tiene organización asignada');
       }
 
       const response = await getSalesByOrgId(
         user.organizationId,
+        user.id,
+        user.role,
+        user.storeId,
         filters,
         includeDeleted,
         pagination
@@ -92,7 +95,7 @@ export const useSales = (
 
       return response.data;
     },
-    enabled: !!user?.organizationId,
+    enabled: !!user?.organizationId && !!user?.id && !!user?.role,
     staleTime: 2 * 60 * 1000, // 2 minutos
     gcTime: 5 * 60 * 1000, // 5 minutos
   });

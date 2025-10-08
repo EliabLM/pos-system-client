@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, Control } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import {
@@ -114,6 +114,8 @@ const schema = yup.object().shape({
   notes: yup.string().nullable().notRequired().defined(),
 });
 
+type SaleFormData = yup.InferType<typeof schema>;
+
 // Tipos locales para el formulario
 interface SelectedProduct {
   productId: string;
@@ -156,13 +158,13 @@ export const NewSaleForm = () => {
 
   const form = useForm({
     resolver: yupResolver(schema),
-    criteriaMode: 'firstError',
+    criteriaMode: 'firstError' as const,
     defaultValues: {
       store: storeSelected?.id ?? '',
       saleDate: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
       status: 'PAID' as const,
-      dueDate: null,
-      notes: '',
+      dueDate: null as string | null,
+      notes: null as string | null,
     },
     mode: 'all' as const,
     reValidateMode: 'onChange' as const,
@@ -308,8 +310,7 @@ export const NewSaleForm = () => {
   };
 
   // Submit del formulario
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: SaleFormData) => {
     if (selectedProducts.length === 0) {
       toast.error('Debes agregar al menos un producto a la venta');
       return;
@@ -457,8 +458,7 @@ export const NewSaleForm = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <FormField
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                control={form.control as any}
+                control={form.control as unknown as Control<SaleFormData>}
                 name="store"
                 render={({ field }) => (
                   <FormItem>
@@ -490,8 +490,7 @@ export const NewSaleForm = () => {
               />
 
               <FormField
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                control={form.control as any}
+                control={form.control as unknown as Control<SaleFormData>}
                 name="saleDate"
                 render={({ field }) => (
                   <FormItem>
@@ -514,8 +513,7 @@ export const NewSaleForm = () => {
               />
 
               <FormField
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                control={form.control as any}
+                control={form.control as unknown as Control<SaleFormData>}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
@@ -555,8 +553,7 @@ export const NewSaleForm = () => {
               {/* Conditional Due Date Field */}
               {form.watch('status') === 'PENDING' && (
                 <FormField
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  control={form.control as any}
+                  control={form.control as unknown as Control<SaleFormData>}
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem>
@@ -955,8 +952,7 @@ export const NewSaleForm = () => {
               {/* Notes Section */}
               <div className="space-y-2">
                 <FormField
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  control={form.control as any}
+                  control={form.control as unknown as Control<SaleFormData>}
                   name="notes"
                   render={({ field }) => (
                     <FormItem>

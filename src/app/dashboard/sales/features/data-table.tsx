@@ -47,6 +47,7 @@ import {
   VisibilityState,
 } from '@tanstack/react-table';
 import { NumericFormat } from 'react-number-format';
+import { Loader2Icon, RefreshCcw } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,7 @@ import {
 } from '@/components/ui/table';
 import { Sale } from '@/generated/prisma';
 import { SaleActionComponent } from './action-component';
+import { useSales } from '@/hooks/useSales';
 
 // Tipo de venta con relaciones incluidas
 type SaleWithRelations = Sale & {
@@ -114,7 +116,7 @@ const getStatusBadge = (status: string) => {
             size={16}
           />
         ),
-        label: 'Pagado',
+        label: 'Pagada',
         variant: 'outline' as const,
       };
     case 'PENDING':
@@ -126,13 +128,13 @@ const getStatusBadge = (status: string) => {
     case 'OVERDUE':
       return {
         icon: <IconAlertCircleFilled className="text-orange-500" size={16} />,
-        label: 'Vencido',
+        label: 'Vencida',
         variant: 'destructive' as const,
       };
     case 'CANCELLED':
       return {
         icon: <IconX className="text-red-500" size={16} />,
-        label: 'Cancelado',
+        label: 'Cancelada',
         variant: 'outline' as const,
       };
     default:
@@ -323,10 +325,24 @@ function DraggableRow({ row }: { row: Row<SaleWithRelations> }) {
 export function DataTable({
   data,
   loading,
+  showFilters,
 }: {
   data: SaleWithRelations[];
   loading: boolean;
+  showFilters: boolean;
 }) {
+  const salesFilters = {
+    search: undefined,
+    status: undefined,
+    storeId: undefined,
+    customerId: undefined,
+    dateFrom: undefined,
+    dateTo: undefined,
+    minAmount: undefined,
+    maxAmount: undefined,
+  };
+  const { refetch, isFetching } = useSales(salesFilters);
+
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -388,6 +404,21 @@ export function DataTable({
     <div className="w-full flex-col justify-start gap-6">
       <div className="flex items-center justify-end mb-4 ">
         <div className="flex items-center gap-2">
+          {!showFilters &&
+            (!isFetching ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={showFilters}
+                onClick={() => refetch()}
+              >
+                <RefreshCcw />
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm">
+                <Loader2Icon className="animate-spin" />
+              </Button>
+            ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -452,16 +483,7 @@ export function DataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : loading ? (
+                {loading ? (
                   <TableRow>
                     <TableCell
                       colSpan={getColumns().length}
@@ -470,6 +492,15 @@ export function DataTable({
                       Cargando...
                     </TableCell>
                   </TableRow>
+                ) : table.getRowModel().rows?.length ? (
+                  <SortableContext
+                    items={dataIds}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {table.getRowModel().rows.map((row) => (
+                      <DraggableRow key={row.id} row={row} />
+                    ))}
+                  </SortableContext>
                 ) : (
                   <TableRow>
                     <TableCell

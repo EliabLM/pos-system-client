@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { RefreshCcw } from 'lucide-react';
+import { Loader2Icon, RefreshCcw } from 'lucide-react';
 import {
   closestCenter,
   DndContext,
@@ -296,7 +296,7 @@ export function DataTable({
   loading: boolean;
   showFilters: boolean;
 }) {
-  const { refetch } = useStockMovements({});
+  const { refetch, isFetching } = useStockMovements({});
 
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -359,16 +359,21 @@ export function DataTable({
     <div className="w-full flex-col justify-start gap-6">
       <div className="flex items-center justify-end mb-4 ">
         <div className="flex items-center gap-2">
-          {!showFilters && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={showFilters}
-              onClick={() => refetch()}
-            >
-              <RefreshCcw />
-            </Button>
-          )}
+          {!showFilters &&
+            (!isFetching ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={showFilters}
+                onClick={() => refetch()}
+              >
+                <RefreshCcw />
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm">
+                <Loader2Icon className="animate-spin" />
+              </Button>
+            ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">

@@ -503,7 +503,7 @@ export const NewSaleForm = () => {
                 <p className="text-sm my-2">Buscando...</p>
               )}
 
-              {searchTerm && products.data && products.data.length > 0 && (
+              {products.data && products.data.length > 0 && (
                 <ScrollArea className="border rounded p-2 mt-2 max-h-60">
                   {products.data.map((product) => (
                     <div

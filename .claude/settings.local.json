@@ -19,7 +19,10 @@
       "Bash(find:*)",
       "Bash(pnpm list:*)",
       "Bash(pnpm exec tsc:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(git add:*)",
+      "WebFetch(domain:www.prisma.io)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

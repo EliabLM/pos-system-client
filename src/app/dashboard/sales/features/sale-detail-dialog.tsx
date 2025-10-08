@@ -50,36 +50,43 @@ const getStatusBadge = (status: string) => {
     case 'PAID':
       return {
         icon: (
-          <IconCircleCheckFilled
-            className="size-4 fill-green-500 dark:fill-green-400"
-          />
+          <IconCircleCheckFilled className="size-4 fill-green-500 dark:fill-green-400" />
         ),
         label: 'Pagado',
-        className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        className:
+          'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
       };
     case 'PENDING':
       return {
-        icon: <IconClock className="size-4 text-yellow-600 dark:text-yellow-500" />,
+        icon: (
+          <IconClock className="size-4 text-yellow-600 dark:text-yellow-500" />
+        ),
         label: 'Pendiente',
-        className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        className:
+          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
       };
     case 'OVERDUE':
       return {
-        icon: <IconAlertCircleFilled className="size-4 text-orange-600 dark:text-orange-500" />,
+        icon: (
+          <IconAlertCircleFilled className="size-4 text-orange-600 dark:text-orange-500" />
+        ),
         label: 'Vencido',
-        className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+        className:
+          'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
       };
     case 'CANCELLED':
       return {
         icon: <IconX className="size-4 text-red-600 dark:text-red-500" />,
         label: 'Cancelado',
-        className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        className:
+          'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
       };
     default:
       return {
         icon: null,
         label: status,
-        className: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+        className:
+          'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
       };
   }
 };
@@ -161,8 +168,14 @@ export function SaleDetailDialog({
   }
 
   const statusBadge = getStatusBadge(sale.status);
-  const totalItems = sale.saleItems.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPayments = sale.salePayments.reduce((sum, payment) => sum + payment.amount, 0);
+  const totalItems = sale.saleItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+  const totalPayments = sale.salePayments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -189,12 +202,15 @@ export function SaleDetailDialog({
         <Separator />
 
         {/* Content */}
-        <ScrollArea className="flex-1 px-6 py-4 max-h-[calc(90vh-140px)]">
+        <ScrollArea className="flex-1 px-1 md:px-6 py-4 max-h-[calc(90vh-140px)]">
           <div className="space-y-6">
             {/* Información General */}
             <section className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <IconFileText className="size-5 text-muted-foreground" aria-hidden="true" />
+                <IconFileText
+                  className="size-5 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 Información General
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
@@ -203,7 +219,9 @@ export function SaleDetailDialog({
                     <IconBuildingStore className="size-4" aria-hidden="true" />
                     <span>Tienda</span>
                   </div>
-                  <p className="font-medium">{sale.store?.name || 'Sin tienda'}</p>
+                  <p className="font-medium">
+                    {sale.store?.name || 'Sin tienda'}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -253,12 +271,17 @@ export function SaleDetailDialog({
             {sale.customer && (
               <section className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <IconUser className="size-5 text-muted-foreground" aria-hidden="true" />
+                  <IconUser
+                    className="size-5 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   Información del Cliente
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Nombre Completo</p>
+                    <p className="text-sm text-muted-foreground">
+                      Nombre Completo
+                    </p>
                     <p className="font-medium">
                       {sale.customer.firstName} {sale.customer.lastName}
                     </p>
@@ -290,7 +313,10 @@ export function SaleDetailDialog({
             {/* Productos Vendidos */}
             <section className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <IconShoppingCart className="size-5 text-muted-foreground" aria-hidden="true" />
+                <IconShoppingCart
+                  className="size-5 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 Productos Vendidos
               </h3>
               <div className="border rounded-lg overflow-hidden">
@@ -316,7 +342,9 @@ export function SaleDetailDialog({
                               />
                             )}
                             <div className="flex flex-col">
-                              <span className="font-medium">{item.product.name}</span>
+                              <span className="font-medium">
+                                {item.product.name}
+                              </span>
                               {item.product.description && (
                                 <span className="text-xs text-muted-foreground line-clamp-1">
                                   {item.product.description}
@@ -360,7 +388,10 @@ export function SaleDetailDialog({
             {/* Métodos de Pago */}
             <section className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <IconCreditCard className="size-5 text-muted-foreground" aria-hidden="true" />
+                <IconCreditCard
+                  className="size-5 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 Métodos de Pago
               </h3>
               <div className="border rounded-lg overflow-hidden">
@@ -445,7 +476,10 @@ export function SaleDetailDialog({
             {sale.notes && (
               <section className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <IconFileText className="size-5 text-muted-foreground" aria-hidden="true" />
+                  <IconFileText
+                    className="size-5 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   Notas
                 </h3>
                 <div className="p-4 bg-muted/50 rounded-lg">

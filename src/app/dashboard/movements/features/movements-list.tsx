@@ -175,7 +175,7 @@ const MovementsList = () => {
 
             <CardContent>
               <DataTable
-                loading={movements.isFetching}
+                loading={movements.isLoading}
                 data={movements.data?.movements ?? []}
                 showFilters={showFilters}
               />

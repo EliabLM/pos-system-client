@@ -147,7 +147,8 @@ export const SaleList = () => {
                       onValueChange={(value) =>
                         setFilters((prev) => ({
                           ...prev,
-                          status: value === 'all' ? undefined : (value as SaleStatus),
+                          status:
+                            value === 'all' ? undefined : (value as SaleStatus),
                         }))
                       }
                     >
@@ -323,8 +324,9 @@ export const SaleList = () => {
 
             <CardContent>
               <DataTable
-                loading={sales.isFetching}
+                loading={sales.isLoading}
                 data={salesData}
+                showFilters={showFilters}
               />
             </CardContent>
           </Card>

@@ -1,8 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { IconDotsVertical, IconEye, IconEdit, IconTrash } from '@tabler/icons-react';
+import {
+  IconDotsVertical,
+  IconEye,
+  IconEdit,
+  IconBan,
+} from '@tabler/icons-react';
 import { Sale } from '@/generated/prisma';
+import Swal from 'sweetalert2';
+import { toast } from 'sonner';
+import { useCancelSale } from '@/hooks/useSales';
 
 import {
   DropdownMenu,
@@ -13,6 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { SaleDetailDialog } from './sale-detail-dialog';
+import { EditSaleStatusDialog } from './edit-sale-status-dialog';
 
 // Tipo extendido para la venta con relaciones (debe coincidir con el tipo de la tabla)
 type SaleWithRelations = Sale & {
@@ -47,19 +56,48 @@ interface SaleActionComponentProps {
 
 export const SaleActionComponent = ({ item }: SaleActionComponentProps) => {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const cancelSaleMutation = useCancelSale();
 
   const handleViewDetail = () => {
     setDetailDialogOpen(true);
   };
 
   const handleEdit = () => {
-    // TODO: Implementar lógica de edición
-    console.log('Editar venta:', item.id);
+    setEditDialogOpen(true);
   };
 
-  const handleDelete = () => {
-    // TODO: Implementar lógica de eliminación con confirmación
-    console.log('Eliminar venta:', item.id);
+  const handleCancelSale = async () => {
+    try {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: '¿Cancelar venta?',
+        text: '¿Estás seguro de que deseas cancelar esta venta?',
+        input: 'textarea',
+        inputLabel: 'Razón de cancelación (opcional)',
+        inputPlaceholder: 'Ingresa la razón de la cancelación...',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No, mantener',
+        showCancelButton: true,
+        showConfirmButton: true,
+        showLoaderOnConfirm: true,
+        confirmButtonColor: '#dc2626',
+        preConfirm: async (reason: string) => {
+          await cancelSaleMutation.mutateAsync({
+            saleId: item.id,
+            reason: reason || undefined,
+          });
+        },
+        allowOutsideClick: () => !Swal.isLoading(),
+      });
+
+      if (result.isConfirmed) {
+        toast.success('Venta cancelada exitosamente');
+      }
+    } catch (error) {
+      console.error('Error cancelando la venta:', error);
+      toast.error('Ha ocurrido un error al cancelar la venta');
+    }
   };
 
   return (
@@ -81,19 +119,23 @@ export const SaleActionComponent = ({ item }: SaleActionComponentProps) => {
             <IconEye className="size-4" aria-hidden="true" />
             <span>Ver Detalle</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleEdit} className="gap-2" disabled>
+          <DropdownMenuItem
+            onClick={handleEdit}
+            className="gap-2"
+            disabled={item.status === 'CANCELLED'}
+          >
             <IconEdit className="size-4" aria-hidden="true" />
             <span>Editar</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
-            onClick={handleDelete}
+            onClick={handleCancelSale}
             className="gap-2"
-            disabled
+            disabled={item.status === 'CANCELLED'}
           >
-            <IconTrash className="size-4" aria-hidden="true" />
-            <span>Eliminar</span>
+            <IconBan className="size-4" aria-hidden="true" />
+            <span>Cancelar Venta</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -102,6 +144,13 @@ export const SaleActionComponent = ({ item }: SaleActionComponentProps) => {
       <SaleDetailDialog
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
+        saleId={item.id}
+      />
+
+      {/* Dialog de edición de estado de venta */}
+      <EditSaleStatusDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
         saleId={item.id}
       />
     </>

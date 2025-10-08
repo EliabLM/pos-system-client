@@ -22,7 +22,8 @@
       "Bash(taskkill:*)",
       "Bash(git add:*)",
       "WebFetch(domain:www.prisma.io)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(pnpm exec next:*)"
     ],
     "deny": [],
     "ask": []

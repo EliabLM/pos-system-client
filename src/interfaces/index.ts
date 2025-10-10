@@ -102,3 +102,6 @@ export type ProductWithIncludesNumberPrice = Omit<
 export type Metadata = {
   onboardingComplete: boolean
 }
+
+// Export dashboard interfaces
+export * from './dashboard';

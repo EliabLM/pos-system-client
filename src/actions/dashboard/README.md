@@ -554,3 +554,198 @@ This action is designed for end-of-day cash register reconciliation:
 - Soft-deleted payments excluded (maintains data integrity)
 - Requires valid organizationId (enforces multi-tenancy)
 - Date filtering prevents unauthorized historical data access beyond scope
+
+---
+
+### `getStockAlerts`
+
+Retrieves products with low stock and calculates urgency metrics including predicted stockout dates.
+
+**Function Signature:**
+```typescript
+getStockAlerts(
+  organizationId: string,
+  storeId?: string | null
+): Promise<ActionResponse<StockAlert[]>>
+```
+
+**Parameters:**
+- `organizationId` (required): The organization ID to filter products
+- `storeId` (optional): Optional store ID to filter sales data for prediction calculations. Note: Products are organization-wide, but sales predictions can be scoped to a specific store.
+
+**Returns:**
+`ActionResponse<StockAlert[]>` with array of low stock products:
+
+```typescript
+{
+  productId: string;
+  productName: string;
+  productImage: string | null;
+  currentStock: number;
+  minStock: number;
+  stockDifference: number;        // currentStock - minStock (negative when below minimum)
+  percentageRemaining: number;    // (currentStock / minStock) * 100
+  severity: 'critical' | 'warning' | 'info';
+  daysUntilStockout?: number;     // Estimated days based on sales trend (optional)
+
+  // Optional product details
+  categoryName?: string;
+  brandName?: string;
+  sku?: string | null;
+  barcode?: string | null;
+}
+```
+
+**Low Stock Detection:**
+- Products where `currentStock <= minStock`
+- Filters by `organizationId` (required)
+- Only active products (`isActive = true`)
+- Excludes soft-deleted products (`isDeleted = false`)
+- Limited to 50 products (ordered by lowest stock first)
+
+**Sales Analysis Period:**
+- Last 30 days of sales data used for predictions
+- Only PAID sales counted
+- Filters out soft-deleted sales and sale items
+- Optional storeId filter for store-specific predictions
+
+**Metrics Calculation:**
+
+1. **currentStock**: Current stock level from product record
+2. **minStock**: Minimum stock threshold from product configuration
+3. **stockDifference**: `currentStock - minStock` (negative value indicates deficit)
+4. **percentageRemaining**: `(currentStock / minStock) * 100` rounded to 2 decimals
+5. **daysUntilStockout**: Estimated days until stockout based on sales trend
+   - Calculation: `currentStock / dailyAverageSales`
+   - `undefined` (omitted) if no sales in last 30 days (cannot predict)
+   - Rounded to nearest integer
+6. **dailyAverageSales** (internal): Total units sold in last 30 days ÷ 30
+
+**Severity Levels:**
+
+The severity is calculated based on stock percentage relative to minimum:
+
+- **'critical'**: Stock is 0 OR stock < 20% of minStock
+  - Urgent reorder required
+  - Risk of immediate stockout
+
+- **'warning'**: Stock < 50% of minStock (but >= 20%)
+  - Reorder should be planned soon
+  - Medium-term risk
+
+- **'info'**: Stock < minStock (but >= 50%)
+  - Low priority reorder
+  - Long-term monitoring
+
+**Sorting:**
+- Primary: By severity (critical → warning → info)
+- Secondary: By currentStock ascending (lowest stock first within same severity)
+
+**Usage Examples:**
+
+```typescript
+import { getStockAlerts } from '@/actions/dashboard';
+
+// Get stock alerts for entire organization
+const response = await getStockAlerts('org-123');
+
+if (response.status === 200) {
+  response.data.forEach((alert) => {
+    console.log(`${alert.productName}:`);
+    console.log(`  Current: ${alert.currentStock} | Min: ${alert.minStock}`);
+    console.log(`  Severity: ${alert.severity}`);
+    console.log(`  Remaining: ${alert.percentageRemaining}%`);
+    if (alert.daysUntilStockout !== undefined) {
+      console.log(`  Days until stockout: ${alert.daysUntilStockout}`);
+    }
+  });
+}
+
+// Get stock alerts with store-specific sales predictions
+const storeResponse = await getStockAlerts('org-123', 'store-456');
+```
+
+**Implementation Details:**
+
+1. **Product Query**:
+   - Fetches products where `currentStock <= minStock`
+   - Includes category and brand relations
+   - Orders by `currentStock ASC`
+   - Limits to 50 products
+
+2. **Sales Query**:
+   - Uses Prisma `groupBy` for efficient aggregation
+   - Groups by `productId`
+   - Sums quantity sold in last 30 days
+   - Filters by organizationId and optional storeId
+   - Only counts PAID sales
+
+3. **Prediction Calculation**:
+   - Creates Map of productId → totalQuantitySold for quick lookup
+   - Calculates daily average: `totalSold / 30`
+   - Predicts stockout: `currentStock / dailyAverage`
+   - Omits `daysUntilStockout` field if no sales history (undefined)
+
+4. **Severity Calculation**:
+   - Handles edge case: `minStock = 0` (returns 'critical' if stock is 0, otherwise 'info')
+   - Calculates percentage: `(currentStock / minStock) * 100`
+   - Assigns severity based on percentage thresholds
+
+**Edge Cases:**
+
+- **No low stock products**: Returns empty array with 200 status
+- **minStock = 0**: Severity is 'critical' if stock is 0, otherwise 'info'
+- **No sales in last 30 days**: `daysUntilStockout` is omitted (undefined, no prediction possible)
+- **currentStock = 0**: Severity is always 'critical'
+- **Very slow-moving products**: May show high `daysUntilStockout` even below minStock
+
+**Business Rules:**
+
+- **Product scope**: Products are organization-wide (no storeId field on Product model)
+- **Sales scope**: Sales can be filtered by store for predictions
+- **Date range**: Fixed 30-day window for sales analysis
+- **Prediction accuracy**: More accurate for products with consistent sales patterns
+- **Reorder suggestions**: Can be calculated as `(minStock * 2) - currentStock` (future enhancement)
+
+**Error Handling:**
+- Returns 400 if organization ID is empty
+- Returns 500 on internal server errors
+- Logs all errors to console
+- Returns empty array if no products meet criteria (not an error)
+
+**Performance Considerations:**
+- Two database queries: one for products, one for sales aggregation
+- Sales query uses `groupBy` for efficient server-side aggregation
+- Map-based lookup for O(1) sales data retrieval
+- Limited to 50 products to prevent performance issues
+- In-memory sorting after data retrieval
+
+**Type Safety:**
+- All fields match StockAlert interface from @/interfaces/dashboard
+- Handles edge cases with proper null/undefined checks
+- Converts numeric calculations safely
+- TypeScript strict mode compliance
+
+**Multi-tenancy:**
+- Products scoped to organizationId
+- Sales optionally scoped to storeId
+- Ensures data isolation between organizations
+- No cross-organization data leakage
+
+**Inventory Management:**
+
+This action supports proactive inventory management:
+
+1. **Stockout Prevention**: Identifies products at risk of running out
+2. **Prioritization**: Severity levels help prioritize reorder decisions
+3. **Demand Forecasting**: Uses historical sales data to predict stockout dates
+4. **Reorder Planning**: `daysUntilStockout` helps schedule purchase orders
+5. **Multi-store Analysis**: Optional store filter for location-specific inventory decisions
+
+**Limitations:**
+
+- Sales predictions assume consistent demand (doesn't account for seasonality)
+- 30-day window may not capture long-term trends
+- Stockout predictions based on linear extrapolation
+- Products with irregular sales patterns may have inaccurate predictions
+- Limit of 50 products means only most critical alerts are shown

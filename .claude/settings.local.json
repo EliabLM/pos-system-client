@@ -26,7 +26,8 @@
       "Bash(pnpm exec next:*)",
       "Bash(mkdir:*)",
       "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\actions\")",
-      "Bash(pnpm eslint:*)"
+      "Bash(pnpm eslint:*)",
+      "Bash(pnpm next build:*)"
     ],
     "deny": [],
     "ask": []

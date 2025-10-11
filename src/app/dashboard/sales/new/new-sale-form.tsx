@@ -52,7 +52,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { useActivePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useCreateSale } from '@/hooks/useSales';
 import type { Product, SaleStatus } from '@/generated/prisma';
-import { isSeller } from '@/lib/rbac';
+import { isAdmin, isSeller } from '@/lib/rbac';
 
 // Mapeo de estados en español
 const SALE_STATUS_LABELS: Record<string, string> = {
@@ -388,8 +388,11 @@ export const NewSaleForm = () => {
       form.resetField('store');
       return;
     }
-    form.setValue('store', storeSelected.id);
-  }, [storeSelected, form]);
+
+    if (isSeller(userRole)) {
+      form.setValue('store', storeSelected.id);
+    }
+  }, [storeSelected, form, userRole]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

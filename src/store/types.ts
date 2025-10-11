@@ -16,7 +16,9 @@ export type UiSlice = {
 
 export type AuthSlice = {
     user: User | null;
-    setUser: (user: User | null) => void
+    storeId: string | null;
+    setUser: (user: User | null) => void;
+    setStoreId: (storeId: string | null) => void;
 }
 
 export type AppState = LoginSlice & AuthSlice //& UiSlice; // agregar más slices según necesites

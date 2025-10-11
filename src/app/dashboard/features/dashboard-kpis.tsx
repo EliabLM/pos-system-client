@@ -9,8 +9,8 @@ import { useStore } from '@/store';
 export function DashboardKpis() {
   // Get organizationId and storeId from Zustand store
   const user = useStore((state) => state.user);
+  const storeId = useStore((state) => state.storeId);
   const organizationId = user?.organizationId;
-  const storeId = user?.storeId;
 
   // Fetch KPIs data
   const { data: kpis, isLoading, error } = useKPIs(organizationId, storeId);
@@ -30,9 +30,7 @@ export function DashboardKpis() {
   if (!isLoading && !kpis) {
     return (
       <Alert>
-        <AlertDescription>
-          No hay datos disponibles
-        </AlertDescription>
+        <AlertDescription>No hay datos disponibles</AlertDescription>
       </Alert>
     );
   }

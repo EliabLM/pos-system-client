@@ -9,7 +9,6 @@ import {
   IconRefresh,
   IconPlus,
   IconFileAnalytics,
-  IconChevronDown
 } from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useStore } from '@/store';
 import { useActiveStores } from '@/hooks/useStores';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,6 +48,8 @@ export function DashboardHeader({
   showStoreSelector = true,
 }: DashboardHeaderProps) {
   const user = useStore((state) => state.user);
+  const globalStoreId = useStore((state) => state.storeId);
+  const setGlobalStoreId = useStore((state) => state.setStoreId);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [relativeTime, setRelativeTime] = useState<string>('');
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
@@ -52,15 +57,21 @@ export function DashboardHeader({
   // Fetch active stores for the organization
   const { data: stores, isLoading: isLoadingStores } = useActiveStores();
 
-  // Initialize selected store from user's storeId
+  // Initialize selected store from user's storeId or global store state
   useEffect(() => {
-    if (user?.storeId) {
+    if (globalStoreId) {
+      // If there's a global store ID in Zustand, use it
+      setSelectedStoreId(globalStoreId);
+    } else if (user?.storeId) {
+      // Otherwise fall back to user's default store
       setSelectedStoreId(user.storeId);
+      setGlobalStoreId(user.storeId);
     } else if (stores && stores.length === 1) {
       // Auto-select if only one store available
       setSelectedStoreId(stores[0].id);
+      setGlobalStoreId(stores[0].id);
     }
-  }, [user?.storeId, stores]);
+  }, [user?.storeId, stores, globalStoreId, setGlobalStoreId]);
 
   // Update relative time every minute
   useEffect(() => {
@@ -96,19 +107,17 @@ export function DashboardHeader({
   // Handle store selection change
   const handleStoreChange = (storeId: string) => {
     setSelectedStoreId(storeId);
-    // TODO: Update this in Zustand store when store slice is extended
-    // For now, this will trigger any parent components listening to this state
+    // Update Zustand store so all dashboard components refetch with new storeId
+    setGlobalStoreId(storeId);
   };
 
   // Determine if we should show the store selector
   const shouldShowStoreSelector =
-    showStoreSelector &&
-    stores &&
-    stores.length > 1 &&
-    !isLoadingStores;
+    showStoreSelector && stores && stores.length > 1 && !isLoadingStores;
 
   // Get current store name for display
-  const currentStoreName = stores?.find((s) => s.id === selectedStoreId)?.name || 'Todas las tiendas';
+  const currentStoreName =
+    stores?.find((s) => s.id === selectedStoreId)?.name || 'Todas las tiendas';
 
   return (
     <div className="flex flex-col gap-4 border-b bg-background pb-4 mb-6">
@@ -118,7 +127,9 @@ export function DashboardHeader({
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <IconDashboard className="h-6 w-6" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Dashboard
+          </h1>
         </div>
 
         <Breadcrumb>
@@ -143,8 +154,13 @@ export function DashboardHeader({
           {/* Store Selector */}
           {shouldShowStoreSelector && (
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Tienda:</span>
-              <Select value={selectedStoreId || undefined} onValueChange={handleStoreChange}>
+              <span className="text-sm font-medium text-muted-foreground">
+                Tienda:
+              </span>
+              <Select
+                value={selectedStoreId || undefined}
+                onValueChange={handleStoreChange}
+              >
                 <SelectTrigger
                   className="w-[200px]"
                   aria-label="Seleccionar tienda"
@@ -167,7 +183,9 @@ export function DashboardHeader({
           {/* Store Selector Loading State */}
           {isLoadingStores && showStoreSelector && (
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Tienda:</span>
+              <span className="text-sm font-medium text-muted-foreground">
+                Tienda:
+              </span>
               <Skeleton className="h-9 w-[200px]" />
             </div>
           )}
@@ -212,7 +230,7 @@ export function DashboardHeader({
           </Button>
 
           <Button asChild variant="outline" className="gap-2">
-            <Link href="/dashboard/reports">
+            <Link href="#">
               <IconFileAnalytics className="h-4 w-4" />
               <span className="hidden sm:inline">Ver Reportes</span>
               <span className="sm:hidden">Reportes</span>

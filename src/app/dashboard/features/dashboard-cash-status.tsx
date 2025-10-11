@@ -161,11 +161,15 @@ const PaymentMethodSkeleton = () => (
 const EmptyState = ({ date }: { date: string }) => (
   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
     <div className="rounded-full bg-muted p-4 mb-4">
-      <IconReceipt className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+      <IconReceipt
+        className="h-8 w-8 text-muted-foreground"
+        aria-hidden="true"
+      />
     </div>
     <h3 className="text-lg font-semibold mb-1">No hay transacciones</h3>
     <p className="text-sm text-muted-foreground max-w-sm">
-      No se registraron transacciones para {formatDateDisplay(date)}. Selecciona otra fecha o realiza ventas.
+      No se registraron transacciones para {formatDateDisplay(date)}. Selecciona
+      otra fecha o realiza ventas.
     </p>
   </div>
 );
@@ -178,33 +182,41 @@ const EmptyState = ({ date }: { date: string }) => (
  */
 export function DashboardCashStatus() {
   // Initialize with today's date
-  const [selectedDate, setSelectedDate] = useState<string>(formatDateForInput(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string>(
+    formatDateForInput(new Date())
+  );
 
   // Get organization and store from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
-  const storeId = user?.storeId;
+  const storeId = useStore((state) => state.storeId);
 
   // Fetch cash status data
-  const { data: cashStatusData, isLoading, error } = useCashStatus(
-    organizationId,
-    storeId,
-    selectedDate
-  );
+  const {
+    data: cashStatusData,
+    isLoading,
+    error,
+  } = useCashStatus(organizationId, storeId, selectedDate);
 
   // Calculate total amount from all payment methods
-  const totalAmount = cashStatusData?.reduce((sum, method) => sum + method.totalAmount, 0) || 0;
+  const totalAmount =
+    cashStatusData?.reduce((sum, method) => sum + method.totalAmount, 0) || 0;
 
   // Calculate total transactions
-  const totalTransactions = cashStatusData?.reduce((sum, method) => sum + method.transactionCount, 0) || 0;
+  const totalTransactions =
+    cashStatusData?.reduce((sum, method) => sum + method.transactionCount, 0) ||
+    0;
 
   // Find most used payment method
-  const mostUsedMethod = cashStatusData?.reduce((prev, current) =>
-    current.transactionCount > prev.transactionCount ? current : prev
-  , cashStatusData[0]);
+  const mostUsedMethod = cashStatusData?.reduce(
+    (prev, current) =>
+      current.transactionCount > prev.transactionCount ? current : prev,
+    cashStatusData[0]
+  );
 
   // Calculate average transaction
-  const averageTransaction = totalTransactions > 0 ? totalAmount / totalTransactions : 0;
+  const averageTransaction =
+    totalTransactions > 0 ? totalAmount / totalTransactions : 0;
 
   return (
     <Card>
@@ -216,7 +228,9 @@ export function DashboardCashStatus() {
               Estado de Caja
             </CardTitle>
             <CardDescription className="mt-1.5">
-              {isToday(selectedDate) ? 'Ingresos de hoy por método de pago' : `Ingresos del ${formatDateDisplay(selectedDate)}`}
+              {isToday(selectedDate)
+                ? 'Ingresos de hoy por método de pago'
+                : `Ingresos del ${formatDateDisplay(selectedDate)}`}
             </CardDescription>
           </div>
 
@@ -242,7 +256,9 @@ export function DashboardCashStatus() {
             <IconAlertTriangle className="h-4 w-4" />
             <AlertTitle>Error al cargar datos</AlertTitle>
             <AlertDescription>
-              {error instanceof Error ? error.message : 'Ocurrió un error al cargar el estado de caja. Por favor, intenta de nuevo.'}
+              {error instanceof Error
+                ? error.message
+                : 'Ocurrió un error al cargar el estado de caja. Por favor, intenta de nuevo.'}
             </AlertDescription>
           </Alert>
         )}
@@ -266,125 +282,156 @@ export function DashboardCashStatus() {
         )}
 
         {/* Empty State */}
-        {!isLoading && !error && (!cashStatusData || cashStatusData.length === 0) && (
-          <EmptyState date={selectedDate} />
-        )}
+        {!isLoading &&
+          !error &&
+          (!cashStatusData || cashStatusData.length === 0) && (
+            <EmptyState date={selectedDate} />
+          )}
 
         {/* Data Display */}
-        {!isLoading && !error && cashStatusData && cashStatusData.length > 0 && (
-          <>
-            {/* Total Amount Header */}
-            <div className="p-6 bg-primary/5 dark:bg-primary/10 rounded-lg border-2 border-primary/20">
-              <p className="text-sm font-medium text-muted-foreground text-center mb-2">
-                Total del Día
-              </p>
-              <p className="text-4xl font-bold text-center text-primary tabular-nums">
-                {formatCurrency(totalAmount)}
-              </p>
-            </div>
+        {!isLoading &&
+          !error &&
+          cashStatusData &&
+          cashStatusData.length > 0 && (
+            <>
+              {/* Total Amount Header */}
+              <div className="p-6 bg-primary/5 dark:bg-primary/10 rounded-lg border-2 border-primary/20">
+                <p className="text-sm font-medium text-muted-foreground text-center mb-2">
+                  Total del Día
+                </p>
+                <p className="text-4xl font-bold text-center text-primary tabular-nums">
+                  {formatCurrency(totalAmount)}
+                </p>
+              </div>
 
-            {/* Payment Methods Breakdown */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Desglose por Método de Pago
-              </h3>
+              {/* Payment Methods Breakdown */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Desglose por Método de Pago
+                </h3>
 
-              {cashStatusData.map((method) => {
-                const Icon = getPaymentIcon(method.paymentType);
-                const colors = getPaymentColor(method.paymentType);
+                {cashStatusData.map((method) => {
+                  const Icon = getPaymentIcon(method.paymentType);
+                  const colors = getPaymentColor(method.paymentType);
 
-                return (
-                  <div
-                    key={method.paymentMethodId}
-                    className={cn(
-                      'flex items-start gap-4 p-4 rounded-lg border transition-all hover:shadow-md',
-                      colors.border
-                    )}
-                  >
-                    {/* Icon */}
-                    <div className={cn('flex-shrink-0 p-2.5 rounded-lg', colors.bg)}>
-                      <Icon className={cn('h-5 w-5', colors.text)} aria-hidden="true" />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      {/* Name and Amount */}
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="font-semibold truncate">{method.paymentMethodName}</span>
-                        <span className="font-bold tabular-nums text-nowrap">
-                          {formatCurrency(method.totalAmount)}
-                        </span>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="mb-2">
-                        <Progress
-                          value={method.percentageOfTotal}
-                          className="h-2"
-                          aria-label={`${method.percentageOfTotal.toFixed(1)}% del total`}
+                  return (
+                    <div
+                      key={method.paymentMethodId}
+                      className={cn(
+                        'flex items-start gap-4 p-4 rounded-lg border transition-all hover:shadow-md',
+                        colors.border
+                      )}
+                    >
+                      {/* Icon */}
+                      <div
+                        className={cn(
+                          'flex-shrink-0 p-2.5 rounded-lg',
+                          colors.bg
+                        )}
+                      >
+                        <Icon
+                          className={cn('h-5 w-5', colors.text)}
+                          aria-hidden="true"
                         />
                       </div>
 
-                      {/* Transaction Count and Percentage */}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{formatNumber(method.transactionCount)} transacciones</span>
-                        <span className="font-medium">{method.percentageOfTotal.toFixed(1)}%</span>
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Name and Amount */}
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="font-semibold truncate">
+                            {method.paymentMethodName}
+                          </span>
+                          <span className="font-bold tabular-nums text-nowrap">
+                            {formatCurrency(method.totalAmount)}
+                          </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mb-2">
+                          <Progress
+                            value={method.percentageOfTotal}
+                            className="h-2"
+                            aria-label={`${method.percentageOfTotal.toFixed(
+                              1
+                            )}% del total`}
+                          />
+                        </div>
+
+                        {/* Transaction Count and Percentage */}
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            {formatNumber(method.transactionCount)}{' '}
+                            transacciones
+                          </span>
+                          <span className="font-medium">
+                            {method.percentageOfTotal.toFixed(1)}%
+                          </span>
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* Additional Statistics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t">
+                {/* Most Used Method */}
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                    <IconTrendingUp
+                      className="h-4 w-4 text-blue-700 dark:text-blue-400"
+                      aria-hidden="true"
+                    />
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Additional Statistics */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t">
-              {/* Most Used Method */}
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                  <IconTrendingUp className="h-4 w-4 text-blue-700 dark:text-blue-400" aria-hidden="true" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                      Método más usado
+                    </p>
+                    <p className="text-sm font-semibold truncate">
+                      {mostUsedMethod?.paymentMethodName || 'N/A'}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">
-                    Método más usado
-                  </p>
-                  <p className="text-sm font-semibold truncate">
-                    {mostUsedMethod?.paymentMethodName || 'N/A'}
-                  </p>
+
+                {/* Total Transactions */}
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                    <IconUsers
+                      className="h-4 w-4 text-purple-700 dark:text-purple-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                      Total de transacciones
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatNumber(totalTransactions)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Average Transaction */}
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                    <IconReceipt
+                      className="h-4 w-4 text-green-700 dark:text-green-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                      Promedio por transacción
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatCurrency(averageTransaction)}
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              {/* Total Transactions */}
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                  <IconUsers className="h-4 w-4 text-purple-700 dark:text-purple-400" aria-hidden="true" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">
-                    Total de transacciones
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {formatNumber(totalTransactions)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Average Transaction */}
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                  <IconReceipt className="h-4 w-4 text-green-700 dark:text-green-400" aria-hidden="true" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">
-                    Promedio por transacción
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {formatCurrency(averageTransaction)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
       </CardContent>
 
       {/* Action Buttons */}
@@ -393,6 +440,8 @@ export function DashboardCashStatus() {
           <Button
             variant="default"
             className="w-full sm:w-auto gap-2"
+            disabled={true}
+            title="Próximamente"
             aria-label="Cerrar caja"
           >
             <IconLock className="h-4 w-4" aria-hidden="true" />
@@ -401,6 +450,8 @@ export function DashboardCashStatus() {
           <Button
             variant="outline"
             className="w-full sm:w-auto gap-2"
+            disabled={true}
+            title="Próximamente"
             aria-label="Imprimir reporte"
           >
             <IconPrinter className="h-4 w-4" aria-hidden="true" />

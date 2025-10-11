@@ -1,6 +1,11 @@
 'use client';
 
-import { IconAlertTriangle, IconAlertCircle, IconCircleCheck, IconPackage } from '@tabler/icons-react';
+import {
+  IconAlertTriangle,
+  IconAlertCircle,
+  IconCircleCheck,
+  IconPackage,
+} from '@tabler/icons-react';
 import { useStore } from '@/store';
 import { useStockAlerts } from '@/hooks/useDashboard';
 import {
@@ -20,7 +25,9 @@ import type { StockAlert } from '@/interfaces';
 /**
  * Map API severity levels to Spanish alert levels
  */
-const mapSeverityToAlertLevel = (severity: 'critical' | 'warning' | 'info'): 'CRÍTICO' | 'URGENTE' | 'ADVERTENCIA' => {
+const mapSeverityToAlertLevel = (
+  severity: 'critical' | 'warning' | 'info'
+): 'CRÍTICO' | 'URGENTE' | 'ADVERTENCIA' => {
   const mapping = {
     critical: 'CRÍTICO' as const,
     warning: 'URGENTE' as const,
@@ -32,7 +39,9 @@ const mapSeverityToAlertLevel = (severity: 'critical' | 'warning' | 'info'): 'CR
 /**
  * Get severity order for sorting (CRÍTICO first)
  */
-const getSeverityOrder = (severity: 'critical' | 'warning' | 'info'): number => {
+const getSeverityOrder = (
+  severity: 'critical' | 'warning' | 'info'
+): number => {
   const order = {
     critical: 0,
     warning: 1,
@@ -75,20 +84,23 @@ const getBadgeConfig = (alertLevel: 'CRÍTICO' | 'URGENTE' | 'ADVERTENCIA') => {
   if (alertLevel === 'CRÍTICO') {
     return {
       variant: 'destructive' as const,
-      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+      className:
+        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
     };
   }
 
   if (alertLevel === 'URGENTE') {
     return {
       variant: 'default' as const,
-      className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
+      className:
+        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
     };
   }
 
   return {
     variant: 'secondary' as const,
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+    className:
+      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
   };
 };
 
@@ -97,14 +109,19 @@ const getBadgeConfig = (alertLevel: 'CRÍTICO' | 'URGENTE' | 'ADVERTENCIA') => {
  */
 const getBorderColor = (severity: 'critical' | 'warning' | 'info'): string => {
   if (severity === 'critical') return 'border-l-red-500 dark:border-l-red-400';
-  if (severity === 'warning') return 'border-l-yellow-500 dark:border-l-yellow-400';
+  if (severity === 'warning')
+    return 'border-l-yellow-500 dark:border-l-yellow-400';
   return 'border-l-blue-500 dark:border-l-blue-400';
 };
 
 /**
  * Format stock info with unit measure
  */
-const formatStockInfo = (currentStock: number, minStock: number, unitMeasure?: string): string => {
+const formatStockInfo = (
+  currentStock: number,
+  minStock: number,
+  unitMeasure?: string
+): string => {
   const unit = unitMeasure || 'unidades';
   return `${currentStock} / ${minStock} ${unit}`;
 };
@@ -141,7 +158,8 @@ const EmptyState = () => (
       Todos los productos tienen stock suficiente
     </AlertTitle>
     <AlertDescription className="text-green-600 dark:text-green-400">
-      No hay productos con stock bajo en este momento. El inventario se encuentra en niveles óptimos.
+      No hay productos con stock bajo en este momento. El inventario se
+      encuentra en niveles óptimos.
     </AlertDescription>
   </Alert>
 );
@@ -161,7 +179,12 @@ const AlertCard = ({ alert }: AlertCardProps) => {
   const AlertIcon = iconConfig.icon;
 
   return (
-    <Card className={cn('border-l-4 hover:shadow-md transition-shadow', borderColor)}>
+    <Card
+      className={cn(
+        'border-l-4 hover:shadow-md transition-shadow',
+        borderColor
+      )}
+    >
       <CardContent className="pt-6">
         <div className="space-y-3">
           {/* Header: Icon, Product Name, and Badge */}
@@ -171,7 +194,10 @@ const AlertCard = ({ alert }: AlertCardProps) => {
                 className={cn('h-5 w-5 shrink-0', iconConfig.className)}
                 aria-label={iconConfig.ariaLabel}
               />
-              <h3 className="font-semibold text-sm leading-tight truncate" title={alert.productName}>
+              <h3
+                className="font-semibold text-sm leading-tight truncate"
+                title={alert.productName}
+              >
                 {alert.productName}
               </h3>
             </div>
@@ -186,21 +212,29 @@ const AlertCard = ({ alert }: AlertCardProps) => {
           {/* Stock Info */}
           <div className="text-sm text-muted-foreground">
             <span className="font-medium">Stock actual:</span>{' '}
-            {formatStockInfo(alert.currentStock, alert.minStock, alert.sku || undefined)}
+            {formatStockInfo(
+              alert.currentStock,
+              alert.minStock,
+              alert.sku || undefined
+            )}
           </div>
 
           {/* Days Until Depletion (if available) */}
-          {alert.daysUntilStockout !== undefined && alert.daysUntilStockout !== null && (
-            <div className="text-xs text-muted-foreground">
-              <span className="font-medium">Estimado:</span> ~{alert.daysUntilStockout} días para agotarse
-            </div>
-          )}
+          {alert.daysUntilStockout !== undefined &&
+            alert.daysUntilStockout !== null && (
+              <div className="text-xs text-muted-foreground">
+                <span className="font-medium">Estimado:</span> ~
+                {alert.daysUntilStockout} días para agotarse
+              </div>
+            )}
 
           {/* Quick Action Button */}
           <Button
             variant="outline"
             size="sm"
             className="w-full"
+            disabled={true}
+            title="Próximamente"
             aria-label={`Generar orden de compra para ${alert.productName}`}
           >
             <IconPackage className="h-4 w-4" />
@@ -222,14 +256,20 @@ export function DashboardStockAlerts() {
   // Get organization and store from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
-  const storeId = user?.storeId;
+  const storeId = useStore((state) => state.storeId);
 
   // Fetch stock alerts data
-  const { data: stockAlerts, isLoading, error } = useStockAlerts(organizationId, storeId);
+  const {
+    data: stockAlerts,
+    isLoading,
+    error,
+  } = useStockAlerts(organizationId, storeId);
 
   // Sort alerts by severity (CRÍTICO → URGENTE → ADVERTENCIA)
   const sortedAlerts = stockAlerts
-    ? [...stockAlerts].sort((a, b) => getSeverityOrder(a.severity) - getSeverityOrder(b.severity))
+    ? [...stockAlerts].sort(
+        (a, b) => getSeverityOrder(a.severity) - getSeverityOrder(b.severity)
+      )
     : [];
 
   // Limit to 12 alerts maximum
@@ -240,7 +280,10 @@ export function DashboardStockAlerts() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <IconAlertTriangle className="h-5 w-5 text-orange-500" aria-hidden="true" />
+          <IconAlertTriangle
+            className="h-5 w-5 text-orange-500"
+            aria-hidden="true"
+          />
           Alertas de Stock
         </CardTitle>
         <CardDescription>
@@ -255,7 +298,9 @@ export function DashboardStockAlerts() {
             <IconAlertTriangle className="h-4 w-4" />
             <AlertTitle>Error al cargar alertas</AlertTitle>
             <AlertDescription>
-              {error instanceof Error ? error.message : 'Ocurrió un error al cargar las alertas de stock. Por favor, intenta de nuevo.'}
+              {error instanceof Error
+                ? error.message
+                : 'Ocurrió un error al cargar las alertas de stock. Por favor, intenta de nuevo.'}
             </AlertDescription>
           </Alert>
         )}
@@ -295,7 +340,8 @@ export function DashboardStockAlerts() {
             {/* Alert count summary */}
             {!hasMoreAlerts && (
               <div className="text-sm text-muted-foreground text-center pt-2">
-                Mostrando {displayedAlerts.length} {displayedAlerts.length === 1 ? 'alerta' : 'alertas'}
+                Mostrando {displayedAlerts.length}{' '}
+                {displayedAlerts.length === 1 ? 'alerta' : 'alertas'}
               </div>
             )}
           </div>

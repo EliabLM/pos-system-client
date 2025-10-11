@@ -43,7 +43,11 @@ function formatCurrency(value: number): string {
 /**
  * Custom tooltip component for the chart
  */
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) {
   if (!active || !payload || payload.length === 0) {
     return null;
   }
@@ -92,7 +96,9 @@ interface ChartDataPoint {
   previousSales?: number;
 }
 
-function transformData(data: SalesByPeriod[] | null | undefined): ChartDataPoint[] {
+function transformData(
+  data: SalesByPeriod[] | null | undefined
+): ChartDataPoint[] {
   if (!data || data.length === 0) return [];
 
   return data.map((item) => ({
@@ -114,7 +120,7 @@ export function DashboardSalesChart() {
   // Get user data from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
-  const storeId = user?.storeId;
+  const storeId = useStore((state) => state.storeId);
 
   // Fetch sales data using the hook
   const { data, isLoading, error } = useSalesByPeriod(
@@ -213,7 +219,11 @@ export function DashboardSalesChart() {
         <PeriodSelector value={period} onChange={setPeriod} />
       </CardHeader>
       <CardContent>
-        <div className="w-full" role="img" aria-label="Gráfico de ventas por periodo">
+        <div
+          className="w-full"
+          role="img"
+          aria-label="Gráfico de ventas por periodo"
+        >
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart
               data={chartData}
@@ -239,7 +249,13 @@ export function DashboardSalesChart() {
                   />
                 </linearGradient>
                 {/* Gradient for previous period (if needed in future) */}
-                <linearGradient id="colorPreviousSales" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="colorPreviousSales"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop
                     offset="5%"
                     stopColor="hsl(var(--muted-foreground))"
@@ -280,7 +296,10 @@ export function DashboardSalesChart() {
               />
 
               {/* Custom tooltip */}
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ strokeDasharray: '3 3' }}
+              />
 
               {/* Previous period area (if data available) */}
               {chartData.some((d) => d.previousSales !== undefined) && (

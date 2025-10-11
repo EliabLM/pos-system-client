@@ -11,7 +11,10 @@ import {
 } from '@tabler/icons-react';
 import { useStore } from '@/store';
 import { useTopProducts } from '@/hooks/useDashboard';
-import { PeriodSelector, type PeriodValue } from '@/components/dashboard/period-selector';
+import {
+  PeriodSelector,
+  type PeriodValue,
+} from '@/components/dashboard/period-selector';
 import {
   Card,
   CardContent,
@@ -36,7 +39,9 @@ import { cn } from '@/lib/utils';
 /**
  * Map period selector values to API period values
  */
-const mapPeriodToApiPeriod = (period: PeriodValue): 'today' | 'week' | 'month' | 'year' => {
+const mapPeriodToApiPeriod = (
+  period: PeriodValue
+): 'today' | 'week' | 'month' | 'year' => {
   if (period === 'day') return 'today';
   return period;
 };
@@ -82,7 +87,9 @@ const getAvatarColor = (name: string, index: number): string => {
   ];
 
   // Use a simple hash based on name + index for consistency
-  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), index);
+  const hash = name
+    .split('')
+    .reduce((acc, char) => acc + char.charCodeAt(0), index);
   return colors[hash % colors.length];
 };
 
@@ -116,7 +123,8 @@ const getTrendInfo = (trend?: 'up' | 'down' | 'neutral') => {
     return {
       variant: 'default' as const,
       icon: IconTrendingUp,
-      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800',
+      className:
+        'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800',
       ariaLabel: 'Tendencia al alza',
     };
   }
@@ -125,7 +133,8 @@ const getTrendInfo = (trend?: 'up' | 'down' | 'neutral') => {
     return {
       variant: 'destructive' as const,
       icon: IconTrendingDown,
-      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+      className:
+        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
       ariaLabel: 'Tendencia a la baja',
     };
   }
@@ -133,7 +142,8 @@ const getTrendInfo = (trend?: 'up' | 'down' | 'neutral') => {
   return {
     variant: 'secondary' as const,
     icon: IconMinus,
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700',
+    className:
+      'bg-gray-100 text-gray-700 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700',
     ariaLabel: 'Tendencia neutral',
   };
 };
@@ -173,11 +183,15 @@ const TableRowSkeleton = () => (
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
     <div className="rounded-full bg-muted p-4 mb-4">
-      <IconShoppingCartOff className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+      <IconShoppingCartOff
+        className="h-8 w-8 text-muted-foreground"
+        aria-hidden="true"
+      />
     </div>
     <h3 className="text-lg font-semibold mb-1">No hay datos disponibles</h3>
     <p className="text-sm text-muted-foreground max-w-sm">
-      No se encontraron productos vendidos en el periodo seleccionado. Intenta seleccionar otro periodo o realiza algunas ventas.
+      No se encontraron productos vendidos en el periodo seleccionado. Intenta
+      seleccionar otro periodo o realiza algunas ventas.
     </p>
   </div>
 );
@@ -194,11 +208,15 @@ export function DashboardTopProducts() {
   // Get organization and store from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
-  const storeId = user?.storeId;
+  const storeId = useStore((state) => state.storeId);
 
   // Fetch top products data
   const apiPeriod = mapPeriodToApiPeriod(period);
-  const { data: topProducts, isLoading, error } = useTopProducts(
+  const {
+    data: topProducts,
+    isLoading,
+    error,
+  } = useTopProducts(
     organizationId,
     apiPeriod,
     storeId,
@@ -226,7 +244,9 @@ export function DashboardTopProducts() {
             <IconAlertTriangle className="h-4 w-4" />
             <AlertTitle>Error al cargar datos</AlertTitle>
             <AlertDescription>
-              {error instanceof Error ? error.message : 'Ocurrió un error al cargar los productos más vendidos. Por favor, intenta de nuevo.'}
+              {error instanceof Error
+                ? error.message
+                : 'Ocurrió un error al cargar los productos más vendidos. Por favor, intenta de nuevo.'}
             </AlertDescription>
           </Alert>
         )}
@@ -239,10 +259,14 @@ export function DashboardTopProducts() {
                 <TableRow>
                   <TableHead className="w-16">#</TableHead>
                   <TableHead>Producto</TableHead>
-                  <TableHead className="hidden md:table-cell">Categoría</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Categoría
+                  </TableHead>
                   <TableHead className="text-right">Unidades</TableHead>
                   <TableHead className="text-right">Ingresos</TableHead>
-                  <TableHead className="hidden md:table-cell text-center">Tendencia</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">
+                    Tendencia
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -268,24 +292,34 @@ export function DashboardTopProducts() {
                   <TableRow>
                     <TableHead className="w-16">#</TableHead>
                     <TableHead>Producto</TableHead>
-                    <TableHead className="hidden md:table-cell">Categoría</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Categoría
+                    </TableHead>
                     <TableHead className="text-right">Unidades</TableHead>
                     <TableHead className="text-right">Ingresos</TableHead>
-                    <TableHead className="hidden md:table-cell text-center">Tendencia</TableHead>
+                    <TableHead className="hidden md:table-cell text-center">
+                      Tendencia
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {topProducts.map((product, index) => {
                     const rank = index + 1;
                     const medal = getMedalEmoji(rank);
-                    const avatarColor = getAvatarColor(product.productName, index);
+                    const avatarColor = getAvatarColor(
+                      product.productName,
+                      index
+                    );
                     const initial = product.productName.charAt(0).toUpperCase();
 
                     // Calculate trend based on percentageOfTotal (simplified logic)
                     // In a real scenario, this should come from the API
-                    const trend = product.percentageOfTotal > 15 ? 'up' :
-                                  product.percentageOfTotal < 5 ? 'down' :
-                                  'neutral';
+                    const trend =
+                      product.percentageOfTotal > 15
+                        ? 'up'
+                        : product.percentageOfTotal < 5
+                        ? 'down'
+                        : 'neutral';
                     const trendInfo = getTrendInfo(trend);
                     const TrendIcon = trendInfo.icon;
 
@@ -298,11 +332,17 @@ export function DashboardTopProducts() {
                         <TableCell className="font-medium">
                           <div className="flex items-center justify-center">
                             {medal ? (
-                              <span className="text-2xl" role="img" aria-label={`Posición ${rank}`}>
+                              <span
+                                className="text-2xl"
+                                role="img"
+                                aria-label={`Posición ${rank}`}
+                              >
                                 {medal}
                               </span>
                             ) : (
-                              <span className="text-muted-foreground">{rank}</span>
+                              <span className="text-muted-foreground">
+                                {rank}
+                              </span>
                             )}
                           </div>
                         </TableCell>
@@ -318,11 +358,18 @@ export function DashboardTopProducts() {
                                   className="object-cover"
                                 />
                               ) : null}
-                              <AvatarFallback className={cn('rounded-lg text-white font-semibold', avatarColor)}>
+                              <AvatarFallback
+                                className={cn(
+                                  'rounded-lg text-white font-semibold',
+                                  avatarColor
+                                )}
+                              >
                                 {initial}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="font-medium line-clamp-1">{product.productName}</span>
+                            <span className="font-medium line-clamp-1">
+                              {product.productName}
+                            </span>
                           </div>
                         </TableCell>
 
@@ -351,8 +398,13 @@ export function DashboardTopProducts() {
                               className={cn('gap-1', trendInfo.className)}
                               aria-label={trendInfo.ariaLabel}
                             >
-                              <TrendIcon className="h-3 w-3" aria-hidden="true" />
-                              <span className="sr-only">{trendInfo.ariaLabel}</span>
+                              <TrendIcon
+                                className="h-3 w-3"
+                                aria-hidden="true"
+                              />
+                              <span className="sr-only">
+                                {trendInfo.ariaLabel}
+                              </span>
                             </Badge>
                           </div>
                         </TableCell>

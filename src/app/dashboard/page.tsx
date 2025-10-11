@@ -1,20 +1,44 @@
-import { ChartAreaInteractive } from '@/components/chart-area-interactive';
-import { DataTable } from '@/components/data-table';
-import { SectionCards } from '@/components/section-cards';
+'use client';
 
-import data from './data.json';
+import { useState } from 'react';
+import { DashboardHeader } from '@/components/dashboard/dashboard-header';
+import { DashboardKpis } from './features/dashboard-kpis';
+import { DashboardSalesChart } from './features/dashboard-sales-chart';
+import { DashboardStockAlerts } from './features/dashboard-stock-alerts';
+import { DashboardTopProducts } from './features/dashboard-top-products';
+import { DashboardCashStatus } from './features/dashboard-cash-status';
+import { useInvalidateDashboard } from '@/hooks/useDashboard';
 
-export default function Page() {
+export default function DashboardPage() {
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const invalidateDashboard = useInvalidateDashboard();
+
+  const handleRefresh = () => {
+    invalidateDashboard();
+    setLastUpdated(new Date());
+  };
+
   return (
-    <div className='flex flex-1 flex-col'>
-      <div className='@container/main flex flex-1 flex-col gap-2'>
-        <div className='flex flex-col gap-4 py-4 md:gap-6 md:py-6'>
-          <SectionCards />
-          <div className='px-4 lg:px-6'>
-            <ChartAreaInteractive />
-          </div>
-          <DataTable data={data} />
+    <div className="flex flex-col gap-6 p-6">
+      <DashboardHeader onRefresh={handleRefresh} lastUpdated={lastUpdated} />
+
+      {/* KPIs Principales */}
+      <DashboardKpis />
+
+      {/* Fila con Gráfico y Alertas */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <DashboardSalesChart />
         </div>
+        <div className="lg:col-span-1">
+          <DashboardStockAlerts />
+        </div>
+      </div>
+
+      {/* Fila con Top Productos y Estado de Caja */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DashboardTopProducts />
+        <DashboardCashStatus />
       </div>
     </div>
   );

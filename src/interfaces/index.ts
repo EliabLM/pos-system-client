@@ -13,7 +13,7 @@ export interface TempUser {
 export interface User {
   id: string;
   organizationId: string;
-  storeId: null;
+  storeId: string | null;
   clerkId: string;
   email: string;
   username: string;
@@ -25,9 +25,27 @@ export interface User {
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt: null;
+  deletedAt: Date | null;
   organization: Organization | null;
-  store: null;
+  store: Store | null;
+}
+
+export interface Store {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string | null;
+  address: string;
+  city: string | null;
+  department: string | null;
+  phone: string | null;
+  saleNumberPrefix: string;
+  lastSaleNumber: number;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 export interface Organization {

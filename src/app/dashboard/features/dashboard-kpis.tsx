@@ -6,11 +6,18 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useKPIs } from '@/hooks/useDashboard';
 import { useStore } from '@/store';
 
-export function DashboardKpis() {
-  // Get organizationId and storeId from Zustand store
+interface DashboardKpisProps {
+  selectedStoreId?: string;
+}
+
+export function DashboardKpis({ selectedStoreId }: DashboardKpisProps) {
+  // Get user from Zustand store
   const user = useStore((state) => state.user);
-  const storeId = useStore((state) => state.storeId);
   const organizationId = user?.organizationId;
+
+  // RBAC: SELLER users must use their assigned storeId (ignoring selectedStoreId prop)
+  // ADMIN users use selectedStoreId from selector (can be undefined = toda la org)
+  const storeId = user?.role === 'SELLER' ? user?.storeId : selectedStoreId;
 
   // Fetch KPIs data
   const { data: kpis, isLoading, error } = useKPIs(organizationId, storeId);

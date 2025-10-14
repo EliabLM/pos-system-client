@@ -8,8 +8,13 @@ import { Prisma } from '@/generated/prisma';
 /**
  * Calculates dashboard KPIs comparing today's sales with yesterday's.
  *
- * @param organizationId - Organization ID to filter sales
- * @param storeId - Optional store ID to filter sales by specific store
+ * RBAC Implementation:
+ * - Frontend enforces role-based filtering: SELLER users MUST pass their assigned storeId
+ * - ADMIN users can pass undefined/null to see all stores in the organization
+ * - Backend validates organizationId and applies storeId filter when provided
+ *
+ * @param organizationId - Organization ID to filter sales (required)
+ * @param storeId - Optional store ID to filter sales by specific store (SELLER users must provide their storeId)
  * @returns ActionResponse with DashboardKPIs data
  */
 export const getDashboardKPIs = async (

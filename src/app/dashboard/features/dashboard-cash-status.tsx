@@ -180,16 +180,23 @@ const EmptyState = ({ date }: { date: string }) => (
  * Displays cash register breakdown by payment method for a selected date.
  * Features date selection, payment method statistics, and action buttons.
  */
-export function DashboardCashStatus() {
+interface DashboardCashStatusProps {
+  selectedStoreId?: string;
+}
+
+export function DashboardCashStatus({ selectedStoreId }: DashboardCashStatusProps) {
   // Initialize with today's date
   const [selectedDate, setSelectedDate] = useState<string>(
     formatDateForInput(new Date())
   );
 
-  // Get organization and store from Zustand store
+  // Get user from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
-  const storeId = useStore((state) => state.storeId);
+
+  // RBAC: SELLER users must use their assigned storeId (ignoring selectedStoreId prop)
+  // ADMIN users use selectedStoreId from selector (can be undefined = toda la org)
+  const storeId = user?.role === 'SELLER' ? user?.storeId : selectedStoreId;
 
   // Fetch cash status data
   const {

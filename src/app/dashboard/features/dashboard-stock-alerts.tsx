@@ -252,11 +252,18 @@ const AlertCard = ({ alert }: AlertCardProps) => {
  * Displays products with low stock organized by severity level.
  * Features loading states, error handling, empty states, and responsive grid layout.
  */
-export function DashboardStockAlerts() {
-  // Get organization and store from Zustand store
+interface DashboardStockAlertsProps {
+  selectedStoreId?: string;
+}
+
+export function DashboardStockAlerts({ selectedStoreId }: DashboardStockAlertsProps) {
+  // Get user from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
-  const storeId = useStore((state) => state.storeId);
+
+  // RBAC: SELLER users must use their assigned storeId (ignoring selectedStoreId prop)
+  // ADMIN users use selectedStoreId from selector (can be undefined = toda la org)
+  const storeId = user?.role === 'SELLER' ? user?.storeId : selectedStoreId;
 
   // Fetch stock alerts data
   const {

@@ -21,10 +21,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
-import {
-  parseLocalDateTime,
-  formatDateTimeLocal,
-} from '@/lib/date-utils';
+import { parseLocalDateTime, formatDateTimeLocal } from '@/lib/date-utils';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -51,11 +48,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { useStore } from '@/store';
 import { useStores } from '@/hooks/useStores';
-import { useProducts } from '@/hooks/useProducts';
+import { useActiveProducts } from '@/hooks/useProducts';
 import { useActivePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useCreateSale } from '@/hooks/useSales';
 import type { Product, SaleStatus } from '@/generated/prisma';
-import { isAdmin, isSeller } from '@/lib/rbac';
+import { isSeller } from '@/lib/rbac';
 
 // Mapeo de estados en español
 const SALE_STATUS_LABELS: Record<string, string> = {
@@ -151,7 +148,7 @@ export const NewSaleForm = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const products = useProducts({ search: debouncedSearchTerm });
+  const products = useActiveProducts({ search: debouncedSearchTerm });
 
   const storeSelected: { id: string; name: string } | null = useMemo(() => {
     if (!user || !stores.data) return null;

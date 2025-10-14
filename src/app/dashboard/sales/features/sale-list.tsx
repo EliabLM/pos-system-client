@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sale, SaleStatus } from '@/generated/prisma';
+import { parseLocalDateStart, parseLocalDateEnd } from '@/lib/date-utils';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -56,8 +57,8 @@ export const SaleList = () => {
     status: filters.status,
     storeId: filters.storeId,
     customerId: filters.customerId,
-    dateFrom: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
-    dateTo: filters.dateTo ? new Date(filters.dateTo) : undefined,
+    dateFrom: filters.dateFrom ? parseLocalDateStart(filters.dateFrom) : undefined,
+    dateTo: filters.dateTo ? parseLocalDateEnd(filters.dateTo) : undefined,
     minAmount: filters.minTotal ? parseFloat(filters.minTotal) : undefined,
     maxAmount: filters.maxTotal ? parseFloat(filters.maxTotal) : undefined,
   };

@@ -126,8 +126,6 @@ export const createSale = async (
   >[]
 ): Promise<ActionResponse<Sale | null>> => {
   try {
-
-
     if (checkOrgId(orgId)) return emptyOrgIdResponse();
 
     validateSaleItems(saleItems);
@@ -308,9 +306,9 @@ export const createSale = async (
         await tx.store.update({
           where: { id: saleData.storeId },
           data: {
-            lastSaleNumber: nextNumber
-          }
-        })
+            lastSaleNumber: nextNumber,
+          },
+        });
 
         return tx.sale.findUnique({
           where: { id: sale.id },
@@ -371,8 +369,8 @@ export const getSalesByOrgId = async (
     customerId?: string;
     userId?: string;
     status?: SaleStatus;
-    dateFrom?: Date;
-    dateTo?: Date;
+    dateFrom?: Date | string;
+    dateTo?: Date | string;
     search?: string;
     minAmount?: number;
     maxAmount?: number;
@@ -414,10 +412,18 @@ export const getSalesByOrgId = async (
     if (filters?.dateFrom || filters?.dateTo) {
       whereClause.saleDate = {};
       if (filters.dateFrom) {
-        whereClause.saleDate.gte = filters.dateFrom;
+        // Convertir string a Date si es necesario
+        whereClause.saleDate.gte =
+          typeof filters.dateFrom === 'string'
+            ? new Date(filters.dateFrom)
+            : filters.dateFrom;
       }
       if (filters.dateTo) {
-        whereClause.saleDate.lte = filters.dateTo;
+        // Convertir string a Date si es necesario
+        whereClause.saleDate.lte =
+          typeof filters.dateTo === 'string'
+            ? new Date(filters.dateTo)
+            : filters.dateTo;
       }
     }
 
@@ -819,8 +825,8 @@ export const softDeleteSale = async (
 // GET SALES ANALYTICS
 export const getSalesAnalytics = async (
   orgId: string,
-  dateFrom?: Date,
-  dateTo?: Date,
+  dateFrom?: Date | string,
+  dateTo?: Date | string,
   storeId?: string
 ): Promise<
   ActionResponse<{
@@ -853,8 +859,14 @@ export const getSalesAnalytics = async (
 
     if (dateFrom || dateTo) {
       whereClause.saleDate = {};
-      if (dateFrom) whereClause.saleDate.gte = dateFrom;
-      if (dateTo) whereClause.saleDate.lte = dateTo;
+      if (dateFrom) {
+        whereClause.saleDate.gte =
+          typeof dateFrom === 'string' ? new Date(dateFrom) : dateFrom;
+      }
+      if (dateTo) {
+        whereClause.saleDate.lte =
+          typeof dateTo === 'string' ? new Date(dateTo) : dateTo;
+      }
     }
 
     if (storeId) {

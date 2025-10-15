@@ -122,7 +122,7 @@ export function StockAdjustmentDialog({
     try {
       setIsLoading(true);
 
-      let adjustmentQuantity: number = data.quantity;
+      const adjustmentQuantity: number = data.quantity;
 
       if (data.adjustmentType === 'increase') {
         await createStockIn.mutateAsync({

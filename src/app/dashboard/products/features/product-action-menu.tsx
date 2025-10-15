@@ -55,37 +55,46 @@ export const ProductActionMenu: React.FC<ProductActionMenuProps> = ({
   };
 
   const handleSoftDelete = async () => {
-    try {
-      if (!user) {
-        toast.error('Ha ocurrido un error eliminando el producto');
-        return;
-      }
+    if (!user) {
+      toast.error('Ha ocurrido un error eliminando el producto');
+      return;
+    }
 
-      Swal.fire({
-        icon: 'question',
-        title: 'Eliminar Producto',
-        text: `¿Estás seguro de eliminar "${product.name}"?`,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        showCancelButton: true,
-        showConfirmButton: true,
-        showLoaderOnConfirm: true,
-        confirmButtonColor: '#dc2626',
-        preConfirm: async () => {
-          await softDeleteMutation.mutateAsync({
+    Swal.fire({
+      icon: 'question',
+      title: 'Eliminar Producto',
+      text: `¿Estás seguro de eliminar "${product.name}"?`,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      showCancelButton: true,
+      showConfirmButton: true,
+      showLoaderOnConfirm: true,
+      confirmButtonColor: '#dc2626',
+      preConfirm: async () => {
+        try {
+          const response = await softDeleteMutation.mutateAsync({
             productId: product.id,
           });
-        },
-        allowOutsideClick: () => !Swal.isLoading(),
-      }).then((result) => {
-        if (result.isConfirmed) {
-          toast.success('Producto eliminado exitosamente');
+
+          if (response.status !== 200) {
+            Swal.showValidationMessage(response.message);
+            return false;
+          }
+
+          return response;
+        } catch (error) {
+          console.error('Error eliminando el producto:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Ha ocurrido un error eliminando el producto';
+          Swal.showValidationMessage(errorMessage);
+          return false;
         }
-      });
-    } catch (error) {
-      console.error('Error eliminando el producto:', error);
-      toast.error('Ha ocurrido un error eliminando el producto');
-    }
+      },
+      allowOutsideClick: () => !Swal.isLoading(),
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        toast.success('Producto eliminado exitosamente');
+      }
+    });
   };
 
   return (

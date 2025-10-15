@@ -36,35 +36,44 @@ export const ProductActionComponent = ({
   };
 
   const handleSoftDelete = async () => {
-    try {
-      if (!user) {
-        toast.error('Ha ocurrido un error eliminando el producto');
-        return;
-      }
+    if (!user) {
+      toast.error('Ha ocurrido un error eliminando el producto');
+      return;
+    }
 
-      Swal.fire({
-        icon: 'question',
-        text: '¿Estas seguro de eliminar este producto?',
-        confirmButtonText: 'Aceptar',
-        cancelButtonText: 'Cancelar',
-        showCancelButton: true,
-        showConfirmButton: true,
-        showLoaderOnConfirm: true,
-        preConfirm: async () => {
-          await softDeleteMutation.mutateAsync({
+    Swal.fire({
+      icon: 'question',
+      text: '¿Estas seguro de eliminar este producto?',
+      confirmButtonText: 'Aceptar',
+      cancelButtonText: 'Cancelar',
+      showCancelButton: true,
+      showConfirmButton: true,
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          const response = await softDeleteMutation.mutateAsync({
             productId: item.id,
           });
-        },
-        allowOutsideClick: () => !Swal.isLoading(),
-      }).then((result) => {
-        if (result.isConfirmed) {
-          toast.success('Producto eliminado exitosamente');
+
+          if (response.status !== 200) {
+            Swal.showValidationMessage(response.message);
+            return false;
+          }
+
+          return response;
+        } catch (error) {
+          console.error('Error eliminando el producto:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Ha ocurrido un error eliminando el producto';
+          Swal.showValidationMessage(errorMessage);
+          return false;
         }
-      });
-    } catch (error) {
-      console.error('🚀 ~ onSubmit ~ error:', error);
-      toast.error('Ha ocurrido un error eliminando el producto');
-    }
+      },
+      allowOutsideClick: () => !Swal.isLoading(),
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        toast.success('Producto eliminado exitosamente');
+      }
+    });
   };
 
   return (

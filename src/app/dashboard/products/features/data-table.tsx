@@ -29,6 +29,8 @@ import {
   IconCircleCheckFilled,
   IconLayoutColumns,
   IconAlertCircleFilled,
+  IconPackage,
+  IconPlus,
 } from '@tabler/icons-react';
 import {
   ColumnDef,
@@ -50,6 +52,14 @@ import { NumericFormat } from 'react-number-format';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import {
   DropdownMenu,
@@ -73,7 +83,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ProductActionComponent } from './action-component';
+import { ProductActionMenu } from './product-action-menu';
 import { ProductWithIncludesNumberPrice } from '@/interfaces';
 
 const getStockStatus = (stock: number, minStock: number) => {
@@ -128,35 +138,64 @@ const getColumns = ({
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
-              <Image
-                className="rounded-sm object-cover w-full h-full"
-                src={product.image ?? ''}
-                alt={product.name}
-                width={50}
-                height={50}
-              />
-            </div>
-            <span className="font-medium">{product.name}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'category.name',
-      header: 'Categoría',
-      enableHiding: true,
-      cell: ({ row }) => {
-        const product = row.original;
+          <TooltipProvider>
+            <div className="flex items-center gap-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border">
+                    <Image
+                      className="object-cover"
+                      src={product.image ?? '/placeholder-product.png'}
+                      alt={product.name}
+                      fill
+                      sizes="64px"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="p-0">
+                  <div className="relative h-64 w-64 overflow-hidden rounded-lg">
+                    <Image
+                      src={product.image ?? '/placeholder-product.png'}
+                      alt={product.name}
+                      fill
+                      sizes="256px"
+                      className="object-cover"
+                    />
+                  </div>
+                </TooltipContent>
+              </Tooltip>
 
-        return (
-          <Badge
-            className="rounded-sm text-muted-foreground px-1.5"
-            variant={'info'}
-          >
-            {product.category?.name?.toLowerCase() ?? 'Sin categoría'}
-          </Badge>
+              <div className="flex flex-col gap-1">
+                <span className="font-semibold">{product.name}</span>
+                {product.sku && (
+                  <Badge
+                    variant="outline"
+                    className="w-fit font-mono text-xs"
+                  >
+                    {product.sku}
+                  </Badge>
+                )}
+                <div className="flex flex-wrap gap-1">
+                  {product.category && (
+                    <Badge
+                      className="rounded-sm px-1.5 text-xs"
+                      variant="info"
+                    >
+                      {product.category.name.toLowerCase()}
+                    </Badge>
+                  )}
+                  {product.brand && (
+                    <Badge
+                      className="rounded-sm px-1.5 text-xs"
+                      variant="secondary"
+                    >
+                      {product.brand.name.toUpperCase()}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TooltipProvider>
         );
       },
     },
@@ -165,33 +204,60 @@ const getColumns = ({
       header: 'Stock',
       cell: ({ row }) => {
         const product = row.original;
-
         const stockStatus = getStockStatus(
           product.currentStock,
           product.minStock
         );
-        return (
-          <div className="flex items-center gap-2">
-            <div className={`h-4 w-4 rounded-full ${stockStatus.color}`} />
-            <span className="font-medium">{product.currentStock}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'brand.name',
-      header: 'Marca',
-      enableHiding: true,
-      cell: ({ row }) => {
-        const product = row.original;
+
+        const getStockLabel = () => {
+          if (product.currentStock < product.minStock) return 'Bajo';
+          if (product.currentStock < product.minStock * 1.5) return 'Medio';
+          if (product.currentStock < product.minStock * 3) return 'Bueno';
+          return 'Alto';
+        };
 
         return (
-          <Badge
-            className="rounded-sm text-muted-foreground px-1.5"
-            variant={'secondary'}
-          >
-            {product.brand?.name?.toUpperCase()}
-          </Badge>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2">
+                  <div className={`h-3 w-3 rounded-full ${stockStatus.color}`} />
+                  <div className="flex flex-col">
+                    <span className="font-medium">
+                      {product.currentStock} / {product.minStock} mín
+                    </span>
+                    <Badge
+                      variant={
+                        stockStatus.status === 'low'
+                          ? 'destructive'
+                          : stockStatus.status === 'medium'
+                            ? 'default'
+                            : 'secondary'
+                      }
+                      className="w-fit text-xs"
+                    >
+                      {getStockLabel()}
+                    </Badge>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-1">
+                  <p className="font-semibold">
+                    Stock: {product.currentStock} unidades
+                  </p>
+                  <p className="text-xs">
+                    Mínimo: {product.minStock} unidades
+                  </p>
+                  {product.currentStock < product.minStock && (
+                    <p className="text-destructive text-xs font-semibold">
+                      ¡Stock por debajo del mínimo!
+                    </p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         );
       },
     },
@@ -200,16 +266,77 @@ const getColumns = ({
       header: 'Precio',
       enableHiding: true,
       cell: ({ row }) => {
-        const price = Number(row.original.salePrice);
+        const product = row.original;
+        const margin = product.salePrice - product.costPrice;
+        const marginPercent = (margin / product.costPrice) * 100;
+
         return (
-          <NumericFormat
-            value={price}
-            prefix="$"
-            thousandSeparator="."
-            decimalSeparator=","
-            readOnly
-            disabled
-          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-help">
+                  <p className="text-lg font-semibold">
+                    <NumericFormat
+                      value={product.salePrice}
+                      prefix="$"
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      displayType="text"
+                    />
+                  </p>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-muted-foreground text-xs">
+                      Precio de Costo
+                    </p>
+                    <p className="font-medium">
+                      <NumericFormat
+                        value={product.costPrice}
+                        prefix="$"
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        displayType="text"
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">
+                      Precio de Venta
+                    </p>
+                    <p className="font-medium text-green-600">
+                      <NumericFormat
+                        value={product.salePrice}
+                        prefix="$"
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        displayType="text"
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Margen</p>
+                    <p
+                      className={`font-semibold ${
+                        margin >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}
+                    >
+                      <NumericFormat
+                        value={margin}
+                        prefix="$"
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        displayType="text"
+                      />{' '}
+                      ({marginPercent.toFixed(1)}%)
+                    </p>
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         );
       },
     },
@@ -238,10 +365,12 @@ const getColumns = ({
     {
       id: 'actions',
       cell: ({ row }) => (
-        <ProductActionComponent
-          item={row.original}
-          setItemSelected={setItemSelected}
-          setSheetOpen={setSheetOpen}
+        <ProductActionMenu
+          product={row.original}
+          onEdit={(product) => {
+            setItemSelected(product);
+            setSheetOpen(true);
+          }}
         />
       ),
     },
@@ -409,7 +538,48 @@ export function DataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
+                {loading ? (
+                  <>
+                    {Array.from({ length: 10 }).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Skeleton className="mx-auto h-4 w-4" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="h-16 w-16 rounded-lg" />
+                            <div className="space-y-2">
+                              <Skeleton className="h-4 w-48" />
+                              <Skeleton className="h-3 w-20" />
+                              <div className="flex gap-1">
+                                <Skeleton className="h-5 w-16" />
+                                <Skeleton className="h-5 w-16" />
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-5 w-16" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="mx-auto h-8 w-8 rounded" />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </>
+                ) : table.getRowModel().rows?.length ? (
                   <SortableContext
                     items={dataIds}
                     strategy={verticalListSortingStrategy}
@@ -418,26 +588,34 @@ export function DataTable({
                       <DraggableRow key={row.id} row={row} />
                     ))}
                   </SortableContext>
-                ) : loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={
-                        getColumns({ setItemSelected, setSheetOpen }).length
-                      }
-                      className="h-24 text-center"
-                    >
-                      Cargando...
-                    </TableCell>
-                  </TableRow>
                 ) : (
                   <TableRow>
                     <TableCell
                       colSpan={
                         getColumns({ setItemSelected, setSheetOpen }).length
                       }
-                      className="h-24 text-center"
+                      className="h-[400px]"
                     >
-                      Sin registros
+                      <Card className="border-dashed">
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <IconPackage className="text-muted-foreground mb-4 size-16 stroke-1" />
+                          <h3 className="mb-2 text-lg font-semibold">
+                            No hay productos registrados
+                          </h3>
+                          <p className="text-muted-foreground mb-4 text-center text-sm">
+                            Comienza agregando tu primer producto al inventario
+                          </p>
+                          <Button
+                            onClick={() => {
+                              setItemSelected(null);
+                              setSheetOpen(true);
+                            }}
+                          >
+                            <IconPlus className="size-4" />
+                            Crear Primer Producto
+                          </Button>
+                        </div>
+                      </Card>
                     </TableCell>
                   </TableRow>
                 )}

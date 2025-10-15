@@ -641,7 +641,7 @@ export const NewSaleForm = () => {
                 !products.isFetching &&
                 products.data &&
                 products.data.length > 0 && (
-                  <ScrollArea className="border rounded-lg mt-2 max-h-64 bg-muted/30 overflow-y-scroll overflow-hidden">
+                  <ScrollArea className="h-64 border rounded-lg mt-2 bg-muted/30">
                     <div
                       className="p-2 space-y-1"
                       role="list"

@@ -28,7 +28,9 @@
       "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\actions\")",
       "Bash(pnpm eslint:*)",
       "Bash(pnpm next build:*)",
-      "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\app\\dashboard\\sales\")"
+      "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\app\\dashboard\\sales\")",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs"
     ],
     "deny": [],
     "ask": []

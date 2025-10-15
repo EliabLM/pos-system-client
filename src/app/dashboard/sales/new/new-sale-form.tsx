@@ -17,11 +17,11 @@ import {
   IconAlertCircle,
   IconCheck,
 } from '@tabler/icons-react';
-import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
+import { parseLocalDateTime, formatDateTimeLocal } from '@/lib/date-utils';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -48,11 +48,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { useStore } from '@/store';
 import { useStores } from '@/hooks/useStores';
-import { useProducts } from '@/hooks/useProducts';
+import { useActiveProducts } from '@/hooks/useProducts';
 import { useActivePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useCreateSale } from '@/hooks/useSales';
 import type { Product, SaleStatus } from '@/generated/prisma';
-import { isAdmin, isSeller } from '@/lib/rbac';
+import { isSeller } from '@/lib/rbac';
 
 // Mapeo de estados en español
 const SALE_STATUS_LABELS: Record<string, string> = {
@@ -148,7 +148,7 @@ export const NewSaleForm = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const products = useProducts({ search: debouncedSearchTerm });
+  const products = useActiveProducts({ search: debouncedSearchTerm });
 
   const storeSelected: { id: string; name: string } | null = useMemo(() => {
     if (!user || !stores.data) return null;
@@ -161,7 +161,7 @@ export const NewSaleForm = () => {
     criteriaMode: 'firstError' as const,
     defaultValues: {
       store: storeSelected?.id ?? '',
-      saleDate: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+      saleDate: formatDateTimeLocal(new Date()),
       status: 'PAID' as const,
       dueDate: null as string | null,
       notes: null as string | null,
@@ -361,10 +361,10 @@ export const NewSaleForm = () => {
           subtotal: totals.subtotal,
           total: totals.subtotal,
           status: data.status as SaleStatus,
-          saleDate: new Date(data.saleDate),
+          saleDate: parseLocalDateTime(data.saleDate),
           dueDate:
             data.status === 'PENDING' && data.dueDate
-              ? new Date(data.dueDate)
+              ? parseLocalDateTime(data.dueDate + 'T00:00')
               : null,
           paidDate: data.status === 'PAID' ? new Date() : null,
           notes: data.notes || null,

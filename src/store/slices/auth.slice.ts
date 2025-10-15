@@ -5,7 +5,5 @@ import { User } from '@/interfaces';
 export const createAuthSlice: StateCreator<AppState, [], [], AuthSlice> =
     (set) => ({
         user: null,
-        storeId: null,
-        setUser: (user: User | null) => set({ user }),
-        setStoreId: (storeId: string | null) => set({ storeId })
+        setUser: (user: User | null) => set({ user })
     });

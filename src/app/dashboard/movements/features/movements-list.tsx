@@ -22,9 +22,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { IconFilter, IconPlus, IconX } from '@tabler/icons-react';
+import { ProductFilterCombobox } from '@/components/product-filter-combobox';
 
 import { useStockMovements } from '@/hooks/useStockMovement';
-import { useActiveProducts } from '@/hooks/useProducts';
 import { StockMovementType } from '@/generated/prisma';
 
 import NewMovement from './new-movement';
@@ -41,7 +41,6 @@ const MovementsList = () => {
   }>({});
 
   const movements = useStockMovements(filters);
-  const products = useActiveProducts();
 
   const handleClearFilters = () => {
     setFilters({});
@@ -92,30 +91,15 @@ const MovementsList = () => {
             {showFilters && (
               <div className="border-t border-border bg-muted/50 px-6 py-4">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="filter-product">Producto</Label>
-                    <Select
-                      value={filters.productId || 'all'}
-                      onValueChange={(value) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          productId: value === 'all' ? undefined : value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger id="filter-product">
-                        <SelectValue placeholder="Todos los productos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los productos</SelectItem>
-                        {products.data?.map((product) => (
-                          <SelectItem key={product.id} value={product.id}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <ProductFilterCombobox
+                    selectedProductId={filters.productId}
+                    onProductSelect={(productId) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        productId,
+                      }))
+                    }
+                  />
 
                   <div className="space-y-2">
                     <Label htmlFor="filter-type">Tipo de movimiento</Label>

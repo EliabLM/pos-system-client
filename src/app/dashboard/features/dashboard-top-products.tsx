@@ -202,13 +202,20 @@ const EmptyState = () => (
  * Displays a table of top-selling products with ranking, images, sales data, and trends.
  * Features period selection, responsive design, and comprehensive loading/error/empty states.
  */
-export function DashboardTopProducts() {
+interface DashboardTopProductsProps {
+  selectedStoreId?: string;
+}
+
+export function DashboardTopProducts({ selectedStoreId }: DashboardTopProductsProps) {
   const [period, setPeriod] = useState<PeriodValue>('day');
 
-  // Get organization and store from Zustand store
+  // Get user from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
-  const storeId = useStore((state) => state.storeId);
+
+  // RBAC: SELLER users must use their assigned storeId (ignoring selectedStoreId prop)
+  // ADMIN users use selectedStoreId from selector (can be undefined = toda la org)
+  const storeId = user?.role === 'SELLER' ? user?.storeId : selectedStoreId;
 
   // Fetch top products data
   const apiPeriod = mapPeriodToApiPeriod(period);

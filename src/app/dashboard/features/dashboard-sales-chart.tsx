@@ -114,13 +114,20 @@ function transformData(
  * Displays sales data in an area chart with period selection.
  * Supports comparison with previous period and responsive design.
  */
-export function DashboardSalesChart() {
+interface DashboardSalesChartProps {
+  selectedStoreId?: string;
+}
+
+export function DashboardSalesChart({ selectedStoreId }: DashboardSalesChartProps) {
   const [period, setPeriod] = useState<PeriodValue>('day');
 
-  // Get user data from Zustand store
+  // Get user from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
-  const storeId = useStore((state) => state.storeId);
+
+  // RBAC: SELLER users must use their assigned storeId (ignoring selectedStoreId prop)
+  // ADMIN users use selectedStoreId from selector (can be undefined = toda la org)
+  const storeId = user?.role === 'SELLER' ? user?.storeId : selectedStoreId;
 
   // Fetch sales data using the hook
   const { data, isLoading, error } = useSalesByPeriod(

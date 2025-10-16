@@ -341,9 +341,13 @@ export const useSoftDeleteProduct = () => {
         throw new Error(response.message);
       }
 
-      return response.data;
+      return response;
     },
-    onSuccess: (_, variables) => {
+    onError: (error) => {
+      console.error('Error eliminando el producto:', error);
+    },
+    onSettled: (_, __, variables) => {
+      // CRITICAL: Always invalidate queries to stop loading state
       queryClient.invalidateQueries({
         queryKey: ['products', user?.organizationId],
       });
@@ -353,9 +357,6 @@ export const useSoftDeleteProduct = () => {
       queryClient.invalidateQueries({
         queryKey: ['products', 'lowStock'],
       });
-    },
-    onError: (error) => {
-      console.error('Error eliminando el producto:', error);
     },
   });
 };
@@ -377,9 +378,13 @@ export const useRestoreProduct = () => {
         throw new Error(response.message);
       }
 
-      return response.data;
+      return response;
     },
-    onSuccess: (data, variables) => {
+    onError: (error) => {
+      console.error('Error restaurando el producto:', error);
+    },
+    onSettled: (data, _, variables) => {
+      // Always invalidate queries to stop loading state
       queryClient.invalidateQueries({
         queryKey: ['products', user?.organizationId],
       });
@@ -391,19 +396,16 @@ export const useRestoreProduct = () => {
       });
 
       // Restaurar búsquedas por barcode y SKU
-      if (data?.barcode) {
+      if (data?.data?.barcode) {
         queryClient.invalidateQueries({
-          queryKey: ['product', 'barcode', data.barcode],
+          queryKey: ['product', 'barcode', data.data.barcode],
         });
       }
-      if (data?.sku) {
+      if (data?.data?.sku) {
         queryClient.invalidateQueries({
-          queryKey: ['product', 'sku', data.sku],
+          queryKey: ['product', 'sku', data.data.sku],
         });
       }
-    },
-    onError: (error) => {
-      console.error('Error restaurando el producto:', error);
     },
   });
 };
@@ -425,9 +427,13 @@ export const useDeleteProduct = () => {
         throw new Error(response.message);
       }
 
-      return response.data;
+      return response;
     },
-    onSuccess: (_, variables) => {
+    onError: (error) => {
+      console.error('Error eliminando permanentemente el producto:', error);
+    },
+    onSettled: (_, __, variables) => {
+      // Always invalidate queries to stop loading state
       queryClient.invalidateQueries({
         queryKey: ['products', user?.organizationId],
       });
@@ -438,9 +444,6 @@ export const useDeleteProduct = () => {
       queryClient.invalidateQueries({
         queryKey: ['products', 'lowStock'],
       });
-    },
-    onError: (error) => {
-      console.error('Error eliminando permanentemente el producto:', error);
     },
   });
 };
@@ -581,18 +584,19 @@ export const useDeleteProductImage = () => {
         throw new Error(response.message);
       }
 
-      return response.data;
+      return response;
     },
-    onSuccess: (_, variables) => {
+    onError: (error) => {
+      console.error('Error eliminando imagen del producto:', error);
+    },
+    onSettled: (_, __, variables) => {
+      // Always invalidate queries to stop loading state
       queryClient.invalidateQueries({
         queryKey: ['products', user?.organizationId],
       });
       queryClient.invalidateQueries({
         queryKey: ['product', variables.productId],
       });
-    },
-    onError: (error) => {
-      console.error('Error eliminando imagen del producto:', error);
     },
   });
 };

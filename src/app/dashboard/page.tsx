@@ -25,7 +25,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-6">
       <DashboardHeader
         onRefresh={handleRefresh}
         lastUpdated={lastUpdated}
@@ -37,7 +37,13 @@ export default function DashboardPage() {
       <DashboardKpis selectedStoreId={selectedStoreId} />
 
       {/* Fila con Gráfico y Alertas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/*
+        Responsive Layout Strategy:
+        - Mobile (default): Stack vertically (grid-cols-1)
+        - Desktop (lg:): 2/3 chart + 1/3 alerts (grid-cols-3)
+        - Full HD (2xl:): Same 2/3 + 1/3 ratio with more breathing room
+      */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="lg:col-span-2">
           <DashboardSalesChart selectedStoreId={selectedStoreId} />
         </div>
@@ -47,7 +53,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Fila con Top Productos y Estado de Caja */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <DashboardTopProducts selectedStoreId={selectedStoreId} />
         <DashboardCashStatus selectedStoreId={selectedStoreId} />
       </div>

@@ -11,7 +11,7 @@ This project uses **pnpm** as the package manager (version 10.7.1+):
 pnpm dev          # Start Next.js dev server with Turbopack
 
 # Build & Production
-pnpm build        # Build for production
+pnpm build        # Build for production (runs prisma generate first)
 pnpm start        # Start production server
 
 # Code Quality
@@ -22,6 +22,9 @@ npx prisma generate       # Generate Prisma client (outputs to src/generated/pri
 npx prisma migrate dev    # Run migrations in development
 npx prisma studio         # Open Prisma Studio database GUI
 npx prisma db push        # Push schema changes without migration
+
+# Deployment
+pnpm vercel-build # Vercel build script (generate + migrate + build)
 ```
 
 ## Architecture Overview
@@ -41,7 +44,15 @@ This is a **multi-tenant Point of Sale (POS) system** with the following stack:
 - **Notifications**: Sonner 2.0.7 & SweetAlert2 11.22.4
 - **Tables**: TanStack Table 8.21.3
 - **Charts**: Recharts 2.15.4
-- **Additional**: date-fns 4.1.0, react-number-format 5.4.4, next-themes 0.4.6
+- **Drag & Drop**: @dnd-kit/core 6.3.1 with sortable, modifiers, and utilities
+- **Additional**:
+  - date-fns 4.1.0 (date utilities)
+  - react-number-format 5.4.4 (number formatting)
+  - next-themes 0.4.6 (theme management)
+  - vaul 1.1.2 (drawer component)
+  - bcrypt 6.0.0 (password hashing)
+  - jose 6.1.0 (JWT handling for Edge Runtime)
+  - jsonwebtoken 9.0.2 (JWT token generation)
 
 ## Project Structure
 
@@ -61,20 +72,72 @@ shadcn/ui configuration (`components.json`):
 ```
 src/
 ├── actions/           # Server actions (grouped by entity)
+│   ├── auth/          # Authentication actions
+│   ├── brand/         # Brand CRUD actions
+│   ├── category/      # Category CRUD actions
+│   ├── customer/      # Customer CRUD actions
+│   ├── dashboard/     # Dashboard analytics actions
+│   ├── organization/  # Organization management actions
+│   ├── payment-methods/ # Payment methods actions
+│   ├── product/       # Product CRUD actions
+│   ├── sale/          # Sales transaction actions
+│   ├── sale-item/     # Sale line items actions
+│   ├── sale-payment/  # Sale payment records actions
+│   ├── stock-movement/ # Inventory tracking actions
+│   ├── store/         # Store management actions
+│   ├── user/          # User management actions
+│   └── utils.ts       # Shared Prisma instance and helper utilities
 ├── app/              # Next.js App Router pages
 │   ├── api/          # API routes (uploadthing)
-│   ├── auth/         # Authentication pages
-│   ├── dashboard/    # Main app (protected)
+│   ├── auth/         # Authentication pages (login, register, etc.)
+│   ├── dashboard/    # Main app (protected routes)
+│   │   ├── brands/
+│   │   ├── categories/
+│   │   ├── movements/  # Stock movements
+│   │   ├── payment-methods/
+│   │   ├── products/
+│   │   ├── sales/
+│   │   │   └── new/   # New sale form
+│   │   ├── stores/
+│   │   ├── users/
+│   │   └── page.tsx   # Dashboard home
 │   ├── onboarding/   # User onboarding flow
 │   └── providers/    # React context providers
 ├── components/       # React components
-│   └── ui/           # shadcn/ui components
+│   ├── dashboard/    # Dashboard-specific components
+│   │   ├── dashboard-header.tsx
+│   │   ├── kpi-card.tsx
+│   │   └── period-selector.tsx
+│   ├── products/     # Product-specific components
+│   │   └── stock-adjustment-dialog.tsx
+│   ├── ui/           # shadcn/ui components
+│   ├── app-sidebar.tsx  # Main navigation sidebar
+│   ├── site-header.tsx  # Top header bar
+│   ├── data-table.tsx   # Reusable TanStack Table component
+│   └── product-filter-combobox.tsx
 ├── generated/        # Generated code (Prisma client)
+│   └── prisma/       # Custom output location for Prisma
 ├── hooks/            # Custom React hooks
+│   ├── auth/         # Authentication hooks
+│   └── (entity hooks)  # useBrands, useCategories, etc.
 ├── interfaces/       # TypeScript interfaces
 ├── lib/              # Utility functions
+│   ├── auth/         # Authentication utilities
+│   │   ├── crypto.ts       # Encryption/hashing
+│   │   ├── jwt.ts          # JWT generation/verification
+│   │   ├── session.ts      # Session management
+│   │   ├── authorization.ts # RBAC helpers
+│   │   ├── validation.ts   # Input validation
+│   │   └── server.ts       # Server-side auth utilities
+│   ├── rbac.ts       # Role-based access control
+│   ├── date-utils.ts # Date formatting utilities
+│   └── utils.ts      # General utilities (cn, etc.)
 ├── store/            # Zustand store slices
+│   ├── slices/       # Feature-based state slices
+│   ├── types.ts      # Store type definitions
+│   └── index.ts      # Store creation with middleware
 └── utils/            # Helper utilities
+    └── uploadthings.ts
 ```
 
 ## Database & Prisma
@@ -110,10 +173,34 @@ Most entities are scoped to an `organizationId`:
 ### Authentication Models (New JWT-based)
 
 The system includes comprehensive authentication tables:
-- **Session** - JWT session management with device tracking, IP address, user agent, and revocation support
-- **PasswordReset** - Secure password reset tokens with expiration
-- **EmailVerification** - Email verification tokens for new accounts and email changes
-- **AuditLog** - Comprehensive audit trail for all authentication events and CRUD operations
+
+- **Session** - JWT session management with:
+  - Token storage (hashed)
+  - Expiration tracking
+  - Device metadata (IP address, user agent, device ID)
+  - Session revocation support
+  - Last activity tracking
+
+- **PasswordReset** - Secure password reset flow:
+  - Unique tokens with expiration
+  - Usage tracking (used/unused)
+  - IP and user agent logging
+  - One-time use enforcement
+
+- **EmailVerification** - Email verification system:
+  - Verification tokens with expiration
+  - Support for email change verification
+  - IP and user agent tracking
+  - Verification status tracking
+
+- **AuditLog** - Comprehensive audit trail:
+  - Authentication events (login, logout, failed attempts, etc.)
+  - CRUD operations (create, read, update, delete, restore)
+  - User role and organization changes
+  - Session management events
+  - Before/after state tracking (oldValues, newValues)
+  - Entity-based filtering
+  - IP address and user agent logging
 
 ## Authentication & Authorization
 
@@ -187,11 +274,11 @@ interface ActionResponse<T = any> {
 ### Available Action Modules
 
 The following server action modules are available:
-- `auth` - Login, register, logout, password reset, email verification
+- `auth` - Login, register, logout, password reset, email verification, token refresh, get current user
 - `user` - User CRUD operations
-- `organization` - Organization management
+- `organization` - Organization management (create, get, update)
 - `store` - Store CRUD operations
-- `category` - Category management
+- `category` - Category management (create, update, delete, get by org/id)
 - `brand` - Brand management
 - `product` - Product CRUD with stock tracking
 - `payment-methods` - Payment method configuration
@@ -200,6 +287,7 @@ The following server action modules are available:
 - `sale-item` - Sale line items
 - `sale-payment` - Sale payment records
 - `stock-movement` - Inventory movement tracking
+- `dashboard` - Dashboard analytics (KPIs, sales by period, cash status, top products, stock alerts)
 
 ### Shared Prisma Instance
 
@@ -256,7 +344,9 @@ All hooks use TanStack Query (React Query) for data fetching and mutations:
 - `useSalePayments` - Payment records
 - `useStockMovement` - Inventory tracking
 - `useOrganizations` - Organization settings
+- `useDashboard` - Dashboard analytics (KPIs, sales data, top products, stock alerts)
 - `use-mobile` - Responsive breakpoint detection
+- `auth/useRegister` - User registration hook
 
 Pattern:
 ```typescript
@@ -332,7 +422,7 @@ npx shadcn@latest add [component-name]
 The project includes these shadcn/ui components:
 - Layout: `sidebar`, `sheet`, `dialog`, `drawer`, `separator`, `scroll-area`
 - Forms: `input`, `textarea`, `label`, `select`, `checkbox`, `switch`, `form`
-- Display: `card`, `table`, `avatar`, `badge`, `tabs`, `chart`
+- Display: `card`, `table`, `avatar`, `badge`, `tabs`, `chart`, `progress`, `alert`
 - Interactive: `button`, `dropdown-menu`, `toggle`, `toggle-group`, `tooltip`
 - Feedback: `sonner` (toast), `skeleton`
 - Navigation: `breadcrumb`
@@ -341,6 +431,18 @@ The project includes these shadcn/ui components:
 
 - `image-picker.tsx` - Image upload with UploadThing integration
 - `sonner.tsx` - Toast notifications configured from 'sonner' library
+- `data-table.tsx` - Reusable TanStack Table wrapper component
+- `product-filter-combobox.tsx` - Product search/filter dropdown
+- `dashboard/kpi-card.tsx` - KPI metric display card
+- `dashboard/period-selector.tsx` - Date period selection component
+- `dashboard/dashboard-header.tsx` - Dashboard page header with filters
+- `products/stock-adjustment-dialog.tsx` - Stock adjustment dialog
+- `app-sidebar.tsx` - Main application sidebar navigation
+- `site-header.tsx` - Top application header
+- `nav-main.tsx`, `nav-parametrization.tsx`, `nav-secondary.tsx`, `nav-user.tsx` - Navigation components
+- `theme-provider.tsx` - Next.js theme provider wrapper
+- `chart-area-interactive.tsx` - Interactive area chart component
+- `section-cards.tsx` - Dashboard section card layouts
 
 ### Icon Usage
 
@@ -358,6 +460,16 @@ import { IconUser, IconHome, IconSettings } from '@tabler/icons-react'
 - Supports both `@layer` directives and inline `@theme`
 - Border radius customization: `--radius` (default: 0.65rem)
 
+## Drag and Drop
+
+The project includes **@dnd-kit** for drag-and-drop functionality:
+- `@dnd-kit/core` - Core drag and drop library
+- `@dnd-kit/sortable` - Sortable lists and grids
+- `@dnd-kit/modifiers` - Drag modifiers (restrict to axis, etc.)
+- `@dnd-kit/utilities` - Utility functions
+
+Use for reorderable lists, sortable tables, or drag-and-drop interfaces.
+
 ## Sales Flow
 
 Key pages:
@@ -370,16 +482,45 @@ Sales workflow:
 3. Stock movement tracking (automatic on sale creation)
 4. Sale number auto-generation per store (`saleNumberPrefix` + `lastSaleNumber`)
 
+## Stock Movement Tracking
+
+The system tracks all inventory changes through the `StockMovement` model:
+- **Types**: IN (additions), OUT (sales/removals), ADJUSTMENT (manual corrections)
+- **Automatic tracking**: Stock movements are created automatically on sales
+- **Audit trail**: Includes previous stock, new stock, reason, user, and reference
+- **Page**: `/dashboard/movements` - View all stock movements
+
 ## Available Dashboard Pages
 
-- `/dashboard` - Dashboard home with charts and metrics
-- `/dashboard/sales` - Sales management
-- `/dashboard/products` - Product catalog
+- `/dashboard` - Dashboard home with charts, KPIs, and analytics
+- `/dashboard/sales` - Sales list with data table
+- `/dashboard/sales/new` - New sale form
+- `/dashboard/products` - Product catalog management
+- `/dashboard/movements` - Stock movements tracking
 - `/dashboard/users` - User administration (Admin only)
 - `/dashboard/categories` - Category parametrization (Admin only)
 - `/dashboard/brands` - Brand management (Admin only)
-- `/dashboard/payment-methods` - Payment methods (Admin only)
+- `/dashboard/payment-methods` - Payment methods configuration (Admin only)
 - `/dashboard/stores` - Store management (Admin only)
+
+## Dashboard Features
+
+### Dashboard Analytics (`/dashboard`)
+
+The main dashboard page includes:
+- **KPI Cards**: Total sales, active products, pending sales, low stock items
+- **Sales Chart**: Interactive area chart showing sales trends by period (week/month/year)
+- **Top Products**: Best-selling products table
+- **Stock Alerts**: Products below minimum stock levels
+- **Cash Status**: Current cash position
+- **Period Selector**: Filter data by week, month, or year
+
+Dashboard actions available in `src/actions/dashboard/`:
+- `getKpis` - Fetch key performance indicators
+- `getSalesByPeriod` - Get sales data filtered by period
+- `getTopProducts` - Retrieve best-selling products
+- `getStockAlerts` - Get low stock warnings
+- `getCashStatus` - Current cash position
 
 ## Data Models Overview
 
@@ -419,11 +560,36 @@ Sales workflow:
 - `PurchaseStatus`: PENDING, RECEIVED, CANCELLED
 - `AuditAction`: LOGIN, LOGOUT, CREATE, UPDATE, DELETE, etc.
 
+## Utility Libraries
+
+### Date Utilities (`src/lib/date-utils.ts`)
+
+Helper functions for date formatting and manipulation using date-fns.
+
+### Authentication Library (`src/lib/auth/`)
+
+Comprehensive authentication utilities:
+- `crypto.ts` - Password hashing with bcrypt, token generation
+- `jwt.ts` - JWT token generation and verification (using jose for Edge Runtime)
+- `session.ts` - Session management (create, validate, revoke)
+- `authorization.ts` - RBAC helpers and permission checks
+- `validation.ts` - Input validation for auth forms
+- `server.ts` - Server-side auth utilities (get user from request, etc.)
+
+### RBAC (`src/lib/rbac.ts`)
+
+Role-based access control utilities for checking user permissions.
+
+### Logout Cleanup (`src/lib/logout-cleanup.ts`)
+
+Utility for cleaning up user session data on logout.
+
 ## Testing & Type Safety
 
 - TypeScript 5 with strict mode enabled
 - ESLint 9 configured with flat config
 - No test framework currently configured
+- Prisma generates full TypeScript types for database models
 
 ## Environment Variables
 
@@ -437,3 +603,177 @@ Required in `.env`:
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 - `CLERK_WEBHOOK_SECRET`
+
+## Common Patterns & Best Practices
+
+### Page Structure Pattern
+
+Most feature pages follow this structure:
+```
+feature-name/
+├── page.tsx                    # Main page component
+└── features/                   # Feature-specific components
+    ├── feature-list.tsx        # List/table view
+    ├── new-feature.tsx         # Create form (Sheet/Dialog)
+    ├── edit-feature.tsx        # Edit form
+    ├── action-component.tsx    # Row actions (edit/delete)
+    └── data-table.tsx          # TanStack Table integration
+```
+
+### Server Action Pattern
+
+1. Always use `"use server"` directive
+2. Import shared Prisma instance from `@/actions/utils`
+3. Validate authentication and authorization
+4. Return `ActionResponse<T>` type
+5. Handle errors with try-catch and return appropriate status codes
+
+Example:
+```typescript
+"use server"
+
+import { ActionResponse } from "@/interfaces"
+import { prisma, checkAdminRole, unauthorizedResponse } from "@/actions/utils"
+
+export async function createEntity(data: EntityData): Promise<ActionResponse<Entity>> {
+  try {
+    const isAdmin = await checkAdminRole(userId)
+    if (!isAdmin) return unauthorizedResponse()
+
+    const entity = await prisma.entity.create({ data })
+
+    return {
+      status: 201,
+      message: "Entity created successfully",
+      data: entity
+    }
+  } catch (error) {
+    return {
+      status: 500,
+      message: "Failed to create entity",
+      data: null
+    }
+  }
+}
+```
+
+### TanStack Query Hook Pattern
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+
+export function useEntities(orgId: string) {
+  const queryClient = useQueryClient()
+
+  // Fetch query
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['entities', orgId],
+    queryFn: () => getEntities(orgId),
+    enabled: !!orgId
+  })
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: createEntity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['entities'] })
+      toast.success('Entity created')
+    },
+    onError: (error) => {
+      toast.error('Failed to create entity')
+    }
+  })
+
+  return { data, isLoading, error, createMutation }
+}
+```
+
+### Form Validation Pattern
+
+Use React Hook Form with Yup or Zod:
+
+```typescript
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as yup from 'yup'
+
+const schema = yup.object({
+  name: yup.string().required('Name is required'),
+  email: yup.string().email('Invalid email').required('Email is required')
+})
+
+function MyForm() {
+  const form = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: { name: '', email: '' }
+  })
+
+  const onSubmit = (data) => {
+    // Handle form submission
+  }
+
+  return <form onSubmit={form.handleSubmit(onSubmit)}>...</form>
+}
+```
+
+### Soft Delete Pattern
+
+Always use soft deletes for data integrity:
+
+```typescript
+// Delete operation
+await prisma.entity.update({
+  where: { id },
+  data: {
+    isDeleted: true,
+    deletedAt: new Date()
+  }
+})
+
+// Query active entities
+const entities = await prisma.entity.findMany({
+  where: {
+    organizationId,
+    isDeleted: false,
+    isActive: true
+  }
+})
+```
+
+### Multi-tenant Query Pattern
+
+Always filter by `organizationId` and soft delete flags:
+
+```typescript
+const entities = await prisma.entity.findMany({
+  where: {
+    organizationId: user.organizationId,
+    isDeleted: false
+  },
+  include: {
+    relatedEntity: true
+  }
+})
+```
+
+## Development Workflow
+
+1. **Database Changes**:
+   - Edit `prisma/schema.prisma`
+   - Run `npx prisma migrate dev --name description_of_change`
+   - Prisma client auto-regenerates to `src/generated/prisma`
+
+2. **Adding New Features**:
+   - Create server actions in `src/actions/entity-name/`
+   - Create custom hook in `src/hooks/useEntityName.ts`
+   - Create page components in `src/app/dashboard/entity-name/`
+   - Add navigation link in `src/components/app-sidebar.tsx`
+
+3. **Adding shadcn/ui Components**:
+   - Run `npx shadcn@latest add component-name`
+   - Component added to `src/components/ui/`
+   - Import and use: `import { Component } from '@/components/ui/component'`
+
+4. **Building for Production**:
+   - Run `pnpm build` (automatically runs `prisma generate`)
+   - For Vercel: Use `pnpm vercel-build` (includes migrations)

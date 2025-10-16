@@ -213,8 +213,8 @@ export function ProductFilterCombobox({
                   <span>Buscando productos...</span>
                 </div>
               ) : displayedProducts.length > 0 ? (
-                <ScrollArea className="max-h-[300px]">
-                  <div className="p-1">
+                <ScrollArea className="h-[360px]">
+                  <div className="p-1 space-y-0.5">
                     {displayedProducts.map((product) => (
                       <button
                         key={product.id}

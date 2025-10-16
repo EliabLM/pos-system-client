@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import {
   IconAlertTriangle,
   IconAlertCircle,
   IconCircleCheck,
   IconPackage,
+  IconChevronDown,
+  IconChevronUp,
 } from '@tabler/icons-react';
 import { useStore } from '@/store';
 import { useStockAlerts } from '@/hooks/useDashboard';
@@ -131,18 +134,18 @@ const formatStockInfo = (
  */
 const AlertCardSkeleton = () => (
   <Card className="border-l-4">
-    <CardContent className="pt-6">
-      <div className="space-y-3">
+    <CardContent className="pt-4 sm:pt-6">
+      <div className="space-y-2 sm:space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 flex-1">
-            <Skeleton className="h-5 w-5 rounded-full" />
-            <Skeleton className="h-5 w-32" />
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+            <Skeleton className="h-5 w-full max-w-[8rem]" />
           </div>
-          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-16 sm:w-20 shrink-0" />
         </div>
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-4 w-full max-w-[7rem]" />
+        <Skeleton className="h-4 w-full max-w-[6rem]" />
+        <Skeleton className="h-8 sm:h-9 w-full" />
       </div>
     </CardContent>
   </Card>
@@ -153,11 +156,11 @@ const AlertCardSkeleton = () => (
  */
 const EmptyState = () => (
   <Alert className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10">
-    <IconCircleCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
-    <AlertTitle className="text-green-700 dark:text-green-300">
+    <IconCircleCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
+    <AlertTitle className="text-green-700 dark:text-green-300 text-sm sm:text-base">
       Todos los productos tienen stock suficiente
     </AlertTitle>
-    <AlertDescription className="text-green-600 dark:text-green-400">
+    <AlertDescription className="text-green-600 dark:text-green-400 text-xs sm:text-sm">
       No hay productos con stock bajo en este momento. El inventario se
       encuentra en niveles óptimos.
     </AlertDescription>
@@ -185,17 +188,20 @@ const AlertCard = ({ alert }: AlertCardProps) => {
         borderColor
       )}
     >
-      <CardContent className="pt-6">
-        <div className="space-y-3">
+      <CardContent className="pt-4 sm:pt-6">
+        <div className="space-y-2 sm:space-y-3">
           {/* Header: Icon, Product Name, and Badge */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <AlertIcon
-                className={cn('h-5 w-5 shrink-0', iconConfig.className)}
+                className={cn(
+                  'h-4 w-4 sm:h-5 sm:w-5 shrink-0',
+                  iconConfig.className
+                )}
                 aria-label={iconConfig.ariaLabel}
               />
               <h3
-                className="font-semibold text-sm leading-tight truncate"
+                className="font-semibold text-sm sm:text-base leading-tight truncate"
                 title={alert.productName}
               >
                 {alert.productName}
@@ -203,14 +209,17 @@ const AlertCard = ({ alert }: AlertCardProps) => {
             </div>
             <Badge
               variant={badgeConfig.variant}
-              className={cn('shrink-0 text-xs', badgeConfig.className)}
+              className={cn(
+                'shrink-0 text-xs whitespace-nowrap',
+                badgeConfig.className
+              )}
             >
               {alertLevel}
             </Badge>
           </div>
 
           {/* Stock Info */}
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs sm:text-sm text-muted-foreground">
             <span className="font-medium">Stock actual:</span>{' '}
             {formatStockInfo(
               alert.currentStock,
@@ -232,12 +241,12 @@ const AlertCard = ({ alert }: AlertCardProps) => {
           <Button
             variant="outline"
             size="sm"
-            className="w-full"
+            className="w-full text-xs sm:text-sm"
             disabled={true}
             title="Próximamente"
             aria-label={`Generar orden de compra para ${alert.productName}`}
           >
-            <IconPackage className="h-4 w-4" />
+            <IconPackage className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Generar orden
           </Button>
         </div>
@@ -256,7 +265,12 @@ interface DashboardStockAlertsProps {
   selectedStoreId?: string;
 }
 
-export function DashboardStockAlerts({ selectedStoreId }: DashboardStockAlertsProps) {
+export function DashboardStockAlerts({
+  selectedStoreId,
+}: DashboardStockAlertsProps) {
+  // State to track if alerts are expanded
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Get user from Zustand store
   const user = useStore((state) => state.user);
   const organizationId = user?.organizationId;
@@ -279,21 +293,25 @@ export function DashboardStockAlerts({ selectedStoreId }: DashboardStockAlertsPr
       )
     : [];
 
-  // Limit to 12 alerts maximum
-  const displayedAlerts = sortedAlerts.slice(0, 12);
-  const hasMoreAlerts = sortedAlerts.length > 12;
+  // Show 2 alerts by default, all when expanded
+  const INITIAL_ALERTS_COUNT = 2;
+  const displayedAlerts = isExpanded
+    ? sortedAlerts
+    : sortedAlerts.slice(0, INITIAL_ALERTS_COUNT);
+  const hasMoreAlerts = sortedAlerts.length > INITIAL_ALERTS_COUNT;
+  const hiddenAlertsCount = sortedAlerts.length - INITIAL_ALERTS_COUNT;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="h-full">
+      <CardHeader className="pb-3 sm:pb-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <IconAlertTriangle
-            className="h-5 w-5 text-orange-500"
+            className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500"
             aria-hidden="true"
           />
           Alertas de Stock
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs sm:text-sm">
           Productos que requieren reabastecimiento
         </CardDescription>
       </CardHeader>
@@ -304,7 +322,7 @@ export function DashboardStockAlerts({ selectedStoreId }: DashboardStockAlertsPr
           <Alert variant="destructive">
             <IconAlertTriangle className="h-4 w-4" />
             <AlertTitle>Error al cargar alertas</AlertTitle>
-            <AlertDescription>
+            <AlertDescription className="text-xs sm:text-sm">
               {error instanceof Error
                 ? error.message
                 : 'Ocurrió un error al cargar las alertas de stock. Por favor, intenta de nuevo.'}
@@ -314,8 +332,8 @@ export function DashboardStockAlerts({ selectedStoreId }: DashboardStockAlertsPr
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, index) => (
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
               <AlertCardSkeleton key={index} />
             ))}
           </div>
@@ -328,25 +346,55 @@ export function DashboardStockAlerts({ selectedStoreId }: DashboardStockAlertsPr
 
         {/* Alerts Grid */}
         {!isLoading && !error && stockAlerts && stockAlerts.length > 0 && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-3 sm:space-y-4">
+            {/*
+              Responsive Grid Strategy:
+              - Mobile (default): 1 column for readability on small screens
+              - Small screens (sm:): Still 1 column to maintain card readability
+              - When this component is in the sidebar (lg:col-span-1 from parent):
+                The container is narrow, so we keep 1 column for optimal UX
+              - On ultra-wide screens (2xl:): 1 column is still best in sidebar
+            */}
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
               {displayedAlerts.map((alert) => (
                 <AlertCard key={alert.productId} alert={alert} />
               ))}
             </div>
 
-            {/* Show "Ver todas" button if there are more alerts */}
+            {/* Expand/Collapse button if there are more alerts */}
             {hasMoreAlerts && (
-              <div className="flex justify-center pt-2">
-                <Button variant="outline" size="sm">
-                  Ver todas las alertas ({sortedAlerts.length})
+              <div className="flex justify-center pt-1 sm:pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs sm:text-sm gap-1.5"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  aria-expanded={isExpanded}
+                  aria-label={
+                    isExpanded
+                      ? 'Mostrar menos alertas'
+                      : `Ver ${hiddenAlertsCount} alertas más`
+                  }
+                >
+                  {isExpanded ? (
+                    <>
+                      <IconChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      Ver menos
+                    </>
+                  ) : (
+                    <>
+                      <IconChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      Ver {hiddenAlertsCount}{' '}
+                      {hiddenAlertsCount === 1 ? 'alerta más' : 'alertas más'}
+                    </>
+                  )}
                 </Button>
               </div>
             )}
 
-            {/* Alert count summary */}
+            {/* Alert count summary - only show when not expandable or when expanded */}
             {!hasMoreAlerts && (
-              <div className="text-sm text-muted-foreground text-center pt-2">
+              <div className="text-xs sm:text-sm text-muted-foreground text-center pt-1 sm:pt-2">
                 Mostrando {displayedAlerts.length}{' '}
                 {displayedAlerts.length === 1 ? 'alerta' : 'alertas'}
               </div>

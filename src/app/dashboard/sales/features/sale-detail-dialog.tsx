@@ -103,7 +103,7 @@ export function SaleDetailDialog({
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <IconReceipt className="size-5" />
@@ -111,8 +111,8 @@ export function SaleDetailDialog({
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center py-12 gap-4">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-8 w-full max-w-64" />
+            <Skeleton className="h-4 w-full max-w-48" />
             <Skeleton className="h-32 w-full" />
           </div>
         </DialogContent>
@@ -124,19 +124,23 @@ export function SaleDetailDialog({
   if (error) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <IconReceipt className="size-5" />
               Detalle de Venta
             </DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <div className="flex flex-col items-center justify-center py-12 gap-4 px-4">
             <IconAlertCircleFilled className="size-12 text-destructive" />
-            <p className="text-muted-foreground text-center">
+            <p className="text-muted-foreground text-center text-sm sm:text-base break-words">
               Error al cargar la venta: {error.message}
             </p>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="w-full sm:w-auto"
+            >
               Cerrar
             </Button>
           </div>
@@ -149,16 +153,22 @@ export function SaleDetailDialog({
   if (!sale) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <IconReceipt className="size-5" />
               Detalle de Venta
             </DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-12 gap-4">
-            <p className="text-muted-foreground">No se encontró la venta</p>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col items-center justify-center py-12 gap-4 px-4">
+            <p className="text-muted-foreground text-center">
+              No se encontró la venta
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="w-full sm:w-auto"
+            >
               Cerrar
             </Button>
           </div>
@@ -179,41 +189,46 @@ export function SaleDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-xl max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden">
         {/* Header */}
-        <DialogHeader className="p-6 pb-4">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1.5">
-              <DialogTitle className="flex items-center gap-2 text-2xl">
-                <IconReceipt className="size-6" aria-hidden="true" />
-                {sale.saleNumber}
+        <DialogHeader className="p-3 sm:p-6 pb-3 sm:pb-4 shrink-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
+              <DialogTitle className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-2xl">
+                <IconReceipt
+                  className="size-5 sm:size-6 shrink-0"
+                  aria-hidden="true"
+                />
+                <span className="truncate">{sale.saleNumber}</span>
               </DialogTitle>
-              <DialogDescription className="text-base">
+              <DialogDescription className="text-sm sm:text-base line-clamp-2">
                 Detalles completos de la transacción de venta
               </DialogDescription>
             </div>
-            <Badge className={`${statusBadge.className} gap-1.5 px-3 py-1`}>
+            <Badge
+              className={`${statusBadge.className} gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 shrink-0 text-xs sm:text-sm`}
+            >
               {statusBadge.icon}
               <span className="font-medium">{statusBadge.label}</span>
             </Badge>
           </div>
         </DialogHeader>
 
-        <Separator />
+        <Separator className="shrink-0" />
 
         {/* Content */}
-        <ScrollArea className="flex-1 px-1 md:px-6 py-4 max-h-[calc(90vh-140px)]">
-          <div className="space-y-6">
+        <ScrollArea className="flex-1 overflow-auto">
+          <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
             {/* Información General */}
-            <section className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
+            <section className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <IconFileText
-                  className="size-5 text-muted-foreground"
+                  className="size-4 sm:size-5 text-muted-foreground shrink-0"
                   aria-hidden="true"
                 />
                 Información General
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/50 rounded-lg">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <IconBuildingStore className="size-4" aria-hidden="true" />
@@ -269,15 +284,15 @@ export function SaleDetailDialog({
 
             {/* Cliente */}
             {sale.customer && (
-              <section className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+              <section className="space-y-3 sm:space-y-4">
+                <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   <IconUser
-                    className="size-5 text-muted-foreground"
+                    className="size-4 sm:size-5 text-muted-foreground shrink-0"
                     aria-hidden="true"
                   />
                   Información del Cliente
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/50 rounded-lg">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">
                       Nombre Completo
@@ -311,19 +326,87 @@ export function SaleDetailDialog({
             )}
 
             {/* Productos Vendidos */}
-            <section className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
+            <section className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <IconShoppingCart
-                  className="size-5 text-muted-foreground"
+                  className="size-4 sm:size-5 text-muted-foreground shrink-0"
                   aria-hidden="true"
                 />
                 Productos Vendidos
               </h3>
-              <div className="border rounded-lg overflow-hidden">
+
+              {/* Mobile: Card Layout */}
+              <div className="flex flex-col gap-3 sm:hidden">
+                {sale.saleItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="border rounded-lg p-3 space-y-3 bg-card"
+                  >
+                    <div className="flex items-start gap-3">
+                      {item.product.image && (
+                        <img
+                          src={item.product.image}
+                          alt={item.product.name}
+                          className="size-12 rounded-md object-cover shrink-0"
+                        />
+                      )}
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="font-medium text-sm">
+                          {item.product.name}
+                        </span>
+                        {item.product.description && (
+                          <span className="text-xs text-muted-foreground line-clamp-2">
+                            {item.product.description}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="space-y-0.5">
+                        <p className="text-xs text-muted-foreground">
+                          Cantidad
+                        </p>
+                        <p className="font-medium">{item.quantity}</p>
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-xs text-muted-foreground">
+                          P. Unit.
+                        </p>
+                        <p className="font-medium">
+                          <NumericFormat
+                            value={item.unitPrice}
+                            prefix="$"
+                            thousandSeparator="."
+                            decimalSeparator=","
+                            displayType="text"
+                          />
+                        </p>
+                      </div>
+                      <div className="space-y-0.5 text-right">
+                        <p className="text-xs text-muted-foreground">
+                          Subtotal
+                        </p>
+                        <p className="font-semibold">
+                          <NumericFormat
+                            value={item.subtotal}
+                            prefix="$"
+                            thousandSeparator="."
+                            decimalSeparator=","
+                            displayType="text"
+                          />
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: Table Layout */}
+              <div className="hidden sm:block border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader className="bg-muted">
                     <TableRow>
-                      <TableHead className="w-[50%]">Producto</TableHead>
+                      <TableHead className="min-w-[200px]">Producto</TableHead>
                       <TableHead className="text-right">Cantidad</TableHead>
                       <TableHead className="text-right">Precio Unit.</TableHead>
                       <TableHead className="text-right">Subtotal</TableHead>
@@ -341,7 +424,7 @@ export function SaleDetailDialog({
                                 className="size-10 rounded-md object-cover"
                               />
                             )}
-                            <div className="flex flex-col">
+                            <div className="flex flex-col min-w-0">
                               <span className="font-medium">
                                 {item.product.name}
                               </span>
@@ -379,22 +462,67 @@ export function SaleDetailDialog({
                   </TableBody>
                 </Table>
               </div>
-              <div className="flex justify-between items-center px-4 py-2 bg-muted/50 rounded-lg">
-                <p className="font-medium">Total de Items:</p>
-                <p className="font-semibold text-lg">{totalItems}</p>
+              <div className="flex justify-between items-center px-3 sm:px-4 py-2 bg-muted/50 rounded-lg">
+                <p className="font-medium text-sm sm:text-base">
+                  Total de Items:
+                </p>
+                <p className="font-semibold text-base sm:text-lg">
+                  {totalItems}
+                </p>
               </div>
             </section>
 
             {/* Métodos de Pago */}
-            <section className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
+            <section className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <IconCreditCard
-                  className="size-5 text-muted-foreground"
+                  className="size-4 sm:size-5 text-muted-foreground shrink-0"
                   aria-hidden="true"
                 />
                 Métodos de Pago
               </h3>
-              <div className="border rounded-lg overflow-hidden">
+
+              {/* Mobile: Card Layout */}
+              <div className="flex flex-col gap-3 sm:hidden">
+                {sale.salePayments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="border rounded-lg p-3 bg-card space-y-2"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground">Método</p>
+                        <p className="font-medium text-sm">
+                          {payment.paymentMethod.name}
+                        </p>
+                      </div>
+                      <div className="space-y-0.5 text-right">
+                        <p className="text-xs text-muted-foreground">Monto</p>
+                        <p className="font-semibold text-sm">
+                          <NumericFormat
+                            value={payment.amount}
+                            prefix="$"
+                            thousandSeparator="."
+                            decimalSeparator=","
+                            displayType="text"
+                          />
+                        </p>
+                      </div>
+                    </div>
+                    {payment.reference && (
+                      <div className="space-y-0.5">
+                        <p className="text-xs text-muted-foreground">
+                          Referencia
+                        </p>
+                        <p className="text-sm">{payment.reference}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: Table Layout */}
+              <div className="hidden sm:block border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader className="bg-muted">
                     <TableRow>
@@ -426,9 +554,11 @@ export function SaleDetailDialog({
                   </TableBody>
                 </Table>
               </div>
-              <div className="flex justify-between items-center px-4 py-2 bg-muted/50 rounded-lg">
-                <p className="font-medium">Total Pagado:</p>
-                <p className="font-semibold text-lg">
+              <div className="flex justify-between items-center px-3 sm:px-4 py-2 bg-muted/50 rounded-lg">
+                <p className="font-medium text-sm sm:text-base">
+                  Total Pagado:
+                </p>
+                <p className="font-semibold text-base sm:text-lg">
                   <NumericFormat
                     value={totalPayments}
                     prefix="$"
@@ -441,12 +571,14 @@ export function SaleDetailDialog({
             </section>
 
             {/* Totales Finales */}
-            <section className="space-y-3">
+            <section className="space-y-2 sm:space-y-3">
               <Separator />
-              <div className="flex flex-col gap-2 p-4 bg-primary/5 rounded-lg">
+              <div className="flex flex-col gap-2 p-3 sm:p-4 bg-primary/5 rounded-lg">
                 <div className="flex justify-between items-center">
-                  <p className="text-muted-foreground">Subtotal:</p>
-                  <p className="font-medium">
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    Subtotal:
+                  </p>
+                  <p className="font-medium text-sm sm:text-base">
                     <NumericFormat
                       value={sale.subtotal}
                       prefix="$"
@@ -458,8 +590,10 @@ export function SaleDetailDialog({
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
-                  <p className="text-lg font-semibold">Total de la Venta:</p>
-                  <p className="text-2xl font-bold text-primary">
+                  <p className="text-base sm:text-lg font-semibold">
+                    Total de la Venta:
+                  </p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary">
                     <NumericFormat
                       value={sale.total}
                       prefix="$"
@@ -474,16 +608,18 @@ export function SaleDetailDialog({
 
             {/* Notas */}
             {sale.notes && (
-              <section className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+              <section className="space-y-3 sm:space-y-4">
+                <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   <IconFileText
-                    className="size-5 text-muted-foreground"
+                    className="size-4 sm:size-5 text-muted-foreground shrink-0"
                     aria-hidden="true"
                   />
                   Notas
                 </h3>
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm whitespace-pre-wrap">{sale.notes}</p>
+                <div className="p-3 sm:p-4 bg-muted/50 rounded-lg">
+                  <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">
+                    {sale.notes}
+                  </p>
                 </div>
               </section>
             )}
@@ -491,10 +627,12 @@ export function SaleDetailDialog({
         </ScrollArea>
 
         {/* Footer */}
-        <Separator />
-        <div className="p-6 pt-4 flex justify-end">
+        <Separator className="shrink-0" />
+        <div className="p-3 sm:p-6 pt-3 sm:pt-4 flex justify-end shrink-0">
           <DialogClose asChild>
-            <Button variant="outline">Cerrar</Button>
+            <Button variant="outline" className="w-full sm:w-auto">
+              Cerrar
+            </Button>
           </DialogClose>
         </div>
       </DialogContent>

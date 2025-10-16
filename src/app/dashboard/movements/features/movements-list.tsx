@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardAction,
@@ -9,44 +9,110 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { DataTable } from '../features/data-table';
+import { MovementsDataTable } from './movements-data-table';
 import { Button } from '@/components/ui/button';
 import { Sheet } from '@/components/ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { IconFilter, IconPlus, IconX } from '@tabler/icons-react';
-import { ProductFilterCombobox } from '@/components/product-filter-combobox';
+import { IconFilter, IconPlus } from '@tabler/icons-react';
 
 import { useStockMovements } from '@/hooks/useStockMovement';
 import { StockMovementType } from '@/generated/prisma';
-
-import NewMovement from './new-movement';
+import { MovementFormSheet } from './movement-form-sheet';
+import { MovementsFilters } from './movements-filters';
 
 const MovementsList = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filtros
-  const [filters, setFilters] = useState<{
-    productId?: string;
-    type?: StockMovementType;
-    search?: string;
-  }>({});
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<StockMovementType | 'all'>(
+    'all'
+  );
+  const [productFilter, setProductFilter] = useState('');
+  const [userFilter, setUserFilter] = useState('');
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
 
-  const movements = useStockMovements(filters);
+  // Debounce search term (400ms)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 400);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  // Build filters for API
+  const apiFilters = useMemo(() => {
+    const filters: {
+      productId?: string;
+      type?: StockMovementType;
+      userId?: string;
+      dateFrom?: Date;
+      dateTo?: Date;
+      search?: string;
+    } = {};
+
+    if (debouncedSearchTerm) {
+      filters.search = debouncedSearchTerm;
+    }
+
+    if (typeFilter !== 'all') {
+      filters.type = typeFilter;
+    }
+
+    if (productFilter) {
+      filters.productId = productFilter;
+    }
+
+    if (userFilter) {
+      filters.userId = userFilter;
+    }
+
+    if (dateFromFilter) {
+      const fromDate = new Date(dateFromFilter);
+      fromDate.setHours(0, 0, 0, 0);
+      filters.dateFrom = fromDate;
+    }
+
+    if (dateToFilter) {
+      const toDate = new Date(dateToFilter);
+      toDate.setHours(23, 59, 59, 999);
+      filters.dateTo = toDate;
+    }
+
+    return filters;
+  }, [
+    debouncedSearchTerm,
+    typeFilter,
+    productFilter,
+    userFilter,
+    dateFromFilter,
+    dateToFilter,
+  ]);
+
+  const movements = useStockMovements(apiFilters);
 
   const handleClearFilters = () => {
-    setFilters({});
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
+    setTypeFilter('all');
+    setProductFilter('');
+    setUserFilter('');
+    setDateFromFilter('');
+    setDateToFilter('');
   };
 
-  const hasActiveFilters = Object.values(filters).some((value) => value);
+  const hasActiveFilters =
+    searchTerm ||
+    typeFilter !== 'all' ||
+    productFilter ||
+    userFilter ||
+    dateFromFilter ||
+    dateToFilter;
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
@@ -57,9 +123,11 @@ const MovementsList = () => {
               <CardTitle>Movimientos de Inventario</CardTitle>
               <CardDescription>
                 <span className="hidden @[540px]/card:block">
-                  Historial de todos los movimientos de inventario
+                  Historial completo de todos los movimientos de stock
                 </span>
-                <span className="@[540px]/card:hidden">Movimientos</span>
+                <span className="@[540px]/card:hidden">
+                  Historial de movimientos
+                </span>
               </CardDescription>
 
               <CardAction>
@@ -68,6 +136,8 @@ const MovementsList = () => {
                   size="sm"
                   onClick={() => setShowFilters(!showFilters)}
                   className="gap-2 mr-2"
+                  aria-label="Mostrar u ocultar filtros"
+                  aria-expanded={showFilters}
                 >
                   <IconFilter className="size-4" />
                   <span className="hidden sm:inline">Filtros</span>
@@ -77,88 +147,40 @@ const MovementsList = () => {
                     setSheetOpen(true);
                   }}
                   className="gap-2"
+                  aria-label="Crear nuevo ajuste de stock"
                 >
                   <IconPlus className="size-4" />
-                  <span className="hidden sm:inline">Nuevo movimiento</span>
+                  <span className="hidden sm:inline">Nuevo ajuste</span>
                   <span className="sm:hidden">Nuevo</span>
                 </Button>
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  <NewMovement setSheetOpen={setSheetOpen} />
+                  <MovementFormSheet setSheetOpen={setSheetOpen} />
                 </Sheet>
               </CardAction>
             </CardHeader>
 
-            {showFilters && (
-              <div className="border-t border-border bg-muted/50 px-6 py-4">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <ProductFilterCombobox
-                    selectedProductId={filters.productId}
-                    onProductSelect={(productId) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        productId,
-                      }))
-                    }
-                  />
+            <CardContent className="space-y-6">
+              {/* Filters */}
+              {showFilters && (
+                <MovementsFilters
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  typeFilter={typeFilter}
+                  onTypeChange={setTypeFilter}
+                  productFilter={productFilter}
+                  onProductChange={setProductFilter}
+                  userFilter={userFilter}
+                  onUserChange={setUserFilter}
+                  dateFromFilter={dateFromFilter}
+                  onDateFromChange={setDateFromFilter}
+                  dateToFilter={dateToFilter}
+                  onDateToChange={setDateToFilter}
+                  onClearFilters={handleClearFilters}
+                />
+              )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="filter-type">Tipo de movimiento</Label>
-                    <Select
-                      value={filters.type || 'all'}
-                      onValueChange={(value) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          type:
-                            value === 'all'
-                              ? undefined
-                              : (value as StockMovementType),
-                        }))
-                      }
-                    >
-                      <SelectTrigger id="filter-type">
-                        <SelectValue placeholder="Todos los tipos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los tipos</SelectItem>
-                        <SelectItem value="IN">Entrada</SelectItem>
-                        <SelectItem value="OUT">Salida</SelectItem>
-                        <SelectItem value="ADJUSTMENT">Ajuste</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="filter-search">Buscar</Label>
-                    <Input
-                      id="filter-search"
-                      placeholder="Buscar por razón o referencia..."
-                      value={filters.search || ''}
-                      onChange={(e) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          search: e.target.value || undefined,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-end">
-                    <Button
-                      variant="ghost"
-                      onClick={handleClearFilters}
-                      disabled={!hasActiveFilters}
-                      className="w-full gap-2"
-                    >
-                      <IconX className="size-4" />
-                      Limpiar filtros
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <CardContent>
-              <DataTable
+              {/* Data Table */}
+              <MovementsDataTable
                 loading={movements.isLoading}
                 data={movements.data?.movements ?? []}
                 showFilters={showFilters}

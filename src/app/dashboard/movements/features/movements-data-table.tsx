@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Loader2Icon, RefreshCcw } from 'lucide-react';
+import { RefreshCcw, Loader2Icon } from 'lucide-react';
 import {
   closestCenter,
   DndContext,
@@ -27,12 +27,9 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconLayoutColumns,
-  IconArrowUp,
-  IconArrowDown,
-  IconAdjustments,
+  IconPackageOff,
 } from '@tabler/icons-react';
 import {
-  ColumnDef,
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
@@ -47,9 +44,7 @@ import {
   VisibilityState,
 } from '@tanstack/react-table';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 
 import {
   DropdownMenu,
@@ -73,194 +68,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { StockMovement } from '@/generated/prisma';
 import { useStockMovements } from '@/hooks/useStockMovement';
-
-// Helper function to format date
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('es-ES', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(date));
-};
-
-// Helper function to get movement type badge variant and icon
-const getMovementTypeBadge = (type: string) => {
-  switch (type) {
-    case 'IN':
-      return {
-        label: 'Entrada',
-        variant: 'default' as const,
-        className: 'bg-green-500 hover:bg-green-600 text-white',
-        icon: <IconArrowUp className="size-4" />,
-      };
-    case 'OUT':
-      return {
-        label: 'Salida',
-        variant: 'destructive' as const,
-        className: 'bg-red-500 hover:bg-red-600 text-white',
-        icon: <IconArrowDown className="size-4" />,
-      };
-    case 'ADJUSTMENT':
-      return {
-        label: 'Ajuste',
-        variant: 'secondary' as const,
-        className: 'bg-blue-500 hover:bg-blue-600 text-white',
-        icon: <IconAdjustments className="size-4" />,
-      };
-    default:
-      return {
-        label: type,
-        variant: 'outline' as const,
-        className: '',
-        icon: null,
-      };
-  }
-};
-
-type StockMovementWithRelations = StockMovement & {
-  product?: {
-    name: string;
-  };
-  user?: {
-    username: string;
-  };
-};
-
-const getColumns = (): ColumnDef<StockMovementWithRelations>[] => {
-  return [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && 'indeterminate')
-            }
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-            aria-label="Select all"
-          />
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: 'createdAt',
-      header: 'Fecha',
-      cell: ({ row }) => (
-        <div className="text-sm">{formatDate(row.original.createdAt)}</div>
-      ),
-      enableHiding: false,
-    },
-    {
-      accessorKey: 'product.name',
-      header: 'Producto',
-      cell: ({ row }) => (
-        <div className="font-medium">{row.original.product?.name ?? 'N/A'}</div>
-      ),
-      enableHiding: false,
-    },
-    {
-      accessorKey: 'type',
-      header: 'Tipo',
-      cell: ({ row }) => {
-        const typeInfo = getMovementTypeBadge(row.original.type);
-        return (
-          <Badge variant={typeInfo.variant} className={typeInfo.className}>
-            {typeInfo.icon}
-            {typeInfo.label}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: 'quantity',
-      header: 'Cantidad',
-      cell: ({ row }) => {
-        const type = row.original.type;
-        const quantity = row.original.quantity;
-        const isPositive = type === 'IN';
-        const isNegative = type === 'OUT';
-
-        return (
-          <div
-            className={`font-medium ${
-              isPositive
-                ? 'text-green-600'
-                : isNegative
-                ? 'text-red-600'
-                : 'text-blue-600'
-            }`}
-          >
-            {isPositive && '+'}
-            {isNegative && '-'}
-            {quantity}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'previousStock',
-      header: 'Stock Anterior',
-      cell: ({ row }) => (
-        <div className="text-sm text-muted-foreground">
-          {row.original.previousStock}
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'newStock',
-      header: 'Stock Nuevo',
-      cell: ({ row }) => (
-        <div className="text-sm font-medium">{row.original.newStock}</div>
-      ),
-    },
-    {
-      accessorKey: 'reason',
-      header: 'Razón',
-      cell: ({ row }) => (
-        <div className="text-sm">{row.original.reason ?? '-'}</div>
-      ),
-      enableHiding: true,
-    },
-    {
-      accessorKey: 'user.username',
-      header: 'Usuario',
-      cell: ({ row }) => (
-        <div className="text-sm">
-          {row.original.user?.username ?? 'Sistema'}
-        </div>
-      ),
-      enableHiding: true,
-    },
-    {
-      accessorKey: 'reference',
-      header: 'Referencia',
-      cell: ({ row }) => (
-        <div className="text-sm text-muted-foreground">
-          {row.original.reference ?? '-'}
-        </div>
-      ),
-      enableHiding: true,
-    },
-  ];
-};
+import { getColumns, StockMovementWithRelations } from './columns';
 
 function DraggableRow({ row }: { row: Row<StockMovementWithRelations> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -287,20 +96,26 @@ function DraggableRow({ row }: { row: Row<StockMovementWithRelations> }) {
   );
 }
 
-export function DataTable({
-  data,
-  loading,
-  showFilters,
-}: {
+export interface MovementsDataTableProps {
   data: StockMovementWithRelations[];
   loading: boolean;
   showFilters: boolean;
-}) {
+}
+
+export function MovementsDataTable({
+  data,
+  loading,
+  showFilters,
+}: MovementsDataTableProps) {
   const { refetch, isFetching } = useStockMovements({});
 
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({
+      reason: false,
+      reference: false,
+      'store.name': false,
+    });
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
@@ -351,13 +166,23 @@ export function DataTable({
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
-      // Stock movements are immutable, no reordering
+      // Stock movements are immutable audit records - no reordering
+      console.log('Drag and drop disabled for stock movements');
     }
   }
 
   return (
     <div className="w-full flex-col justify-start gap-6">
-      <div className="flex items-center justify-end mb-4 ">
+      {/* Table Controls */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length > 0 && (
+            <span>
+              {table.getFilteredSelectedRowModel().rows.length} de{' '}
+              {table.getFilteredRowModel().rows.length} fila(s) seleccionadas
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {!showFilters &&
             (!isFetching ? (
@@ -366,21 +191,26 @@ export function DataTable({
                 size="sm"
                 disabled={showFilters}
                 onClick={() => refetch()}
+                aria-label="Actualizar datos"
               >
-                <RefreshCcw />
+                <RefreshCcw className="size-4" />
+                <span className="hidden sm:inline ml-2">Actualizar</span>
               </Button>
             ) : (
-              <Button variant="outline" size="sm">
-                <Loader2Icon className="animate-spin" />
+              <Button variant="outline" size="sm" disabled>
+                <Loader2Icon className="size-4 animate-spin" />
+                <span className="hidden sm:inline ml-2">Actualizando...</span>
               </Button>
             ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                <span className="hidden lg:inline">Personalizar columnas</span>
-                <span className="lg:hidden">Columnas</span>
-                <IconChevronDown />
+              <Button variant="outline" size="sm" aria-label="Personalizar columnas">
+                <IconLayoutColumns className="size-4" />
+                <span className="hidden lg:inline ml-2">
+                  Personalizar columnas
+                </span>
+                <span className="lg:hidden ml-2">Columnas</span>
+                <IconChevronDown className="size-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -409,6 +239,8 @@ export function DataTable({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Table */}
       <div className="relative flex flex-col gap-4 overflow-auto">
         <div className="overflow-hidden rounded-lg border">
           <DndContext
@@ -437,14 +269,19 @@ export function DataTable({
                   </TableRow>
                 ))}
               </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
+              <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell
                       colSpan={getColumns().length}
                       className="h-24 text-center"
                     >
-                      Cargando...
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
+                        <span className="text-muted-foreground">
+                          Cargando movimientos...
+                        </span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : table.getRowModel().rows?.length ? (
@@ -460,9 +297,20 @@ export function DataTable({
                   <TableRow>
                     <TableCell
                       colSpan={getColumns().length}
-                      className="h-24 text-center"
+                      className="h-32 text-center"
                     >
-                      Sin registros
+                      <div className="flex flex-col items-center justify-center gap-3 py-8">
+                        <IconPackageOff className="size-12 text-muted-foreground/50" />
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            No hay movimientos registrados
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Los movimientos aparecerán aquí cuando se registren
+                            ventas o ajustes de stock
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -470,14 +318,16 @@ export function DataTable({
             </Table>
           </DndContext>
         </div>
-        <div className="flex items-center justify-between px-4">
+
+        {/* Pagination */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
           <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
             {table.getFilteredSelectedRowModel().rows.length} de{' '}
-            {table.getFilteredRowModel().rows.length} filas(s) seleccionadas.
+            {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
           </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
+          <div className="flex w-full sm:w-auto items-center gap-4 lg:gap-8">
             <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
+              <Label htmlFor="rows-per-page" className="text-sm font-medium whitespace-nowrap">
                 Filas por página
               </Label>
               <Select
@@ -500,19 +350,20 @@ export function DataTable({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
+            <div className="flex w-fit items-center justify-center text-sm font-medium whitespace-nowrap">
               Página {table.getState().pagination.pageIndex + 1} de{' '}
               {table.getPageCount()}
             </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 className="hidden h-8 w-8 p-0 lg:flex"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
+                aria-label="Ir a primera página"
               >
                 <span className="sr-only">Ir a primera página</span>
-                <IconChevronsLeft />
+                <IconChevronsLeft className="size-4" />
               </Button>
               <Button
                 variant="outline"
@@ -520,9 +371,10 @@ export function DataTable({
                 size="icon"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
+                aria-label="Página anterior"
               >
                 <span className="sr-only">Página anterior</span>
-                <IconChevronLeft />
+                <IconChevronLeft className="size-4" />
               </Button>
               <Button
                 variant="outline"
@@ -530,9 +382,10 @@ export function DataTable({
                 size="icon"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
+                aria-label="Siguiente página"
               >
                 <span className="sr-only">Siguiente página</span>
-                <IconChevronRight />
+                <IconChevronRight className="size-4" />
               </Button>
               <Button
                 variant="outline"
@@ -540,9 +393,10 @@ export function DataTable({
                 size="icon"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
+                aria-label="Ir a última página"
               >
                 <span className="sr-only">Ir a última página</span>
-                <IconChevronsRight />
+                <IconChevronsRight className="size-4" />
               </Button>
             </div>
           </div>

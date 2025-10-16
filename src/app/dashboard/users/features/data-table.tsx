@@ -2,37 +2,14 @@
 
 import * as React from 'react';
 import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type UniqueIdentifier,
-} from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
   IconLayoutColumns,
-  IconCircleCheckFilled,
-  IconAlertCircleFilled,
-  IconMailCheck,
-  IconMailX,
 } from '@tabler/icons-react';
 import {
-  ColumnDef,
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
@@ -41,16 +18,12 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  Row,
   SortingState,
   useReactTable,
   VisibilityState,
 } from '@tanstack/react-table';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -73,162 +46,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { UserActionComponent } from './action-component';
 import { User } from '@/generated/prisma';
+import { getColumns } from './columns';
 
-const getRoleLabel = (role: string) => {
-  const roles: Record<string, string> = {
-    ADMIN: 'Administrador',
-    SELLER: 'Vendedor',
-  };
-  return roles[role] || role;
-};
-
-const getColumns = ({
-  setItemSelected,
-  setSheetOpen,
-}: {
+interface DataTableProps {
+  data: User[];
+  loading: boolean;
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setItemSelected: React.Dispatch<React.SetStateAction<User | null>>;
-}): ColumnDef<User>[] => {
-  return [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && 'indeterminate')
-            }
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-            aria-label="Select all"
-          />
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: 'username',
-      header: 'Usuario',
-      enableHiding: false,
-      cell: ({ row }) => {
-        const user = row.original;
-        return <span className="font-medium">{user.username}</span>;
-      },
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email',
-      enableHiding: false,
-      cell: ({ row }) => {
-        return <span className="text-muted-foreground">{row.original.email}</span>;
-      },
-    },
-    {
-      accessorKey: 'role',
-      header: 'Rol',
-      enableHiding: true,
-      cell: ({ row }) => {
-        const user = row.original;
-        return (
-          <Badge
-            className="rounded-sm text-muted-foreground px-1.5"
-            variant={user.role === 'ADMIN' ? 'default' : 'secondary'}
-          >
-            {getRoleLabel(user.role)}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: 'emailVerified',
-      header: 'Email verificado',
-      enableHiding: true,
-      cell: ({ row }) => {
-        const verified = row.original.emailVerified;
-        return (
-          <Badge
-            variant="outline"
-            className="rounded-sm text-muted-foreground px-1.5"
-          >
-            {verified ? (
-              <>
-                <IconMailCheck className="fill-green-500 dark:fill-green-400" />
-                Verificado
-              </>
-            ) : (
-              <>
-                <IconMailX className="fill-orange-500 dark:fill-orange-400" />
-                Pendiente
-              </>
-            )}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: 'status',
-      header: 'Estado',
-      cell: ({ row }) => (
-        <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.isActive ? (
-            <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-          ) : (
-            <IconAlertCircleFilled className="fill-red-500 dark:fill-red-400" />
-          )}
-          {row.original.isActive ? 'Activo' : 'Inactivo'}
-        </Badge>
-      ),
-    },
-    {
-      id: 'actions',
-      cell: ({ row }) => (
-        <UserActionComponent
-          item={row.original}
-          setItemSelected={setItemSelected}
-          setSheetOpen={setSheetOpen}
-        />
-      ),
-    },
-  ];
-};
-
-function DraggableRow({ row }: { row: Row<User> }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id ?? 0,
-  });
-
-  return (
-    <TableRow
-      data-state={row.getIsSelected() && 'selected'}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
-  );
+  setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedUserId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export function DataTable({
@@ -236,12 +63,9 @@ export function DataTable({
   loading,
   setSheetOpen,
   setItemSelected,
-}: {
-  data: User[];
-  loading: boolean;
-  setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<User | null>>;
-}) {
+  setDialogOpen,
+  setSelectedUserId,
+}: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -253,21 +77,21 @@ export function DataTable({
     pageIndex: 0,
     pageSize: 10,
   });
-  const sortableId = React.useId();
-  const sensors = useSensors(
-    useSensor(MouseSensor, {}),
-    useSensor(TouchSensor, {}),
-    useSensor(KeyboardSensor, {})
-  );
 
-  const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id ?? 0) || [],
-    [data]
+  const columns = React.useMemo(
+    () =>
+      getColumns({
+        setItemSelected,
+        setSheetOpen,
+        setDialogOpen,
+        setSelectedUserId,
+      }),
+    [setItemSelected, setSheetOpen, setDialogOpen, setSelectedUserId]
   );
 
   const table = useReactTable({
     data,
-    columns: getColumns({ setItemSelected, setSheetOpen }),
+    columns,
     state: {
       sorting,
       columnVisibility,
@@ -290,24 +114,18 @@ export function DataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      //
-    }
-  }
-
   return (
     <div className="w-full flex-col justify-start gap-6">
-      <div className="flex items-center justify-end mb-4 ">
+      {/* Column Visibility Toggle */}
+      <div className="flex items-center justify-end mb-4">
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
+              <Button variant="outline" size="sm" className="gap-2">
+                <IconLayoutColumns className="size-4" />
                 <span className="hidden lg:inline">Personalizar columnas</span>
                 <span className="lg:hidden">Columnas</span>
-                <IconChevronDown />
+                <IconChevronDown className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -336,75 +154,86 @@ export function DataTable({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Table */}
       <div className="relative flex flex-col gap-4 overflow-auto">
         <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
+          <Table>
+            <TableHeader className="bg-muted sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
                   >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
                     ))}
-                  </SortableContext>
-                ) : loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={
-                        getColumns({ setItemSelected, setSheetOpen }).length
-                      }
-                      className="h-24 text-center"
-                    >
-                      Cargando...
-                    </TableCell>
                   </TableRow>
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={
-                        getColumns({ setItemSelected, setSheetOpen }).length
-                      }
-                      className="h-24 text-center"
-                    >
-                      Sin registros
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
+                ))
+              ) : loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      <span className="text-sm text-muted-foreground">
+                        Cargando usuarios...
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2 py-8">
+                      <p className="text-sm text-muted-foreground">
+                        No se encontraron usuarios
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Intenta ajustar los filtros de búsqueda
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
+
+        {/* Pagination */}
         <div className="flex items-center justify-between px-4">
           <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
             {table.getFilteredSelectedRowModel().rows.length} de{' '}
-            {table.getFilteredRowModel().rows.length} filas(s) seleccionadas.
+            {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
           </div>
           <div className="flex w-full items-center gap-8 lg:w-fit">
             <div className="hidden items-center gap-2 lg:flex">
@@ -441,9 +270,10 @@ export function DataTable({
                 className="hidden h-8 w-8 p-0 lg:flex"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
+                aria-label="Ir a primera página"
               >
                 <span className="sr-only">Ir a primera página</span>
-                <IconChevronsLeft />
+                <IconChevronsLeft className="size-4" />
               </Button>
               <Button
                 variant="outline"
@@ -451,9 +281,10 @@ export function DataTable({
                 size="icon"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
+                aria-label="Página anterior"
               >
                 <span className="sr-only">Página anterior</span>
-                <IconChevronLeft />
+                <IconChevronLeft className="size-4" />
               </Button>
               <Button
                 variant="outline"
@@ -461,9 +292,10 @@ export function DataTable({
                 size="icon"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
+                aria-label="Siguiente página"
               >
                 <span className="sr-only">Siguiente página</span>
-                <IconChevronRight />
+                <IconChevronRight className="size-4" />
               </Button>
               <Button
                 variant="outline"
@@ -471,9 +303,10 @@ export function DataTable({
                 size="icon"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
+                aria-label="Ir a última página"
               >
                 <span className="sr-only">Ir a última página</span>
-                <IconChevronsRight />
+                <IconChevronsRight className="size-4" />
               </Button>
             </div>
           </div>

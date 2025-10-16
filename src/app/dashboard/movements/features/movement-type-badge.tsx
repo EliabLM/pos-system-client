@@ -1,6 +1,10 @@
 'use client';
 
-import { IconArrowDown, IconArrowUp, IconAdjustments } from '@tabler/icons-react';
+import {
+  IconArrowDown,
+  IconArrowUp,
+  IconAdjustments,
+} from '@tabler/icons-react';
 import { Badge } from '@/components/ui/badge';
 import { StockMovementType } from '@/generated/prisma';
 
@@ -13,7 +17,7 @@ interface MovementTypeBadgeProps {
 export function MovementTypeBadge({
   type,
   showIcon = true,
-  className = ''
+  className = '',
 }: MovementTypeBadgeProps) {
   const getTypeInfo = () => {
     switch (type) {
@@ -21,7 +25,8 @@ export function MovementTypeBadge({
         return {
           label: 'Entrada',
           icon: <IconArrowDown className="size-3 sm:size-3.5" />,
-          className: 'bg-green-500 hover:bg-green-600 text-white border-green-600',
+          className:
+            'bg-green-500 hover:bg-green-600 text-white border-green-600',
         };
       case 'OUT':
         return {
@@ -33,7 +38,7 @@ export function MovementTypeBadge({
         return {
           label: 'Ajuste',
           icon: <IconAdjustments className="size-3 sm:size-3.5" />,
-          className: 'bg-orange-500 hover:bg-orange-600 text-white border-orange-600',
+          className: 'bg-blue-500 hover:bg-blue-600 text-white border-blue-600',
         };
       default:
         return {

@@ -536,7 +536,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\eliab\\workspace\\projects\\pos-system\\pos-system-client\\src\\generated\\prisma",
+      "value": "C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -554,7 +554,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\eliab\\workspace\\projects\\pos-system\\pos-system-client\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

@@ -128,12 +128,9 @@ export function MovementsFilters({
 
         {/* Producto */}
         <div className="space-y-2">
-          <Label>Producto</Label>
           <ProductFilterCombobox
             selectedProductId={productFilter || undefined}
-            onProductSelect={(productId) =>
-              onProductChange(productId || '')
-            }
+            onProductSelect={(productId) => onProductChange(productId || '')}
           />
         </div>
 

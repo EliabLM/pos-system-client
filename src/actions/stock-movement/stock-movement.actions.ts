@@ -10,7 +10,7 @@ import {
   emptyOrgIdResponse,
 } from '../utils';
 
-const stockMovementInclude: Prisma.StockMovementInclude = {
+const stockMovementInclude = {
   organization: true,
   product: {
     include: {
@@ -24,9 +24,16 @@ const stockMovementInclude: Prisma.StockMovementInclude = {
       id: true,
       username: true,
       email: true,
+      firstName: true,
+      lastName: true,
     },
   },
-};
+} satisfies Prisma.StockMovementInclude;
+
+// Type for StockMovement with includes
+export type StockMovementWithRelations = Prisma.StockMovementGetPayload<{
+  include: typeof stockMovementInclude;
+}>;
 
 // CREATE
 export const createStockMovement = async (
@@ -238,7 +245,7 @@ export const getStockMovementsByOrgId = async (
 // GET ONE
 export const getStockMovementById = async (
   movementId: string
-): Promise<ActionResponse<StockMovement | null>> => {
+): Promise<ActionResponse<StockMovementWithRelations | null>> => {
   try {
     if (!movementId)
       return {
@@ -374,7 +381,7 @@ export const updateStockMovement = async (
 
     // Remover campos undefined
     const cleanUpdates = Object.fromEntries(
-      Object.entries(allowedUpdates).filter(([_, value]) => value !== undefined)
+      Object.entries(allowedUpdates).filter(([, value]) => value !== undefined)
     );
 
     if (Object.keys(cleanUpdates).length === 0) {

@@ -8,7 +8,6 @@ import {
   IconFileText,
   IconCalendar,
   IconUserCircle,
-  IconBuildingStore,
   IconReceipt,
   IconArrowsExchange,
 } from '@tabler/icons-react';
@@ -168,7 +167,8 @@ export function MovementDetailDialog({
               </h3>
               <div className="p-3 sm:p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-start gap-3 sm:gap-4">
-                  {movement.product?.image && (
+                  {movement.product.image && (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={movement.product.image}
                       alt={movement.product.name}
@@ -202,13 +202,17 @@ export function MovementDetailDialog({
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/50 rounded-lg">
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Stock Anterior</p>
+                  <p className="text-sm text-muted-foreground">
+                    Stock Anterior
+                  </p>
                   <p className="text-2xl font-bold font-mono">
                     {movement.previousStock}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Cantidad Movida</p>
+                  <p className="text-sm text-muted-foreground">
+                    Cantidad Movida
+                  </p>
                   <p
                     className={`text-2xl font-bold font-mono ${
                       movement.type === 'IN'
@@ -262,20 +266,13 @@ export function MovementDetailDialog({
                     <span>Realizado por</span>
                   </div>
                   <p className="font-medium">
-                    {movement.user
+                    {movement.user &&
+                    movement.user.firstName &&
+                    movement.user.lastName
                       ? `${movement.user.firstName} ${movement.user.lastName}`
-                      : 'Sistema'}
+                      : movement.user?.username || 'Sistema'}
                   </p>
                 </div>
-                {movement.store && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <IconBuildingStore className="size-4" aria-hidden="true" />
-                      <span>Tienda</span>
-                    </div>
-                    <p className="font-medium">{movement.store.name}</p>
-                  </div>
-                )}
                 {movement.reference && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -283,15 +280,6 @@ export function MovementDetailDialog({
                       <span>Referencia</span>
                     </div>
                     <p className="font-medium">{movement.reference}</p>
-                  </div>
-                )}
-                {movement.sale && (
-                  <div className="space-y-1 md:col-span-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <IconReceipt className="size-4" aria-hidden="true" />
-                      <span>Venta Relacionada</span>
-                    </div>
-                    <p className="font-medium">{movement.sale.saleNumber}</p>
                   </div>
                 )}
               </div>

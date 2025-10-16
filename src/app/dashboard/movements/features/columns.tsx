@@ -228,16 +228,6 @@ export const getColumns = (): ColumnDef<StockMovementWithRelations>[] => {
       enableHiding: true,
     },
     {
-      accessorKey: 'store.name',
-      header: 'Tienda',
-      cell: ({ row }) => (
-        <span className="text-sm">
-          {row.original.store?.name || 'Sin tienda'}
-        </span>
-      ),
-      enableHiding: true,
-    },
-    {
       id: 'actions',
       header: 'Acciones',
       cell: ({ row }) => <MovementActions movement={row.original} />,

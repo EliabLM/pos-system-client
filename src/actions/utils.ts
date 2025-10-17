@@ -24,6 +24,25 @@ export const checkAdminRole = async (userId: string): Promise<boolean> => {
 };
 
 /**
+ * Verifica si un usuario tiene el rol de ADMIN o SELLER.
+ * @param userId - El ID del usuario que realiza la acción.
+ * @returns {Promise<boolean>} - True si el usuario es ADMIN o SELLER, de lo contrario false.
+ */
+export const checkAdminOrSellerRole = async (userId: string): Promise<boolean> => {
+  if (!userId) return false;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    return user?.role === UserRole.ADMIN || user?.role === UserRole.SELLER;
+  } catch (error) {
+    console.error("Error checking admin or seller role:", error);
+    return false;
+  }
+};
+
+/**
  * Crea una respuesta de error estandarizada para accesos no autorizados.
  * @returns {ActionResponse} - Un objeto de respuesta con estado 403.
  */

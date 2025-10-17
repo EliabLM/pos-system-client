@@ -5,6 +5,7 @@ import { ActionResponse } from '@/interfaces';
 import {
   prisma,
   checkAdminRole,
+  checkAdminOrSellerRole,
   unauthorizedResponse,
   checkOrgId,
   emptyOrgIdResponse,
@@ -51,8 +52,8 @@ export const createCustomer = async (
   >
 ): Promise<ActionResponse<Customer | null>> => {
   try {
-    const isAdmin = await checkAdminRole(userId);
-    if (!isAdmin) return unauthorizedResponse();
+    const hasAccess = await checkAdminOrSellerRole(userId);
+    if (!hasAccess) return unauthorizedResponse();
 
     if (checkOrgId(orgId)) return emptyOrgIdResponse();
 
@@ -325,8 +326,8 @@ export const updateCustomer = async (
   >
 ): Promise<ActionResponse<Customer | null>> => {
   try {
-    const isAdmin = await checkAdminRole(userId);
-    if (!isAdmin) return unauthorizedResponse();
+    const hasAccess = await checkAdminOrSellerRole(userId);
+    if (!hasAccess) return unauthorizedResponse();
 
     if (!customerId) {
       return {
@@ -424,8 +425,8 @@ export const softDeleteCustomer = async (
   userId: string
 ): Promise<ActionResponse> => {
   try {
-    const isAdmin = await checkAdminRole(userId);
-    if (!isAdmin) return unauthorizedResponse();
+    const hasAccess = await checkAdminOrSellerRole(userId);
+    if (!hasAccess) return unauthorizedResponse();
 
     if (!customerId) {
       return {
@@ -485,8 +486,8 @@ export const toggleCustomerActiveStatus = async (
   userId: string
 ): Promise<ActionResponse<Customer | null>> => {
   try {
-    const isAdmin = await checkAdminRole(userId);
-    if (!isAdmin) return unauthorizedResponse();
+    const hasAccess = await checkAdminOrSellerRole(userId);
+    if (!hasAccess) return unauthorizedResponse();
 
     if (!customerId) {
       return {

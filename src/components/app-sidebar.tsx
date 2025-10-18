@@ -177,10 +177,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Filter navigation items based on user role
   const isSeller = user?.role === 'SELLER';
 
-  // For SELLER role, show Dashboard, Reports, Sales, Customers, and Suppliers
+  // For SELLER role: show only Dashboard and Sales
+  // SELLER CANNOT access: Reports, Suppliers, Customers, Products, Movements, Users, Parametrization
   const filteredNavMain = isSeller
     ? data.navMain.filter((item) =>
-        ['/dashboard', '/dashboard/reports', '/dashboard/sales', '/dashboard/customers', '/dashboard/suppliers'].includes(item.url)
+        [
+          '/dashboard',
+          '/dashboard/sales',
+        ].includes(item.url)
       )
     : data.navMain;
 

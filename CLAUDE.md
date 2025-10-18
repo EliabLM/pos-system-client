@@ -591,6 +591,98 @@ Utility for cleaning up user session data on logout.
 - No test framework currently configured
 - Prisma generates full TypeScript types for database models
 
+### CRITICAL: Strict TypeScript Typing Rules
+
+**ABSOLUTELY FORBIDDEN - NO EXCEPTIONS:**
+
+1. **NEVER use `any` type** - This is strictly prohibited in all circumstances
+2. **NEVER bypass type checking** with:
+   - `as any`
+   - `@ts-ignore`
+   - `@ts-expect-error`
+   - `// eslint-disable-next-line @typescript-eslint/no-explicit-any`
+   - Any other method to circumvent TypeScript type checking
+
+3. **ALL code must be explicitly typed:**
+   - Function parameters must have explicit types
+   - Function return types must be declared
+   - Variables must have inferred or explicit types
+   - Object properties must be typed
+   - Array elements must have specific types
+
+4. **Proper type casting:**
+   - Use `unknown` for truly unknown types, then narrow with type guards
+   - Use proper type assertions: `as unknown as TargetType` (double assertion pattern)
+   - Import and use proper types from React Hook Form, Prisma, etc.
+
+**Correct patterns:**
+
+```typescript
+// ✅ CORRECT - Proper typing with Resolver
+import { useForm, Resolver } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+
+const form = useForm<FormData>({
+  resolver: yupResolver(schema) as unknown as Resolver<FormData>,
+});
+
+// ✅ CORRECT - Using unknown for Prisma relations
+type EntityWithIncludes = Entity & {
+  relations?: unknown[];
+  _count?: {
+    relations: number;
+  };
+};
+
+// ✅ CORRECT - Proper type narrowing
+const items = (data as Record<string, unknown>[]).map((item) => ({
+  id: String(item.id ?? ''),
+  name: String(item.name ?? ''),
+}));
+
+// ✅ CORRECT - Explicit function typing
+export async function createEntity(
+  data: EntityData
+): Promise<ActionResponse<Entity>> {
+  // implementation
+}
+```
+
+**Incorrect patterns:**
+
+```typescript
+// ❌ FORBIDDEN - Using any
+const data: any = fetchData();
+
+// ❌ FORBIDDEN - Bypassing type checking
+const form = useForm({
+  resolver: yupResolver(schema) as any, // NEVER DO THIS
+});
+
+// ❌ FORBIDDEN - ts-ignore
+// @ts-ignore
+const value = someFunction();
+
+// ❌ FORBIDDEN - Disabling ESLint rule
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const result: any = compute();
+```
+
+**Consequences of violating these rules:**
+- Code will not pass production build
+- Pull requests will be rejected
+- Runtime type errors are unacceptable
+- Type safety is non-negotiable for system reliability
+
+**If you encounter a typing challenge:**
+1. Use `unknown` and narrow the type with type guards
+2. Create proper interface/type definitions
+3. Use generics when appropriate
+4. Import proper types from libraries (React Hook Form, TanStack Query, etc.)
+5. Use the double assertion pattern: `as unknown as TargetType`
+
+This is a **ZERO TOLERANCE** policy. Type safety is critical for the reliability and maintainability of this production POS system.
+
 ## Environment Variables
 
 Required in `.env`:

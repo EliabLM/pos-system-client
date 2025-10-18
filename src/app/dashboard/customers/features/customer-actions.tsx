@@ -28,7 +28,7 @@ import { Customer } from '@/generated/prisma';
 
 // Type for Customer with includes from API
 type CustomerWithIncludes = Customer & {
-  sales?: any[];
+  sales?: unknown[];
   _count?: {
     sales: number;
   };

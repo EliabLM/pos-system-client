@@ -29,7 +29,7 @@ import CustomerForm from './customer-form';
 
 // Type for Customer with includes from API
 type CustomerWithIncludes = Customer & {
-  sales?: any[];
+  sales?: unknown[];
   _count?: {
     sales: number;
   };

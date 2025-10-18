@@ -77,7 +77,7 @@ import CustomerDetailSheet from './customer-detail-sheet';
 
 // Type for Customer with includes from API
 type CustomerWithIncludes = Customer & {
-  sales?: any[];
+  sales?: unknown[];
   _count?: {
     sales: number;
   };

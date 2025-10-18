@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, Control } from 'react-hook-form';
+import { useForm, Control, Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { toast } from 'sonner';
@@ -110,7 +110,7 @@ export function CreateCustomerDialog({
   const createCustomerMutation = useCreateCustomer();
 
   const form = useForm<CustomerFormData>({
-    resolver: yupResolver(schema) as any,
+    resolver: yupResolver(schema) as unknown as Resolver<CustomerFormData>,
     defaultValues: {
       firstName: '',
       lastName: '',

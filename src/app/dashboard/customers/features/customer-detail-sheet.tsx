@@ -38,7 +38,7 @@ import { es } from 'date-fns/locale';
 
 // Type for Customer with includes from API
 type CustomerWithIncludes = Customer & {
-  sales?: any[];
+  sales?: unknown[];
   _count?: {
     sales: number;
   };
@@ -388,18 +388,18 @@ export default function CustomerDetailSheet({
                 </div>
               ) : purchaseHistory.length > 0 ? (
                 <div className="space-y-2">
-                  {purchaseHistory.slice(0, 5).map((sale: any) => (
+                  {(purchaseHistory as Record<string, unknown>[]).slice(0, 5).map((sale) => (
                     <div
-                      key={sale.id}
+                      key={sale.id as string}
                       className="p-3 sm:p-4 bg-muted/50 rounded-lg"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm sm:text-base truncate">
-                            Venta #{sale.saleNumber}
+                            Venta #{String(sale.saleNumber ?? '')}
                           </p>
                           <p className="text-xs sm:text-sm text-muted-foreground">
-                            {formatDistanceToNow(new Date(sale.saleDate), {
+                            {formatDistanceToNow(new Date(sale.saleDate as string), {
                               addSuffix: true,
                               locale: es,
                             })}
@@ -407,7 +407,7 @@ export default function CustomerDetailSheet({
                         </div>
                         <div className="text-right shrink-0">
                           <p className="font-bold text-sm sm:text-base">
-                            ${(sale.total ?? 0).toLocaleString()}
+                            ${Number(sale.total ?? 0).toLocaleString()}
                           </p>
                           <Badge
                             variant={

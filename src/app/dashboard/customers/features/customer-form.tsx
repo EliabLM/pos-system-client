@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useForm } from 'react-hook-form';
+import { useForm, Resolver } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -96,7 +96,7 @@ const CustomerForm = ({
     },
     mode: 'all',
     reValidateMode: 'onChange',
-    resolver: yupResolver(schema) as any,
+    resolver: yupResolver(schema) as unknown as Resolver<CustomerFormData>,
   });
 
   const onSubmit = async (data: CustomerFormData) => {

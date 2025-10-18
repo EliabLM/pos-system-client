@@ -31,7 +31,9 @@
       "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\app\\dashboard\\sales\")",
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npm run build:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

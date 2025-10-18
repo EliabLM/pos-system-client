@@ -107,3 +107,20 @@ export function formatDateLocal(date: Date): string {
 
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * Formatea un Date para visualización en español
+ *
+ * @param date - Objeto Date a formatear
+ * @returns String en formato de fecha legible en español
+ *
+ * @example
+ * formatDate(new Date()) // "13/10/2025"
+ */
+export function formatDate(date: Date): string {
+  return date.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+}

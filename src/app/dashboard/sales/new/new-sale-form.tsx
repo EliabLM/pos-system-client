@@ -16,6 +16,7 @@ import {
   IconCalendar,
   IconAlertCircle,
   IconCheck,
+  IconUserHeart,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -53,6 +54,9 @@ import { useActivePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useCreateSale } from '@/hooks/useSales';
 import type { Product, SaleStatus } from '@/generated/prisma';
 import { isSeller } from '@/lib/rbac';
+
+import { CustomerCombobox } from './features/customer-combobox';
+import { CreateCustomerDialog } from './features/create-customer-dialog';
 
 // Mapeo de estados en español
 const SALE_STATUS_LABELS: Record<string, string> = {
@@ -147,6 +151,10 @@ export const NewSaleForm = () => {
   const [payments, setPayments] = useState<PaymentEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Estado para cliente
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [createCustomerDialogOpen, setCreateCustomerDialogOpen] = useState(false);
 
   const products = useActiveProducts({ search: debouncedSearchTerm });
 
@@ -309,6 +317,12 @@ export const NewSaleForm = () => {
     setPayments((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Handler para cuando se crea un nuevo cliente
+  const handleCustomerCreated = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    toast.success('Cliente seleccionado para esta venta');
+  };
+
   // Submit del formulario
   const onSubmit = async (data: SaleFormData) => {
     if (selectedProducts.length === 0) {
@@ -357,7 +371,7 @@ export const NewSaleForm = () => {
         saleData: {
           storeId: data.store,
           userId: user.id,
-          customerId: null,
+          customerId: selectedCustomerId,
           subtotal: totals.subtotal,
           total: totals.subtotal,
           status: data.status as SaleStatus,
@@ -588,6 +602,31 @@ export const NewSaleForm = () => {
                 />
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Customer Selection Section */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <IconUserHeart className="h-5 w-5 text-primary" />
+              Cliente
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <CustomerCombobox
+              value={selectedCustomerId}
+              onValueChange={setSelectedCustomerId}
+              onCreateClick={() => setCreateCustomerDialogOpen(true)}
+            />
+            {selectedCustomerId && (
+              <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg text-sm">
+                <IconUserHeart className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <p className="text-blue-900 dark:text-blue-100">
+                  Esta venta se asociará con el cliente seleccionado. Puedes cambiar o quitar el cliente en cualquier momento.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -1094,6 +1133,13 @@ export const NewSaleForm = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Create Customer Dialog */}
+        <CreateCustomerDialog
+          open={createCustomerDialogOpen}
+          onOpenChange={setCreateCustomerDialogOpen}
+          onCustomerCreated={handleCustomerCreated}
+        />
       </form>
     </Form>
   );

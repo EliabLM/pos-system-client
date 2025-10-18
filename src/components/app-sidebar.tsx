@@ -20,6 +20,7 @@ import {
   IconChartCandle,
   IconUserHeart,
   IconTruck,
+  IconChartBar,
 } from '@tabler/icons-react';
 
 import { NavParametrization } from '@/components/nav-parametrization';
@@ -44,6 +45,11 @@ const data = {
       title: 'Dashboard',
       url: '/dashboard',
       icon: IconDashboard,
+    },
+    {
+      title: 'Reportes',
+      url: '/dashboard/reports',
+      icon: IconChartBar,
     },
     {
       title: 'Ventas',
@@ -171,10 +177,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Filter navigation items based on user role
   const isSeller = user?.role === 'SELLER';
 
-  // For SELLER role, show Dashboard, Sales, Customers, and Suppliers
+  // For SELLER role, show Dashboard, Reports, Sales, Customers, and Suppliers
   const filteredNavMain = isSeller
     ? data.navMain.filter((item) =>
-        ['/dashboard', '/dashboard/sales', '/dashboard/customers', '/dashboard/suppliers'].includes(item.url)
+        ['/dashboard', '/dashboard/reports', '/dashboard/sales', '/dashboard/customers', '/dashboard/suppliers'].includes(item.url)
       )
     : data.navMain;
 

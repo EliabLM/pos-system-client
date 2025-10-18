@@ -123,3 +123,6 @@ export type Metadata = {
 
 // Export dashboard interfaces
 export * from './dashboard';
+
+// Export reports interfaces
+export * from './reports';

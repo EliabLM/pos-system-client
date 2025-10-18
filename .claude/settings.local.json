@@ -34,7 +34,8 @@
       "Bash(npx eslint:*)",
       "Bash(npm run build:*)",
       "Bash(findstr:*)",
-      "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\actions\" /B)"
+      "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\actions\" /B)",
+      "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\app\\dashboard\\reports\" /B)"
     ],
     "deny": [],
     "ask": []

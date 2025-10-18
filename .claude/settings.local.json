@@ -33,7 +33,8 @@
       "mcp__context7__get-library-docs",
       "Bash(npx eslint:*)",
       "Bash(npm run build:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\actions\" /B)"
     ],
     "deny": [],
     "ask": []

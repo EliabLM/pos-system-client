@@ -259,7 +259,7 @@ export interface ReportFiltersProps {
   dateRange: DateRangeFilter;
   onDateRangeChange: (range: DateRangeFilter) => void;
   storeId?: string;
-  onStoreChange?: (storeId: string) => void;
+  onStoreChange?: (storeId: string | undefined) => void;
   showStoreFilter?: boolean;
   additionalFilters?: React.ReactNode;
   className?: string;

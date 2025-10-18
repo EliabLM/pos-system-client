@@ -11,6 +11,8 @@
 import React from 'react';
 import { SimpleDateRangePicker } from './date-range-picker';
 import { Card, CardContent } from '@/components/ui/card';
+import { useStores } from '@/hooks/useStores';
+import { useStore } from '@/store';
 import type { ReportFiltersProps } from '@/interfaces/reports';
 
 export function ReportFilters({
@@ -22,6 +24,9 @@ export function ReportFilters({
   additionalFilters,
   className = '',
 }: ReportFiltersProps): React.ReactElement {
+  // Fetch stores (only active stores)
+  const { data: stores, isLoading: isLoadingStores } = useStores(true, false);
+
   return (
     <Card className={className}>
       <CardContent className="pt-6">
@@ -41,11 +46,19 @@ export function ReportFilters({
               <label className="text-sm font-medium">Tienda</label>
               <select
                 value={storeId || ''}
-                onChange={(e) => onStoreChange(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  onStoreChange(value === '' ? undefined : value);
+                }}
+                disabled={isLoadingStores}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">Todas las tiendas</option>
-                {/* Store options will be populated dynamically */}
+                {stores?.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
               </select>
             </div>
           )}

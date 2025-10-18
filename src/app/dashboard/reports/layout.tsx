@@ -18,9 +18,9 @@ export default function ReportsLayout({
   children,
 }: ReportsLayoutProps): React.ReactElement {
   return (
-    <div className="space-y-6">
+    <div className="space-y-1">
       {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground px-4 py-2">
         <Link
           href="/dashboard"
           className="hover:text-foreground transition-colors"

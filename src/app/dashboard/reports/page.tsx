@@ -25,7 +25,13 @@ import {
   IconArrowsSort,
   IconTrendingUp,
 } from '@tabler/icons-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { ReportCard, ReportCategory } from '@/interfaces/reports';
 
@@ -42,11 +48,12 @@ const reportCategories: ReportCategory[] = [
       {
         id: 'sales-detailed',
         title: 'Ventas Detalladas',
-        description: 'Reporte completo de todas las ventas con filtros avanzados',
+        description:
+          'Reporte completo de todas las ventas con filtros avanzados',
         icon: IconFileAnalytics,
         href: '/dashboard/reports/sales/detailed',
         category: 'sales',
-        enabled: false, // Phase 2
+        enabled: true, // Phase 2 - COMPLETED
       },
       {
         id: 'sales-by-product',
@@ -55,7 +62,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconBoxMultiple,
         href: '/dashboard/reports/sales/by-product',
         category: 'sales',
-        enabled: false, // Phase 2
+        enabled: true, // Phase 2 - COMPLETED
       },
       {
         id: 'sales-by-category',
@@ -64,7 +71,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconArrowsSort,
         href: '/dashboard/reports/sales/by-category',
         category: 'sales',
-        enabled: false, // Phase 2
+        enabled: true, // Phase 2 - COMPLETED
       },
       {
         id: 'sales-by-payment',
@@ -73,7 +80,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconCreditCard,
         href: '/dashboard/reports/sales/by-payment',
         category: 'sales',
-        enabled: false, // Phase 2
+        enabled: true, // Phase 2 - COMPLETED
       },
       {
         id: 'sales-by-seller',
@@ -82,7 +89,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconUsers,
         href: '/dashboard/reports/sales/by-seller',
         category: 'sales',
-        enabled: false, // Phase 2
+        enabled: true, // Phase 2 - COMPLETED
       },
     ],
   },
@@ -231,12 +238,20 @@ const reportCategories: ReportCategory[] = [
 /**
  * Report Card Component
  */
-function ReportCardComponent({ report }: { report: ReportCard }): React.ReactElement {
+function ReportCardComponent({
+  report,
+}: {
+  report: ReportCard;
+}): React.ReactElement {
   const Icon = report.icon;
   const isEnabled = report.enabled;
 
   const content = (
-    <Card className={`transition-all hover:shadow-md ${!isEnabled ? 'opacity-60' : ''}`}>
+    <Card
+      className={`transition-all hover:shadow-md ${
+        !isEnabled ? 'opacity-60' : ''
+      }`}
+    >
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -272,7 +287,7 @@ function ReportCardComponent({ report }: { report: ReportCard }): React.ReactEle
  */
 export default function ReportsPage(): React.ReactElement {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6">
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Reportes</h1>
@@ -312,18 +327,19 @@ export default function ReportsPage(): React.ReactElement {
       })}
 
       {/* Info Banner */}
-      <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
+      <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
-            <IconFileAnalytics className="size-6 shrink-0 text-blue-600 dark:text-blue-400" />
+            <IconFileAnalytics className="size-6 shrink-0 text-green-600 dark:text-green-400" />
             <div className="space-y-1">
-              <p className="font-semibold text-blue-900 dark:text-blue-100">
-                Fase 1: Infraestructura Completa
+              <p className="font-semibold text-green-900 dark:text-green-100">
+                Fase 2: Reportes de Ventas Completados
               </p>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                La infraestructura base de reportes está lista. Los reportes
-                individuales se implementarán en las siguientes fases según el
-                plan de desarrollo.
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Todos los reportes de ventas están ahora disponibles con
+                visualizaciones interactivas, filtros avanzados y exportación a
+                PDF/Excel. Los reportes de inventario, finanzas, clientes y
+                proveedores se implementarán en las siguientes fases.
               </p>
             </div>
           </div>

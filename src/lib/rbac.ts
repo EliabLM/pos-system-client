@@ -75,19 +75,25 @@ export function hasRouteAccess(role: string, pathname: string): boolean {
   if (role === 'SELLER') {
     const sellerRoutes = ROLE_ROUTES.SELLER;
 
-    // Check if the pathname starts with any allowed route
-    return sellerRoutes.some(route => {
-      // Exact match for root routes
+    // Sort routes by length (longest first) to match most specific routes first
+    // This prevents /dashboard from matching /dashboard/products
+    const sortedRoutes = [...sellerRoutes].sort((a, b) => b.length - a.length);
+
+    for (const route of sortedRoutes) {
+      // Exact match
       if (pathname === route) {
         return true;
       }
-      // Check if pathname starts with the route path (for nested routes)
-      // e.g., /dashboard/sales/new should match /dashboard/sales
-      if (pathname.startsWith(`${route}/`)) {
+
+      // For nested routes: /dashboard/sales/new should match /dashboard/sales
+      // But /dashboard/products should NOT match /dashboard
+      if (route !== '/dashboard' && pathname.startsWith(`${route}/`)) {
         return true;
       }
-      return false;
-    });
+    }
+
+    // Special case: /dashboard exact match only (no nested routes except explicitly allowed)
+    return pathname === '/dashboard';
   }
 
   // Unknown roles have no access

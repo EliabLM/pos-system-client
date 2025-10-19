@@ -12,3 +12,11 @@ export {
   getSalesByPayment,
   getSalesBySeller,
 } from './sales-reports';
+
+// Inventory Reports
+export {
+  getStockStatusReport,
+  getStockMovementsReport,
+  getInventoryValuationReport,
+  getInventoryRotationReport,
+} from './inventory-reports';

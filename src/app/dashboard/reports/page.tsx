@@ -106,7 +106,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconBuildingWarehouse,
         href: '/dashboard/reports/inventory/stock-status',
         category: 'inventory',
-        enabled: false, // Phase 3
+        enabled: true, // Phase 3
       },
       {
         id: 'stock-movements',
@@ -115,7 +115,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconArrowsSort,
         href: '/dashboard/reports/inventory/movements',
         category: 'inventory',
-        enabled: false, // Phase 3
+        enabled: true, // Phase 3
       },
       {
         id: 'inventory-valuation',
@@ -124,7 +124,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconReportMoney,
         href: '/dashboard/reports/inventory/valuation',
         category: 'inventory',
-        enabled: false, // Phase 3
+        enabled: true, // Phase 3
       },
       {
         id: 'inventory-rotation',
@@ -133,7 +133,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconChartLine,
         href: '/dashboard/reports/inventory/rotation',
         category: 'inventory',
-        enabled: false, // Phase 3
+        enabled: true, // Phase 3
       },
     ],
   },

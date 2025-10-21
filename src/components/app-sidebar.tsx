@@ -61,11 +61,11 @@ const data = {
       url: '/dashboard/customers',
       icon: IconUserHeart,
     },
-    {
-      title: 'Proveedores',
-      url: '/dashboard/suppliers',
-      icon: IconTruck,
-    },
+    // {
+    //   title: 'Proveedores',
+    //   url: '/dashboard/suppliers',
+    //   icon: IconTruck,
+    // },
     {
       title: 'Productos',
       url: '/dashboard/products',
@@ -181,10 +181,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // SELLER CANNOT access: Reports, Suppliers, Customers, Products, Movements, Users, Parametrization
   const filteredNavMain = isSeller
     ? data.navMain.filter((item) =>
-        [
-          '/dashboard',
-          '/dashboard/sales',
-        ].includes(item.url)
+        ['/dashboard', '/dashboard/sales'].includes(item.url)
       )
     : data.navMain;
 

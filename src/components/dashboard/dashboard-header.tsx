@@ -161,7 +161,10 @@ export function DashboardHeader({
           {/* Store Selector for ADMIN */}
           {isAdmin && onStoreChange && (
             <div className="flex items-center gap-2">
-              <Label htmlFor="store-filter" className="text-sm whitespace-nowrap">
+              <Label
+                htmlFor="store-filter"
+                className="text-sm whitespace-nowrap"
+              >
                 Filtrar por:
               </Label>
               <Select
@@ -212,7 +215,7 @@ export function DashboardHeader({
           </Button>
 
           <Button asChild variant="outline" className="gap-2">
-            <Link href="#">
+            <Link href="/dashboard/reports">
               <IconFileAnalytics className="h-4 w-4" />
               <span className="hidden sm:inline">Ver Reportes</span>
               <span className="sm:hidden">Reportes</span>

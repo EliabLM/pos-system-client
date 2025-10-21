@@ -869,3 +869,9 @@ const entities = await prisma.entity.findMany({
 4. **Building for Production**:
    - Run `pnpm build` (automatically runs `prisma generate`)
    - For Vercel: Use `pnpm vercel-build` (includes migrations)
+
+5. **Troubleshooting Charts (Recharts)**:
+   - See `.claude/RECHARTS_CHARTS_TROUBLESHOOTING.md` for common chart issues
+   - Horizontal BarChart requires `layout="vertical"` (counterintuitive)
+   - Use `<Cell>` components for dynamic colors in charts
+   - Reference existing reports for working examples

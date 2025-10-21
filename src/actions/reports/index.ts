@@ -20,3 +20,16 @@ export {
   getInventoryValuationReport,
   getInventoryRotationReport,
 } from './inventory-reports';
+
+// Financial Reports
+export {
+  getProfitLossReport,
+  getProfitabilityReport,
+  getCashFlowReport,
+} from './financial-reports';
+export type {
+  FinancialReportFilters,
+  ProfitLossData,
+  ProfitabilityData,
+  CashFlowData,
+} from './financial-reports';

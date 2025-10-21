@@ -150,7 +150,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconChartBar,
         href: '/dashboard/reports/financial/profit-loss',
         category: 'financial',
-        enabled: false, // Phase 4
+        enabled: true, // Phase 4
       },
       {
         id: 'profitability',
@@ -159,7 +159,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconTrendingUp,
         href: '/dashboard/reports/financial/profitability',
         category: 'financial',
-        enabled: false, // Phase 4
+        enabled: true, // Phase 4
       },
       {
         id: 'cash-flow',
@@ -168,7 +168,7 @@ const reportCategories: ReportCategory[] = [
         icon: IconWallet,
         href: '/dashboard/reports/financial/cash-flow',
         category: 'financial',
-        enabled: false, // Phase 4
+        enabled: true, // Phase 4
       },
     ],
   },
@@ -327,7 +327,7 @@ export default function ReportsPage(): React.ReactElement {
       })}
 
       {/* Info Banner */}
-      <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+      {/* <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
             <IconFileAnalytics className="size-6 shrink-0 text-green-600 dark:text-green-400" />
@@ -344,7 +344,7 @@ export default function ReportsPage(): React.ReactElement {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

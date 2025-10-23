@@ -242,6 +242,7 @@ export function validatePassword(
  * @param password - Password a verificar
  * @returns true si contiene secuencias
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function hasSequentialChars(password: string): boolean {
   const sequences = [
     'abcdefghijklmnopqrstuvwxyz',

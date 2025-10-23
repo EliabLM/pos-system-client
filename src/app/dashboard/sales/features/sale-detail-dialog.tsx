@@ -344,6 +344,7 @@ export function SaleDetailDialog({
                   >
                     <div className="flex items-start gap-3">
                       {item.product.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={item.product.image}
                           alt={item.product.name}
@@ -418,6 +419,7 @@ export function SaleDetailDialog({
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {item.product.image && (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={item.product.image}
                                 alt={item.product.name}

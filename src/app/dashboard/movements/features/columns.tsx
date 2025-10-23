@@ -106,6 +106,7 @@ export const getColumns = (): ColumnDef<StockMovementWithRelations>[] => {
         return (
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {product.image && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={product.image}
                 alt={product.name}

@@ -111,6 +111,7 @@ const NewBrand = ({
     form.setValue('name', itemSelected.name);
     form.setValue('description', itemSelected.description);
     form.setValue('active', itemSelected.isActive);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemSelected]);
 
   return (

@@ -78,7 +78,8 @@ const createInitialConfigurations = async (
   adminUserId: string
 ): Promise<void> => {
   // Usar transacciones para asegurar consistencia
-  await prisma.$transaction(async (tx) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  await prisma.$transaction(async (_tx) => {
     // Crear categorías en paralelo usando Promise.all
     const categoryPromises = DEFAULT_CATEGORIES.map((category) =>
       createCategory(organizationId, adminUserId, {

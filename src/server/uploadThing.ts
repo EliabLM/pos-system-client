@@ -14,7 +14,7 @@ export const utapi = new UTApi({
 export const ourFileRouter = {
   // Ruta para imágenes de productos
   productImage: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       // Verificar autenticación con JWT
       const cookieStore = await cookies();
       const token = cookieStore.get('auth-token')?.value;

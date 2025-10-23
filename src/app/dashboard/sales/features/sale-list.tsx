@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sale, SaleStatus } from '@/generated/prisma';
+import { SaleStatus } from '@/generated/prisma';
 import { parseLocalDateStart, parseLocalDateEnd } from '@/lib/date-utils';
 
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,6 @@ interface SaleFiltersState {
 export const SaleList = () => {
   const router = useRouter();
 
-  const [itemSelected, setItemSelected] = useState<Sale | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   // Estado local de filtros
@@ -105,7 +104,6 @@ export const SaleList = () => {
                 </Button>
                 <Button
                   onClick={() => {
-                    setItemSelected(null);
                     router.push('/dashboard/sales/new');
                   }}
                   className="gap-2"

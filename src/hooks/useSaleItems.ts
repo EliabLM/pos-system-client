@@ -67,7 +67,7 @@ export const useAddSaleItem = () => {
 
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidar queries relacionadas con los items de la venta
       queryClient.invalidateQueries({
         queryKey: ['saleItems', variables.saleId],
@@ -121,7 +121,7 @@ export const useUpdateSaleItem = () => {
 
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       // Invalidar queries relacionadas con los items de la venta
       if (data?.saleId) {
         queryClient.invalidateQueries({
@@ -251,7 +251,6 @@ export const useSaleItemsTotal = (saleId: string) => {
 export const useAddMultipleSaleItems = () => {
   const addSaleItemMutation = useAddSaleItem();
   const queryClient = useQueryClient();
-  const user = useStore((state) => state.user);
 
   return useMutation({
     mutationFn: async ({

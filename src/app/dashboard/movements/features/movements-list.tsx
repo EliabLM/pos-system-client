@@ -106,7 +106,8 @@ const MovementsList = () => {
     setDateToFilter('');
   };
 
-  const hasActiveFilters =
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _hasActiveFilters =
     searchTerm ||
     typeFilter !== 'all' ||
     productFilter ||

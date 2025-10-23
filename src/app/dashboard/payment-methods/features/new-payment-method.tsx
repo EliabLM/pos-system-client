@@ -150,6 +150,7 @@ const NewPaymentMethod = ({
     form.setValue('name', itemSelected.name);
     form.setValue('type', itemSelected.type);
     form.setValue('active', itemSelected.isActive);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemSelected]);
 
   return (

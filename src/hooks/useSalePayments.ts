@@ -69,7 +69,7 @@ export const useAddSalePayment = () => {
 
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidar pagos de la venta específica
       queryClient.invalidateQueries({
         queryKey: ['salePayments', variables.saleId],
@@ -119,7 +119,7 @@ export const useUpdateSalePayment = () => {
 
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       // Invalidar pagos de la venta específica
       if (data?.saleId) {
         queryClient.invalidateQueries({
@@ -171,7 +171,7 @@ export const useDeleteSalePayment = () => {
 
       return response.data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Necesitamos obtener el saleId del pago eliminado para invalidar las queries correctas
       // Como no lo tenemos directamente, invalidamos todas las queries de pagos
       queryClient.invalidateQueries({

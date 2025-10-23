@@ -1,5 +1,4 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { UploadThingError } from "uploadthing/server";
 
 const f = createUploadthing();
 
@@ -12,10 +11,11 @@ export const ourFileRouter = {
     },
   })
     // Set permissions and file types for this FileRoute
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       // Middleware de autenticación
       return { userId: 'example-user-id' };
     })
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .onUploadComplete(async ({ metadata, file }) => {
 
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback

@@ -37,7 +37,6 @@ import {
 } from '@/components/ui/tooltip';
 import { useStore } from '@/store';
 import { useActiveStores } from '@/hooks/useStores';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface DashboardHeaderProps {
   onRefresh?: () => void;
@@ -57,7 +56,7 @@ export function DashboardHeader({
   const [relativeTime, setRelativeTime] = useState<string>('');
 
   // Fetch active stores for the organization (only for ADMIN users)
-  const { data: stores, isLoading: isLoadingStores } = useActiveStores();
+  const { data: stores } = useActiveStores();
 
   // RBAC: Determine if user is a SELLER (can only see their assigned store)
   const isAdmin = user?.role === 'ADMIN';
@@ -161,7 +160,10 @@ export function DashboardHeader({
           {/* Store Selector for ADMIN */}
           {isAdmin && onStoreChange && (
             <div className="flex items-center gap-2">
-              <Label htmlFor="store-filter" className="text-sm whitespace-nowrap">
+              <Label
+                htmlFor="store-filter"
+                className="text-sm whitespace-nowrap"
+              >
                 Filtrar por:
               </Label>
               <Select
@@ -212,7 +214,7 @@ export function DashboardHeader({
           </Button>
 
           <Button asChild variant="outline" className="gap-2">
-            <Link href="#">
+            <Link href="/dashboard/reports">
               <IconFileAnalytics className="h-4 w-4" />
               <span className="hidden sm:inline">Ver Reportes</span>
               <span className="sm:hidden">Reportes</span>

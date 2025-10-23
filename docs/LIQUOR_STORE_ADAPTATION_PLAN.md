@@ -1307,8 +1307,120 @@ const LIQUOR_UNITS = [
 
 ---
 
-### Fase 5: Reportes y Analytics Específicos
+### Fase 5: Flujo y Vistas de Venta
+**Duración estimada**: 1-2 días
+
+**📄 Documento de análisis**: Ver `SALES_FLOW_BUSINESS_TYPE_ANALYSIS.md` para análisis completo
+
+#### Fase 5A: Nueva Venta - Visualización de Productos (CRÍTICO)
+**Prioridad**: ALTA - Impacta operación diaria del vendedor
+
+- [ ] **Modificar `src/app/dashboard/sales/new/new-sale-form.tsx`**
+  - [ ] Importar hook `useBusinessType`
+  - [ ] Crear componente `ProductSpecificInfo` para información condicional
+  - [ ] Agregar visualización condicional en búsqueda de productos (líneas 692-738)
+    - Licoreras: Mostrar `volume` (ml) y `alcoholGrade` (%)
+    - Zapaterías: Mostrar `size` (talla) y `color`
+  - [ ] Agregar visualización condicional en productos seleccionados (líneas 775-862)
+    - Misma lógica que búsqueda
+    - Ayuda al vendedor a confirmar selección correcta
+
+**Ejemplo de implementación**:
+```typescript
+const ProductSpecificInfo = ({
+  product,
+  businessType
+}: {
+  product: Product;
+  businessType: 'liquor_store' | 'shoe_store' | null;
+}) => {
+  if (businessType === 'liquor_store') {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {product.volume && `${product.volume}ml`}
+        {product.alcoholGrade && ` • ${product.alcoholGrade}% Vol.`}
+      </p>
+    );
+  }
+
+  if (businessType === 'shoe_store') {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {product.size && `Talla: ${product.size}`}
+        {product.color && ` • ${product.color}`}
+      </p>
+    );
+  }
+
+  return null;
+};
+```
+
+**Justificación**:
+- Sin esta información, el vendedor debe memorizar SKUs o adivinar qué variante es
+- Crítico para productos con múltiples presentaciones (ej: mismo whisky en 750ml, 1L, 1.75L)
+- Reduce errores de venta significativamente
+- Mejora velocidad de venta
+
+**Testing**:
+- [ ] TC-SALES-01: Verificar campos específicos en licorera
+- [ ] TC-SALES-02: Verificar campos específicos en zapatería
+- [ ] TC-SALES-03: Verificar productos sin campos específicos no causan errores
+- [ ] TC-SALES-04: Regresión en zapaterías existentes
+
+#### Fase 5B: Reportes de Ventas - Columnas Dinámicas (OPCIONAL)
+**Prioridad**: MEDIA - Mejora UX pero no crítico
+
+- [ ] **Modificar `src/app/dashboard/reports/sales/by-product/page.tsx`**
+  - [ ] Implementar columnas condicionales con `useMemo`
+  - [ ] Agregar columnas de `volume` y `alcoholGrade` para licoreras
+  - [ ] Agregar columnas de `size` y `color` para zapaterías
+
+- [ ] **Modificar `src/app/dashboard/reports/sales/detailed/page.tsx`**
+  - [ ] Agregar información específica en detalle de productos vendidos
+
+**Patrón de implementación**:
+```typescript
+const columns = useMemo(() => {
+  const baseColumns: ColumnDef<Product>[] = [
+    { accessorKey: 'name', header: 'Nombre' },
+    { accessorKey: 'salePrice', header: 'Precio' },
+    { accessorKey: 'currentStock', header: 'Stock' },
+  ];
+
+  if (businessType === 'liquor_store') {
+    baseColumns.splice(2, 0,
+      {
+        accessorKey: 'volume',
+        header: 'Volumen (ml)',
+        cell: ({ row }) => row.original.volume ? `${row.original.volume}ml` : '-'
+      },
+      {
+        accessorKey: 'alcoholGrade',
+        header: 'Graduación',
+        cell: ({ row }) => row.original.alcoholGrade ? `${row.original.alcoholGrade}%` : '-'
+      }
+    );
+  } else if (businessType === 'shoe_store') {
+    baseColumns.splice(2, 0,
+      { accessorKey: 'size', header: 'Talla' },
+      { accessorKey: 'color', header: 'Color' }
+    );
+  }
+
+  return baseColumns;
+}, [businessType]);
+```
+
+**NO REQUIERE CAMBIOS**:
+- ✅ `src/app/dashboard/sales/features/sale-list.tsx` - Solo muestra agregados de venta
+- ✅ Reportes por categoría, pago, vendedor - No muestran detalles de producto
+
+---
+
+### Fase 6: Reportes y Analytics Específicos (FUTURO)
 **Duración estimada**: 3 días
+**Estado**: OPCIONAL - Fuera del scope inicial
 
 #### 6.7 Reportes para Licoreras
 - [ ] **Crear reporte "Ventas por Categoría de Licor"**
@@ -1336,8 +1448,9 @@ const LIQUOR_UNITS = [
 
 ---
 
-### Fase 6: Mejoras de UX Específicas
+### Fase 7: Mejoras de UX Específicas (FUTURO)
 **Duración estimada**: 2 días
+**Estado**: OPCIONAL - Fuera del scope inicial
 
 #### 6.9 Componentes UI Especializados
 - [ ] **Crear `AlcoholGradeIndicator.tsx`**

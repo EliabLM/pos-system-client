@@ -216,7 +216,72 @@ Jose Cuervo, Heineken, Corona, Budweiser, Stella Artois
 
 ---
 
-### **FASE 5: Reportes y Analytics Específicos (OPCIONAL)**
+### **FASE 5: Flujo y Vistas de Venta**
+**Duración**: 1-2 días | **Prioridad**: ALTA
+
+**📄 Análisis completo**: Ver `docs/SALES_FLOW_BUSINESS_TYPE_ANALYSIS.md`
+
+#### Fase 5A: Nueva Venta - Visualización de Productos (CRÍTICO)
+**Justificación**: Sin info específica, el vendedor debe memorizar SKUs para diferenciar variantes del mismo producto (ej: mismo whisky en 3 presentaciones diferentes)
+
+#### Archivos a Modificar:
+1. ✅ `src/app/dashboard/sales/new/new-sale-form.tsx`
+   - **Importar** `useBusinessType` hook
+   - **Crear** componente `ProductSpecificInfo` para renderizado condicional
+   - **Modificar** búsqueda de productos (líneas 692-738):
+     - Licoreras: Mostrar `volume` (ml) y `alcoholGrade` (%)
+     - Zapaterías: Mostrar `size` y `color`
+   - **Modificar** productos seleccionados (líneas 775-862):
+     - Misma lógica de visualización
+     - Confirmación visual de selección correcta
+
+**Ejemplo**:
+```tsx
+const ProductSpecificInfo = ({ product, businessType }) => {
+  if (businessType === 'liquor_store') {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {product.volume && `${product.volume}ml`}
+        {product.alcoholGrade && ` • ${product.alcoholGrade}% Vol.`}
+      </p>
+    );
+  }
+  if (businessType === 'shoe_store') {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {product.size && `Talla: ${product.size}`}
+        {product.color && ` • ${product.color}`}
+      </p>
+    );
+  }
+  return null;
+};
+```
+
+#### Fase 5B: Reportes de Ventas - Columnas Dinámicas (OPCIONAL)
+**Prioridad**: MEDIA
+
+2. ✅ `src/app/dashboard/reports/sales/by-product/page.tsx`
+   - Columnas condicionales con `useMemo`
+   - Agregar `volume` y `alcoholGrade` para licoreras
+   - Agregar `size` y `color` para zapaterías
+
+3. ✅ `src/app/dashboard/reports/sales/detailed/page.tsx`
+   - Información específica en detalle de productos vendidos
+
+**NO requieren cambios**:
+- ✅ `sale-list.tsx` - Solo muestra agregados de venta
+- ✅ Reportes por categoría, pago, vendedor
+
+#### Entregables:
+- [ ] Información específica en búsqueda de productos (Nueva Venta)
+- [ ] Información específica en productos seleccionados
+- [ ] Columnas dinámicas en reportes (opcional)
+- [ ] Tests de regresión en zapaterías
+
+---
+
+### **FASE 6: Reportes y Analytics Específicos (OPCIONAL)**
 **Duración**: 3 días | **Prioridad**: BAJA
 
 #### Reportes para Licoreras:

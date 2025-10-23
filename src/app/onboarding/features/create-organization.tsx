@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import {
@@ -13,6 +13,7 @@ import {
   Loader2,
   Check,
 } from 'lucide-react';
+import { IconBottle, IconShoe } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,13 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import { useCreateOrganization } from '@/hooks/useOrganizations';
 import { useUpdateUserOrg } from '@/hooks/useUsers';
@@ -47,6 +55,10 @@ import { toast } from 'sonner';
 
 // Schema de validación con Yup
 const onboardingSchema = yup.object({
+  businessType: yup
+    .string()
+    .oneOf(['liquor_store', 'shoe_store'], 'Debes seleccionar un tipo de negocio válido')
+    .required('El tipo de negocio es requerido'),
   companyName: yup
     .string()
     .required('El nombre de la empresa es requerido')
@@ -128,8 +140,9 @@ const RegisterOrganizationPage = () => {
   }, [router]);
 
   const form = useForm<SignUpFormData>({
-    resolver: yupResolver(onboardingSchema),
+    resolver: yupResolver(onboardingSchema) as unknown as Resolver<SignUpFormData>,
     defaultValues: {
+      businessType: undefined,
       address: '',
       companyName: '',
       nit: '',
@@ -150,7 +163,7 @@ const RegisterOrganizationPage = () => {
 
       // TODO - check subdomain availability
 
-      // Create organization
+      // Create organization with business type
       const resOrgDb = await createOrgMutation.mutateAsync({
         userId: currentUser.id,
         organizationData: {
@@ -164,6 +177,7 @@ const RegisterOrganizationPage = () => {
           nit: data.nit,
           taxId: null,
         },
+        businessType: data.businessType as 'liquor_store' | 'shoe_store',
       });
 
       if (resOrgDb === null) {
@@ -252,6 +266,59 @@ const RegisterOrganizationPage = () => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Tipo de Negocio */}
+              <FormField
+                control={form.control}
+                name="businessType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-lg font-semibold">
+                      ¿Qué tipo de negocio es?
+                    </FormLabel>
+                    <FormDescription className="text-sm">
+                      Selecciona el tipo de negocio para personalizar tu experiencia.
+                      Esta configuración no se puede cambiar después.
+                    </FormDescription>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isSubmitting}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-auto">
+                          <SelectValue placeholder="Selecciona un tipo de negocio" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="liquor_store">
+                          <div className="flex items-center gap-3 py-2">
+                            <IconBottle className="h-6 w-6 text-amber-600" />
+                            <div className="flex flex-col items-start">
+                              <span className="font-semibold">Licorera</span>
+                              <span className="text-xs text-muted-foreground">
+                                Tienda de bebidas alcohólicas
+                              </span>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="shoe_store">
+                          <div className="flex items-center gap-3 py-2">
+                            <IconShoe className="h-6 w-6 text-blue-600" />
+                            <div className="flex flex-col items-start">
+                              <span className="font-semibold">Zapatería</span>
+                              <span className="text-xs text-muted-foreground">
+                                Tienda de calzado deportivo
+                              </span>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Nombre de la empresa */}
               <FormField
                 control={form.control}

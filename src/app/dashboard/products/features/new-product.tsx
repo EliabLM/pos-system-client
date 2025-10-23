@@ -50,8 +50,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ProductWithIncludesNumberPrice } from '@/interfaces';
+import { useBusinessType } from '@/hooks/useSystemConfig';
+import { ProductFieldsLiquor } from './product-fields-liquor';
+import { ProductFieldsFootwear } from './product-fields-footwear';
 
-const schema = yup.object().shape({
+// Base schema shared by all business types
+const baseSchema = {
   name: yup
     .string()
     .min(3, 'Debe ingresar mínimo 3 caracteres')
@@ -87,9 +91,51 @@ const schema = yup.object().shape({
     .min(0, 'El valor mínimo permitido es 0')
     .integer('Solo se permite ingresar números enteros'),
   active: yup.bool().default(true),
-});
+};
 
-type StoreFormData = yup.InferType<typeof schema>;
+// Liquor store specific fields (optional)
+const liquorFields = {
+  alcoholGrade: yup
+    .number()
+    .nullable()
+    .notRequired()
+    .transform((value, originalValue) => (originalValue === '' ? null : value))
+    .min(0, 'El grado alcohólico mínimo es 0%')
+    .max(100, 'El grado alcohólico máximo es 100%'),
+  volume: yup
+    .number()
+    .nullable()
+    .notRequired()
+    .transform((value, originalValue) => (originalValue === '' ? null : value))
+    .positive('El volumen debe ser un número positivo')
+    .min(1, 'El volumen mínimo es 1ml'),
+};
+
+// Footwear store specific fields (optional)
+const footwearFields = {
+  size: yup.string().nullable().notRequired().defined(),
+  color: yup.string().nullable().notRequired().defined(),
+  model: yup.string().nullable().notRequired().defined(),
+};
+
+// Function to create schema based on business type
+const createSchema = (businessType: 'liquor_store' | 'shoe_store' | null) => {
+  if (businessType === 'liquor_store') {
+    return yup.object().shape({
+      ...baseSchema,
+      ...liquorFields,
+    });
+  } else if (businessType === 'shoe_store') {
+    return yup.object().shape({
+      ...baseSchema,
+      ...footwearFields,
+    });
+  }
+  // Default to base schema if no business type
+  return yup.object().shape(baseSchema);
+};
+
+type StoreFormData = yup.InferType<ReturnType<typeof createSchema>>;
 
 const NewProduct = ({
   setSheetOpen,
@@ -106,13 +152,19 @@ const NewProduct = ({
   const updateMutation = useUpdateProduct();
   const { data: activeCategories } = useActiveCategories();
   const { data: activeBrands } = useActiveBrands();
+  const { data: businessType } = useBusinessType();
 
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
 
-  const form = useForm<StoreFormData>({
-    criteriaMode: 'firstError',
-    defaultValues: {
+  // Create dynamic schema based on business type
+  const schema = React.useMemo(() => {
+    return createSchema(businessType ?? null);
+  }, [businessType]);
+
+  // Create dynamic default values based on business type
+  const defaultValues = React.useMemo(() => {
+    const baseValues = {
       name: itemSelected?.name ?? '',
       description: itemSelected?.description ?? '',
       image: itemSelected?.image ?? '',
@@ -125,7 +177,29 @@ const NewProduct = ({
       minStock: itemSelected?.minStock,
       currentStock: itemSelected?.currentStock,
       active: itemSelected?.isActive ?? true,
-    },
+    };
+
+    if (businessType === 'liquor_store') {
+      return {
+        ...baseValues,
+        alcoholGrade: itemSelected?.alcoholGrade ?? null,
+        volume: itemSelected?.volume ?? null,
+      };
+    } else if (businessType === 'shoe_store') {
+      return {
+        ...baseValues,
+        size: itemSelected?.size ?? null,
+        color: itemSelected?.color ?? null,
+        model: itemSelected?.model ?? null,
+      };
+    }
+
+    return baseValues;
+  }, [itemSelected, businessType]);
+
+  const form = useForm<StoreFormData>({
+    criteriaMode: 'firstError',
+    defaultValues,
     mode: 'all',
     reValidateMode: 'onChange',
     resolver: yupResolver(schema),
@@ -173,7 +247,8 @@ const NewProduct = ({
 
         toast.success('Producto actualizado exitosamente');
       } else {
-        await createMutation.mutateAsync({
+        // Build product data based on business type
+        const productData = {
           name: data.name,
           description: data.description,
           barcode: data.barcode,
@@ -187,12 +262,15 @@ const NewProduct = ({
           image: imageUrl ?? null,
           unitMeasureId: null, //TODO Crear unidad de medida por defecto (UN)
           isActive: data.active,
-          alcoholGrade: null,
-          color: null,
-          model: null,
-          size: null,
-          volume: null,
-        });
+          // Conditional fields based on business type - with explicit typing
+          alcoholGrade: (businessType === 'liquor_store' && 'alcoholGrade' in data ? data.alcoholGrade : null) as number | null,
+          volume: (businessType === 'liquor_store' && 'volume' in data ? data.volume : null) as number | null,
+          size: (businessType === 'shoe_store' && 'size' in data ? data.size : null) as string | null,
+          color: (businessType === 'shoe_store' && 'color' in data ? data.color : null) as string | null,
+          model: (businessType === 'shoe_store' && 'model' in data ? data.model : null) as string | null,
+        };
+
+        await createMutation.mutateAsync(productData);
 
         toast.success('Producto creado exitosamente');
       }
@@ -210,6 +288,17 @@ const NewProduct = ({
       form.resetField('categoryId');
       form.resetField('brandId');
       form.resetField('active');
+
+      // Reset conditional fields based on business type
+      if (businessType === 'liquor_store') {
+        form.resetField('alcoholGrade' as keyof StoreFormData);
+        form.resetField('volume' as keyof StoreFormData);
+      } else if (businessType === 'shoe_store') {
+        form.resetField('size' as keyof StoreFormData);
+        form.resetField('color' as keyof StoreFormData);
+        form.resetField('model' as keyof StoreFormData);
+      }
+
       setSheetOpen(false);
       setItemSelected(null);
     } catch (error) {
@@ -240,6 +329,16 @@ const NewProduct = ({
       form.resetField('categoryId');
       form.resetField('brandId');
       form.resetField('active');
+
+      // Reset conditional fields based on business type
+      if (businessType === 'liquor_store') {
+        form.resetField('alcoholGrade' as keyof StoreFormData);
+        form.resetField('volume' as keyof StoreFormData);
+      } else if (businessType === 'shoe_store') {
+        form.resetField('size' as keyof StoreFormData);
+        form.resetField('color' as keyof StoreFormData);
+        form.resetField('model' as keyof StoreFormData);
+      }
       return;
     }
 
@@ -256,7 +355,17 @@ const NewProduct = ({
     form.setValue('categoryId', itemSelected.categoryId);
     form.setValue('brandId', itemSelected.brandId ?? '');
     form.setValue('active', itemSelected.isActive);
-  }, [itemSelected, form]);
+
+    // Set conditional fields based on business type
+    if (businessType === 'liquor_store') {
+      form.setValue('alcoholGrade' as keyof StoreFormData, itemSelected.alcoholGrade ?? null);
+      form.setValue('volume' as keyof StoreFormData, itemSelected.volume ?? null);
+    } else if (businessType === 'shoe_store') {
+      form.setValue('size' as keyof StoreFormData, itemSelected.size ?? null);
+      form.setValue('color' as keyof StoreFormData, itemSelected.color ?? null);
+      form.setValue('model' as keyof StoreFormData, itemSelected.model ?? null);
+    }
+  }, [itemSelected, form, businessType]);
 
   return (
     <SheetContent className="sm:max-w-xl overflow-y-scroll">
@@ -641,6 +750,15 @@ const NewProduct = ({
                 />
               </CardContent>
             </Card>
+
+            {/* SECTION 4: Business-Specific Fields (Conditional) */}
+            {businessType === 'liquor_store' && (
+              <ProductFieldsLiquor form={form} />
+            )}
+
+            {businessType === 'shoe_store' && (
+              <ProductFieldsFootwear form={form} />
+            )}
           </div>
           <SheetFooter>
             <div className="flex gap-4 flex-row-reverse">

@@ -223,14 +223,16 @@ export const useCreateOrganization = () => {
     mutationFn: async ({
       userId,
       organizationData,
+      businessType,
     }: {
       userId: string;
       organizationData: Omit<
         Organization,
         'id' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'
       >;
+      businessType?: 'liquor_store' | 'shoe_store' | null;
     }) => {
-      const response = await createOrganization(userId, organizationData);
+      const response = await createOrganization(userId, organizationData, businessType);
 
       if (response.status !== 201) {
         throw new Error(response.message);

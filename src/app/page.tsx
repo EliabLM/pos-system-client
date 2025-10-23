@@ -1,6 +1,14 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 
+// TODO - CORREGIR eliminación de opciones parametrizables (marcas), se queda loader infinito
+// TODO - Se realizaron ventas después de 6 pm y en los reportes no se visualizan en la opción hoy
+// TODO - Exportar PDF no funciona en ningún reporte
+// TODO - En la creación de productos, la categoría no esta como obligatoria pero si no se incluye genera error
+// TODO - Cambiar el titulo del método de pago en el reporte de ventas por método de pago (están en ingles)
+// TODO - En la actualización de productos, el campo unidad de medida no se esta actualizando
+// TODO - Unificar loaders en todas las tablas de parametrización, ventas, productos, inventarios. Loaders primarios y secundarios.
+
 export default async function Home() {
   const headersList = await headers();
 

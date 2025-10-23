@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createUnitMeasure,
   getUnitMeasuresByOrgId,
+  updateUnitMeasure,
+  softDeleteUnitMeasure,
 } from '@/actions/unit-measure';
 import { useStore } from '@/store';
 import { UnitMeasure } from '@/generated/prisma';
@@ -75,6 +77,88 @@ export const useCreateUnitMeasure = () => {
     },
     onError: (error) => {
       console.error('Error creando unidad de medida:', error);
+    },
+  });
+};
+
+// Hook para actualizar unidad de medida
+export const useUpdateUnitMeasure = () => {
+  const queryClient = useQueryClient();
+  const user = useStore((state) => state.user);
+
+  return useMutation({
+    mutationFn: async ({
+      unitMeasureId,
+      unitMeasureData,
+    }: {
+      unitMeasureId: string;
+      unitMeasureData: Partial<
+        Omit<
+          UnitMeasure,
+          | 'id'
+          | 'organizationId'
+          | 'createdAt'
+          | 'updatedAt'
+          | 'isDeleted'
+          | 'deletedAt'
+        >
+      >;
+    }) => {
+      if (!user?.organizationId) {
+        throw new Error('Usuario no tiene organización asignada');
+      }
+
+      const response = await updateUnitMeasure(
+        unitMeasureId,
+        user.id,
+        unitMeasureData
+      );
+
+      if (response.status !== 200) {
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidar todas las queries de unidades de medida para esta organización
+      queryClient.invalidateQueries({
+        queryKey: ['unit-measures', user?.organizationId],
+      });
+    },
+    onError: (error) => {
+      console.error('Error actualizando unidad de medida:', error);
+    },
+  });
+};
+
+// Hook para eliminar unidad de medida (soft delete)
+export const useSoftDeleteUnitMeasure = () => {
+  const queryClient = useQueryClient();
+  const user = useStore((state) => state.user);
+
+  return useMutation({
+    mutationFn: async ({ unitMeasureId }: { unitMeasureId: string }) => {
+      if (!user?.organizationId) {
+        throw new Error('Usuario no tiene organización asignada');
+      }
+
+      const response = await softDeleteUnitMeasure(unitMeasureId, user.id);
+
+      if (response.status !== 200) {
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidar todas las queries de unidades de medida para esta organización
+      queryClient.invalidateQueries({
+        queryKey: ['unit-measures', user?.organizationId],
+      });
+    },
+    onError: (error) => {
+      console.error('Error eliminando unidad de medida:', error);
     },
   });
 };

@@ -7,6 +7,7 @@ import { createCategory } from '../category';
 import { createPaymentMethod } from '../payment-methods';
 import { createBrand } from '../brand';
 import { setBusinessType } from '../system-config';
+import { createUnitMeasure } from '../unit-measure';
 
 const organizationInclude: Prisma.OrganizationInclude = {
   users: {
@@ -122,6 +123,30 @@ const LIQUOR_BRANDS_INTERNATIONAL = [
   { name: 'Stella Artois', description: 'Cerveza belga' },
 ] as const;
 
+// ============================================
+// UNIDADES DE MEDIDA POR TIPO DE NEGOCIO
+// ============================================
+
+// Unidades de medida para LICORERAS
+const LIQUOR_UNIT_MEASURES = [
+  { name: 'Botella', abbreviation: 'bot' },
+  { name: 'Lata', abbreviation: 'lata' },
+  { name: 'Litro', abbreviation: 'L' },
+  { name: 'Mililitro', abbreviation: 'ml' },
+  { name: 'Caja', abbreviation: 'cj' },
+  { name: 'Six-pack', abbreviation: '6pk' },
+  { name: 'Twelve-pack', abbreviation: '12pk' },
+  { name: 'Docena', abbreviation: 'doc' },
+  { name: 'Barril', abbreviation: 'barril' },
+] as const;
+
+// Unidades de medida para ZAPATERÍAS
+const FOOTWEAR_UNIT_MEASURES = [
+  { name: 'Unidad', abbreviation: 'un' },
+  { name: 'Par', abbreviation: 'par' },
+  { name: 'Caja', abbreviation: 'cj' },
+] as const;
+
 const createInitialConfigurations = async (
   organizationId: string,
   adminUserId: string,
@@ -138,6 +163,12 @@ const createInitialConfigurations = async (
       businessType === 'liquor_store'
         ? [...LIQUOR_BRANDS_NATIONAL, ...LIQUOR_BRANDS_INTERNATIONAL]
         : DEFAULT_BRANDS;
+
+    // Determinar qué unidades de medida crear según el tipo de negocio
+    const unitMeasures =
+      businessType === 'liquor_store'
+        ? LIQUOR_UNIT_MEASURES
+        : FOOTWEAR_UNIT_MEASURES;
 
     // Crear categorías en paralelo usando Promise.all
     const categoryPromises = categories.map((category) =>
@@ -166,11 +197,21 @@ const createInitialConfigurations = async (
       })
     );
 
+    // Crear unidades de medida según tipo de negocio
+    const unitMeasurePromises = unitMeasures.map((unit) =>
+      createUnitMeasure(organizationId, adminUserId, {
+        name: unit.name,
+        abbreviation: unit.abbreviation,
+        isActive: true,
+      })
+    );
+
     // Ejecutar todas las creaciones en paralelo
     await Promise.all([
       ...categoryPromises,
       ...paymentMethodPromises,
       ...brandsPromises,
+      ...unitMeasurePromises,
     ]);
   });
 };

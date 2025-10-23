@@ -42,6 +42,7 @@ import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts';
 import { deleteImageFromUploadThing, uploadImage } from '@/actions/product';
 import { useActiveCategories } from '@/hooks/useCategories';
 import { useActiveBrands } from '@/hooks/useBrands';
+import { useActiveUnitMeasures } from '@/hooks/useUnitMeasures';
 import {
   Select,
   SelectContent,
@@ -66,6 +67,7 @@ const baseSchema = {
   sku: yup.string().nullable().notRequired().defined(),
   categoryId: yup.string().nullable().notRequired().defined(),
   brandId: yup.string().required('La marca es requerida'),
+  unitMeasureId: yup.string().required('La unidad de medida es requerida'),
   costPrice: yup
     .number()
     .typeError('Debe ingresar un valor válido')
@@ -152,6 +154,7 @@ const NewProduct = ({
   const updateMutation = useUpdateProduct();
   const { data: activeCategories } = useActiveCategories();
   const { data: activeBrands } = useActiveBrands();
+  const { data: activeUnitMeasures } = useActiveUnitMeasures();
   const { data: businessType } = useBusinessType();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -260,7 +263,7 @@ const NewProduct = ({
           currentStock: data.currentStock,
           minStock: data.minStock,
           image: imageUrl ?? null,
-          unitMeasureId: null, //TODO Crear unidad de medida por defecto (UN)
+          unitMeasureId: data.unitMeasureId,
           isActive: data.active,
           // Conditional fields based on business type - with explicit typing
           alcoholGrade: (businessType === 'liquor_store' && 'alcoholGrade' in data ? data.alcoholGrade : null) as number | null,
@@ -508,6 +511,34 @@ const NewProduct = ({
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="unitMeasureId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unidad de Medida *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value ?? undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona unidad de medida" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {activeUnitMeasures?.map((unit) => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              {unit.name} ({unit.abbreviation})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

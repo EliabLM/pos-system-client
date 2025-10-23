@@ -6,6 +6,7 @@ import { prisma, checkAdminRole, unauthorizedResponse } from '../utils';
 import { createCategory } from '../category';
 import { createPaymentMethod } from '../payment-methods';
 import { createBrand } from '../brand';
+import { setBusinessType } from '../system-config';
 
 const organizationInclude: Prisma.OrganizationInclude = {
   users: {
@@ -73,15 +74,73 @@ const DEFAULT_BRANDS = [
   { name: 'PUMA', description: 'PUMA' },
 ] as const;
 
+// ============================================
+// CONSTANTES PARA LICORERAS
+// ============================================
+
+// Categorías para LICORERAS
+const LIQUOR_CATEGORIES = [
+  { name: 'Whisky', description: 'Whisky escocés, irlandés, bourbon, etc.' },
+  { name: 'Ron', description: 'Ron blanco, añejo, premium' },
+  { name: 'Vodka', description: 'Vodka nacional e importado' },
+  { name: 'Tequila', description: 'Tequila blanco, reposado, añejo' },
+  { name: 'Ginebra', description: 'Ginebra dry, London dry, premium' },
+  { name: 'Aguardiente', description: 'Aguardiente nacional' },
+  { name: 'Cerveza Nacional', description: 'Cervezas nacionales' },
+  { name: 'Cerveza Importada', description: 'Cervezas importadas' },
+  { name: 'Vino Tinto', description: 'Vinos tintos nacionales e importados' },
+  { name: 'Vino Blanco', description: 'Vinos blancos nacionales e importados' },
+  { name: 'Vino Rosado', description: 'Vinos rosados' },
+  { name: 'Champagne/Espumosos', description: 'Champagne y vinos espumosos' },
+  { name: 'Licores', description: 'Licores cremosos y digestivos' },
+  { name: 'Brandy/Cognac', description: 'Brandy y cognac' },
+  { name: 'Aperitivos', description: 'Aperitivos y vermut' },
+] as const;
+
+// Marcas para LICORERAS (Nacionales Colombia)
+const LIQUOR_BRANDS_NATIONAL = [
+  { name: 'Aguardiente Antioqueño', description: 'Aguardiente colombiano' },
+  { name: 'Ron Viejo de Caldas', description: 'Ron colombiano' },
+  { name: 'Club Colombia', description: 'Cerveza premium colombiana' },
+  { name: 'Poker', description: 'Cerveza colombiana' },
+  { name: 'Aguila', description: 'Cerveza colombiana' },
+  { name: 'Pilsen', description: 'Cerveza colombiana' },
+  { name: 'Tres Cordilleras', description: 'Ron colombiano' },
+] as const;
+
+// Marcas para LICORERAS (Internacionales)
+const LIQUOR_BRANDS_INTERNATIONAL = [
+  { name: 'Johnnie Walker', description: 'Whisky escocés' },
+  { name: 'Jack Daniels', description: 'Whisky americano' },
+  { name: 'Bacardi', description: 'Ron caribeño' },
+  { name: 'Absolut', description: 'Vodka sueco' },
+  { name: 'Smirnoff', description: 'Vodka' },
+  { name: 'Jose Cuervo', description: 'Tequila mexicano' },
+  { name: 'Heineken', description: 'Cerveza holandesa' },
+  { name: 'Corona', description: 'Cerveza mexicana' },
+  { name: 'Budweiser', description: 'Cerveza americana' },
+  { name: 'Stella Artois', description: 'Cerveza belga' },
+] as const;
+
 const createInitialConfigurations = async (
   organizationId: string,
-  adminUserId: string
+  adminUserId: string,
+  businessType?: 'liquor_store' | 'shoe_store' | null
 ): Promise<void> => {
   // Usar transacciones para asegurar consistencia
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   await prisma.$transaction(async (_tx) => {
+    // Determinar qué categorías y marcas crear según el tipo de negocio
+    const categories =
+      businessType === 'liquor_store' ? LIQUOR_CATEGORIES : DEFAULT_CATEGORIES;
+
+    const brands =
+      businessType === 'liquor_store'
+        ? [...LIQUOR_BRANDS_NATIONAL, ...LIQUOR_BRANDS_INTERNATIONAL]
+        : DEFAULT_BRANDS;
+
     // Crear categorías en paralelo usando Promise.all
-    const categoryPromises = DEFAULT_CATEGORIES.map((category) =>
+    const categoryPromises = categories.map((category) =>
       createCategory(organizationId, adminUserId, {
         name: category.name,
         description: category.description,
@@ -89,7 +148,7 @@ const createInitialConfigurations = async (
       })
     );
 
-    // Crear métodos de pago en paralelo
+    // Crear métodos de pago en paralelo (comunes para ambos tipos)
     const paymentMethodPromises = DEFAULT_PAYMENT_METHODS.map((method) =>
       createPaymentMethod(organizationId, adminUserId, {
         name: method.name,
@@ -98,8 +157,8 @@ const createInitialConfigurations = async (
       })
     );
 
-    // Crear marcas en paralelo
-    const brandsPromises = DEFAULT_BRANDS.map((brand) =>
+    // Crear marcas según tipo de negocio
+    const brandsPromises = brands.map((brand) =>
       createBrand(organizationId, adminUserId, {
         name: brand.name,
         description: brand.description,
@@ -122,7 +181,8 @@ export const createOrganization = async (
   organizationData: Omit<
     Organization,
     'id' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'deletedAt'
-  >
+  >,
+  businessType?: 'liquor_store' | 'shoe_store' | null
 ): Promise<ActionResponse<Organization | null>> => {
   try {
     const isAdmin = await checkAdminRole(adminUserId);
@@ -152,15 +212,30 @@ export const createOrganization = async (
     });
 
     // Crear configuraciones iniciales de forma asíncrona
-    createInitialConfigurations(newOrganization.id, adminUserId).catch(
-      (error) => {
+    createInitialConfigurations(
+      newOrganization.id,
+      adminUserId,
+      businessType
+    ).catch((error) => {
+      console.error(
+        'Error creating initial configurations for organization:',
+        newOrganization.id,
+        error
+      );
+    });
+
+    // Guardar tipo de negocio en SystemConfig si se proporciona
+    if (businessType) {
+      try {
+        await setBusinessType(newOrganization.id, businessType);
+      } catch (error) {
         console.error(
-          'Error creating initial configurations for organization:',
+          'Error setting business type for organization:',
           newOrganization.id,
           error
         );
       }
-    );
+    }
 
     return {
       status: 201,

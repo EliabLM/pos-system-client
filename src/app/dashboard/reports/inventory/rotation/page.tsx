@@ -262,24 +262,25 @@ export default function InventoryRotationReportPage(): React.ReactElement {
               {isLoading ? (
                 <Skeleton className="h-[350px] w-full" />
               ) : topRotatingChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={Math.max(topRotatingChartData.length * 40, 350)}>
                   <BarChart
                     data={topRotatingChartData}
-                    margin={{ top: 5, right: 20, left: 20, bottom: 80 }}
+                    layout="vertical"
+                    margin={{ top: 5, right: 20, left: 100, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis
-                      dataKey="name"
-                      className="text-xs"
-                      tick={{ fill: '#6b7280', fontSize: 10 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis
+                      type="number"
                       className="text-xs"
                       tick={{ fill: '#6b7280' }}
                       domain={[0, 'dataMax']}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      className="text-xs"
+                      tick={{ fill: '#6b7280', fontSize: 11 }}
+                      width={100}
                     />
                     <Tooltip
                       content={({ active, payload }) => {
@@ -300,11 +301,17 @@ export default function InventoryRotationReportPage(): React.ReactElement {
                     />
                     <Bar
                       dataKey="rotacion"
-                      fill="#3b82f6"
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={60}
+                      radius={[0, 4, 4, 0]}
+                      maxBarSize={30}
                       minPointSize={5}
-                    />
+                    >
+                      {topRotatingChartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={`hsl(${160 + (index * 20)}, ${60 + (index * 2)}%, ${45 - (index * 2)}%)`}
+                        />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (

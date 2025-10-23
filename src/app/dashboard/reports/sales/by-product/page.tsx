@@ -24,6 +24,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -38,6 +39,20 @@ import { useSalesByProduct } from '@/hooks/useSalesReports';
 import { useExport } from '@/hooks/useExport';
 import { useStore } from '@/store';
 import type { DateRangeFilter } from '@/interfaces/reports';
+
+// Colores para el gráfico de barras - Solo HSL hardcodeados
+const CHART_COLORS = [
+  'hsl(220, 90%, 56%)',  // Blue
+  'hsl(142, 71%, 45%)',  // Green
+  'hsl(280, 65%, 60%)',  // Purple
+  'hsl(25, 95%, 53%)',   // Orange
+  'hsl(340, 75%, 55%)',  // Pink
+  'hsl(199, 89%, 48%)',  // Cyan
+  'hsl(48, 96%, 53%)',   // Yellow
+  'hsl(160, 60%, 45%)',  // Teal
+  'hsl(0, 84%, 60%)',    // Red
+  'hsl(262, 52%, 47%)',  // Deep Purple
+];
 
 export default function SalesByProductReportPage(): React.ReactElement {
   const user = useStore((state) => state.user);
@@ -291,9 +306,12 @@ export default function SalesByProductReportPage(): React.ReactElement {
                   />
                   <Bar
                     dataKey="revenue"
-                    fill="hsl(var(--primary))"
                     radius={[0, 4, 4, 0]}
-                  />
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (

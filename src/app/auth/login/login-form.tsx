@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2Icon } from 'lucide-react';
+import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -51,6 +52,7 @@ export function LoginForm({
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormData>({
     criteriaMode: 'firstError',
@@ -185,7 +187,26 @@ export function LoginForm({
                             </a>
                           </div>
                           <FormControl>
-                            <Input id="password" type="password" {...field} />
+                            <div className="relative">
+                              <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                className="pr-10"
+                                {...field}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                              >
+                                {showPassword ? (
+                                  <IconEyeOff size={20} />
+                                ) : (
+                                  <IconEye size={20} />
+                                )}
+                              </button>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

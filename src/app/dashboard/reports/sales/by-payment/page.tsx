@@ -39,12 +39,12 @@ import { useStore } from '@/store';
 import type { DateRangeFilter } from '@/interfaces/reports';
 
 const COLORS = [
-  'hsl(var(--primary))',
-  'hsl(142 76% 36%)',
-  'hsl(221 83% 53%)',
-  'hsl(262 83% 58%)',
-  'hsl(24 95% 53%)',
-  'hsl(346 87% 43%)',
+  'hsl(220, 90%, 56%)',  // Blue
+  'hsl(142, 76%, 36%)',  // Green
+  'hsl(221, 83%, 53%)',  // Blue variant
+  'hsl(262, 83%, 58%)',  // Purple
+  'hsl(24, 95%, 53%)',   // Orange
+  'hsl(346, 87%, 43%)',  // Red
 ];
 
 export default function SalesByPaymentReportPage(): React.ReactElement {

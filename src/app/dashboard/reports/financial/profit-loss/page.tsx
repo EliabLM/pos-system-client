@@ -270,8 +270,8 @@ export default function ProfitLossReportPage(): React.ReactElement {
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
+                    stroke="hsl(220, 90%, 56%)"
+                    fill="hsl(220, 90%, 56%)"
                     fillOpacity={0.3}
                     strokeWidth={2}
                     name="Ingresos"

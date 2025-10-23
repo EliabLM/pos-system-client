@@ -46,14 +46,14 @@ import { useStore } from '@/store';
 import type { DateRangeFilter } from '@/interfaces/reports';
 
 const COLORS = [
-  'hsl(var(--primary))',
-  'hsl(142 76% 36%)',
-  'hsl(221 83% 53%)',
-  'hsl(262 83% 58%)',
-  'hsl(24 95% 53%)',
-  'hsl(142 71% 45%)',
-  'hsl(346 87% 43%)',
-  'hsl(48 96% 53%)',
+  'hsl(220, 90%, 56%)',  // Blue
+  'hsl(142, 76%, 36%)',  // Green
+  'hsl(221, 83%, 53%)',  // Blue variant
+  'hsl(262, 83%, 58%)',  // Purple
+  'hsl(24, 95%, 53%)',   // Orange
+  'hsl(142, 71%, 45%)',  // Green variant
+  'hsl(346, 87%, 43%)',  // Red
+  'hsl(48, 96%, 53%)',   // Yellow
 ];
 
 export default function SalesByCategoryReportPage(): React.ReactElement {
@@ -341,8 +341,8 @@ export default function SalesByCategoryReportPage(): React.ReactElement {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="revenue" name="Ingresos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="profit" name="Ganancia" fill="hsl(142 76% 36%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" name="Ingresos" fill="hsl(220, 90%, 56%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="profit" name="Ganancia" fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : null}

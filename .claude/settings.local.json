@@ -41,7 +41,9 @@
       "Bash(do sed -i \"/import { es } from ''date-fns\\/locale'';/d\" \"$file\")",
       "Bash(echo:*)",
       "Bash(done)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(dir:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

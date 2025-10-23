@@ -366,6 +366,7 @@ export interface TopProductData {
   profitMargin: number;
   category?: string;
   brand?: string;
+  unitMeasure?: string; // Unit measure abbreviation
 }
 
 // ===========================

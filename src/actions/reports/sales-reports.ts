@@ -253,6 +253,9 @@ export async function getSalesByProduct(
             brand: {
               select: { name: true },
             },
+            unitMeasure: {
+              select: { id: true, name: true, abbreviation: true },
+            },
           },
         },
       },
@@ -266,6 +269,7 @@ export async function getSalesByProduct(
       cost: number;
       category?: string;
       brand?: string;
+      unitMeasure?: string;
     }>();
 
     for (const item of saleItems) {
@@ -280,6 +284,7 @@ export async function getSalesByProduct(
         cost: 0,
         category: item.product.category?.name,
         brand: item.product.brand?.name,
+        unitMeasure: item.product.unitMeasure?.abbreviation,
       };
 
       productMap.set(productId, {
@@ -289,6 +294,7 @@ export async function getSalesByProduct(
         cost: existing.cost + cost,
         category: existing.category,
         brand: existing.brand,
+        unitMeasure: existing.unitMeasure,
       });
     }
 
@@ -307,6 +313,7 @@ export async function getSalesByProduct(
         profitMargin: Number(margin.toFixed(2)),
         category: values.category,
         brand: values.brand,
+        unitMeasure: values.unitMeasure,
       };
     });
 

@@ -122,6 +122,7 @@ export default function SalesByProductReportPage(): React.ReactElement {
     return products.map((product) => ({
       producto: product.productName,
       categoria: product.category || 'Sin categoría',
+      unidad: product.unitMeasure || '-',
       marca: product.brand || 'Sin marca',
       cantidad: product.quantity,
       ingresos: formatCurrency(product.revenue),
@@ -344,6 +345,7 @@ export default function SalesByProductReportPage(): React.ReactElement {
                       <th className="text-left p-2 font-medium">#</th>
                       <th className="text-left p-2 font-medium">Producto</th>
                       <th className="text-left p-2 font-medium">Categoría</th>
+                      <th className="text-left p-2 font-medium">Unidad</th>
                       <th className="text-right p-2 font-medium">Cantidad</th>
                       <th className="text-right p-2 font-medium">Ingresos</th>
                       <th className="text-right p-2 font-medium">Ganancia</th>
@@ -357,6 +359,9 @@ export default function SalesByProductReportPage(): React.ReactElement {
                         <td className="p-2 font-medium">{product.productName}</td>
                         <td className="p-2 text-muted-foreground">
                           {product.category || 'Sin categoría'}
+                        </td>
+                        <td className="p-2 text-muted-foreground">
+                          {product.unitMeasure || '-'}
                         </td>
                         <td className="p-2 text-right">{product.quantity}</td>
                         <td className="p-2 text-right font-medium">

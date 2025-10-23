@@ -4,7 +4,6 @@ import { Customer, Prisma } from '@/generated/prisma';
 import { ActionResponse } from '@/interfaces';
 import {
   prisma,
-  checkAdminRole,
   checkAdminOrSellerRole,
   unauthorizedResponse,
   checkOrgId,

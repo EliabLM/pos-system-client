@@ -37,7 +37,6 @@ import {
 } from '@/components/ui/tooltip';
 import { useStore } from '@/store';
 import { useActiveStores } from '@/hooks/useStores';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface DashboardHeaderProps {
   onRefresh?: () => void;
@@ -57,7 +56,7 @@ export function DashboardHeader({
   const [relativeTime, setRelativeTime] = useState<string>('');
 
   // Fetch active stores for the organization (only for ADMIN users)
-  const { data: stores, isLoading: isLoadingStores } = useActiveStores();
+  const { data: stores } = useActiveStores();
 
   // RBAC: Determine if user is a SELLER (can only see their assigned store)
   const isAdmin = user?.role === 'ADMIN';

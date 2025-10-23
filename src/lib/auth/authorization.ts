@@ -11,7 +11,6 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/actions/utils';
 import { User, UserRole } from '@/generated/prisma';
 import { verifyToken } from './jwt';
-import { AuthError, AuthErrorCode } from './types';
 
 // Configuración
 const COOKIE_NAME = 'auth-token';
@@ -60,7 +59,7 @@ export async function getCurrentAuthUser(): Promise<User | null> {
       if (!payload || !payload.userId) {
         return null;
       }
-    } catch (error) {
+    } catch {
       // Token inválido o expirado
       return null;
     }

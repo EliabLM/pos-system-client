@@ -36,7 +36,12 @@
       "Bash(findstr:*)",
       "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\actions\" /B)",
       "Bash(dir \"C:\\Users\\elopez\\workspace\\projects\\pos-system\\pos-system-client\\src\\app\\dashboard\\reports\" /B)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(for file in src/app/dashboard/reports/financial/profit-loss/page.tsx src/app/dashboard/reports/inventory/rotation/page.tsx src/app/dashboard/reports/inventory/stock-status/page.tsx src/app/dashboard/reports/inventory/valuation/page.tsx src/app/dashboard/reports/sales/by-category/page.tsx src/app/dashboard/reports/sales/by-payment/page.tsx src/app/dashboard/reports/sales/by-product/page.tsx src/app/dashboard/reports/sales/by-seller/page.tsx)",
+      "Bash(do sed -i \"/import { es } from ''date-fns\\/locale'';/d\" \"$file\")",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

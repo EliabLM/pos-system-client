@@ -19,7 +19,6 @@ import {
   IconBuildingWarehouse,
   IconChartCandle,
   IconUserHeart,
-  IconTruck,
   IconChartBar,
 } from '@tabler/icons-react';
 

@@ -482,6 +482,7 @@ export const getSalesByOrgId = async (
 };
 
 // Definir el tipo de include sin where clauses para una correcta inferencia de tipos
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const saleIncludeForType = {
   store: true,
   customer: true,
@@ -718,7 +719,7 @@ export const cancelSale = async (
     const cancelledSale = await prisma.$transaction(
       async (tx) => {
         // Actualizar status de la venta
-        const sale = await tx.sale.update({
+        await tx.sale.update({
           where: { id: saleId },
           data: {
             status: 'CANCELLED',

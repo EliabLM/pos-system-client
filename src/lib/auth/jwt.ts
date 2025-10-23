@@ -290,6 +290,7 @@ export function refreshTokenIfNeeded(
     }
 
     // Generar nuevo token con mismo payload
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { iat, exp, ...dataPayload } = payload;
     const newToken = generateToken(dataPayload as Omit<JWTPayload, 'iat' | 'exp'>);
 

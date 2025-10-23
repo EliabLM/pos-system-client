@@ -1,4 +1,4 @@
-import { UserRole } from '@/generated/prisma';
+// ROLE-BASED ACCESS CONTROL (RBAC) UTILITIES
 
 // ============================================
 // ROLE-BASED ACCESS CONTROL (RBAC) UTILITIES

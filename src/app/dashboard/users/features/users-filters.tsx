@@ -12,7 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { IconX, IconSearch } from '@tabler/icons-react';
 import { useActiveStores } from '@/hooks/useStores';
-import { UserRole } from '@/generated/prisma';
 
 interface UsersFiltersProps {
   searchTerm: string;

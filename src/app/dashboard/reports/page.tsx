@@ -27,7 +27,6 @@ import {
 } from '@tabler/icons-react';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,

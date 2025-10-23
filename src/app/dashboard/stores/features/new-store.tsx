@@ -132,6 +132,7 @@ const NewStore = ({
     form.setValue('address', itemSelected.address);
     form.setValue('phone', selectedStore.data.phone);
     form.setValue('active', itemSelected.isActive);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemSelected, selectedStore.data]);
 
   return (

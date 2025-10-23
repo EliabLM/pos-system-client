@@ -47,16 +47,11 @@ export const useCreateCategory = () => {
 
             return response.data
         },
-        onSuccess: (newCategory) => {
+        onSuccess: () => {
             // Invalidar todas las queries de categorías para esta organización
             queryClient.invalidateQueries({
                 queryKey: ['categories', user?.organizationId]
             })
-
-            // Opcional: Agregar optimistic update
-            // queryClient.setQueryData(['categories', user?.organizationId], (oldData: Category[] | undefined) => {
-            //     return oldData ? [...oldData, newCategory] : [newCategory]
-            // })
         },
         onError: (error) => {
             console.error('Error creando categoría:', error)
@@ -93,7 +88,7 @@ export const useSoftDeleteCategory = () => {
 
             return response.data
         },
-        onSuccess: (newCategory) => {
+        onSuccess: () => {
             // Invalidar todas las queries de categorías para esta organización
             queryClient.invalidateQueries({
                 queryKey: ['categories', user?.organizationId]
@@ -132,7 +127,7 @@ export const useUpdateCategory = () => {
 
             return response.data
         },
-        onSuccess: (newCategory) => {
+        onSuccess: () => {
             // Invalidar todas las queries de categorías para esta organización
             queryClient.invalidateQueries({
                 queryKey: ['categories', user?.organizationId]

@@ -12,7 +12,6 @@ import React from 'react';
 import { SimpleDateRangePicker } from './date-range-picker';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStores } from '@/hooks/useStores';
-import { useStore } from '@/store';
 import type { ReportFiltersProps } from '@/interfaces/reports';
 
 export function ReportFilters({

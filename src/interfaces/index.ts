@@ -79,7 +79,7 @@ export type CreateProductInput = Omit<
   salePrice: number | string;
 };
 
-const productInclude: Prisma.ProductInclude = {
+export const productInclude: Prisma.ProductInclude = {
   organization: true,
   brand: true,
   category: true,

@@ -122,6 +122,7 @@ export function MovementFormSheet({ setSheetOpen }: MovementFormSheetProps) {
   const selectedProduct = useMemo(() => {
     const productId = form.watch('productId');
     return products?.find((p) => p.id === productId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.watch('productId'), products]);
 
   // Calculate projected stock
@@ -143,6 +144,7 @@ export function MovementFormSheet({ setSheetOpen }: MovementFormSheetProps) {
       default:
         return currentStock;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.watch('type'), form.watch('quantity'), selectedProduct]);
 
   // Warning for negative stock
@@ -154,6 +156,7 @@ export function MovementFormSheet({ setSheetOpen }: MovementFormSheetProps) {
       projectedStock !== null &&
       projectedStock < 0
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.watch('type'), selectedProduct, projectedStock]);
 
   // Warning for zero stock
@@ -164,6 +167,7 @@ export function MovementFormSheet({ setSheetOpen }: MovementFormSheetProps) {
       projectedStock === 0 &&
       form.watch('type') !== 'ADJUSTMENT'
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProduct, projectedStock, form.watch('type')]);
 
   const selectedType = form.watch('type');

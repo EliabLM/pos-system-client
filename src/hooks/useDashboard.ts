@@ -6,13 +6,6 @@ import {
   getStockAlerts,
   getCashStatus,
 } from '@/actions/dashboard';
-import {
-  DashboardKPIs,
-  SalesByPeriod,
-  TopProduct,
-  StockAlert,
-  CashStatus,
-} from '@/interfaces';
 
 /**
  * Hook para obtener los KPIs del dashboard (métricas principales)

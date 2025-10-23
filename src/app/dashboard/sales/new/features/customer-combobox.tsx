@@ -62,7 +62,10 @@ export function CustomerCombobox({
     { page: 1, limit: 15 }
   );
 
-  const customers = customersData?.customers || [];
+  const customers = React.useMemo(
+    () => customersData?.customers || [],
+    [customersData?.customers]
+  );
 
   // Close dropdown on click outside
   React.useEffect(() => {

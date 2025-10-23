@@ -9,9 +9,6 @@ import {
 } from '@/actions/reports';
 import {
   SalesReportFilters,
-  SalesSummary,
-  SalesPeriodData,
-  TopProductData,
 } from '@/interfaces/reports';
 
 /**

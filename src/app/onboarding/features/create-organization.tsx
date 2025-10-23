@@ -99,8 +99,8 @@ const RegisterOrganizationPage = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingSubdomain, setIsCheckingSubdomain] = useState(false);
-  const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(
+  const [isCheckingSubdomain] = useState(false);
+  const [subdomainAvailable] = useState<boolean | null>(
     null
   );
 

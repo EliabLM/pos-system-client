@@ -18,7 +18,6 @@ import {
   normalizeEmail,
   createSession,
   AuthError,
-  AuthErrorCode,
 } from '@/lib/auth';
 
 // Configuración
@@ -261,7 +260,8 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
     });
 
     // 7. Return success con user data (sin password)
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
 
     return {
       status: 200,

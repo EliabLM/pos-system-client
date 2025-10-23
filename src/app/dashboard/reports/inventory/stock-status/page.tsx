@@ -23,7 +23,6 @@ import {
   IconBoxOff,
 } from '@tabler/icons-react';
 import { subDays, format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import {
   Bar,
   BarChart,

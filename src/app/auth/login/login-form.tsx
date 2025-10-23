@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { toast } from 'sonner';
-import type { User } from '@/generated/prisma';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -51,7 +50,7 @@ export function LoginForm({
   const setUser = useStore((state) => state.setUser);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isLoadingGoogle] = useState(false);
 
   const form = useForm<LoginFormData>({
     criteriaMode: 'firstError',

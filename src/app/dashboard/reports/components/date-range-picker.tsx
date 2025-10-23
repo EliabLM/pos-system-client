@@ -28,8 +28,10 @@ export function DateRangePicker({
   value,
   onChange,
   presets,
-  minDate,
-  maxDate,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  minDate: _minDate,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  maxDate: _maxDate,
   disabled = false,
   className = '',
 }: DateRangePickerProps): React.ReactElement {

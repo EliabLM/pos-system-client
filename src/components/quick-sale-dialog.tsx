@@ -46,6 +46,7 @@ import { useCreateSale } from '@/hooks/useSales';
 import { useActiveProducts } from '@/hooks/useProducts';
 import { useActiveStores } from '@/hooks/useStores';
 import { useActivePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useBusinessType } from '@/hooks/useSystemConfig';
 
 // Props interface
 interface QuickSaleDialogProps {
@@ -102,6 +103,7 @@ export function QuickSaleDialog({
   const { data: stores, isLoading: isLoadingStores } = useActiveStores();
   const { data: paymentMethods, isLoading: isLoadingPaymentMethods } =
     useActivePaymentMethods();
+  const { data: businessType } = useBusinessType();
   const createSaleMutation = useCreateSale();
 
   // Local state for selected product details
@@ -112,6 +114,11 @@ export function QuickSaleDialog({
     stock: number;
     image: string | null;
     sku: string | null;
+    unitMeasure?: { abbreviation: string; name: string } | null;
+    volume?: number | null;
+    alcoholGrade?: number | null;
+    size?: string | null;
+    color?: string | null;
   } | null>(null);
 
   // Get store name for display
@@ -187,6 +194,11 @@ export function QuickSaleDialog({
       stock: product.currentStock,
       image: product.image,
       sku: product.sku,
+      unitMeasure: product.unitMeasure,
+      volume: product.volume,
+      alcoholGrade: product.alcoholGrade,
+      size: product.size,
+      color: product.color,
     });
 
     // Update form values
@@ -450,12 +462,71 @@ export function QuickSaleDialog({
                   {form.formState.errors.productId.message}
                 </p>
               )}
-              {selectedProduct && selectedProduct.stock <= 5 && (
-                <div className="flex items-start gap-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-                  <IconPackage className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
-                  <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                    Stock bajo. Solo quedan {selectedProduct.stock} unidades
-                  </p>
+              {/* Product information display */}
+              {selectedProduct && (
+                <div className="p-3 bg-muted/50 border rounded-md space-y-2">
+                  <div className="flex items-start gap-3">
+                    {selectedProduct.image && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={selectedProduct.image}
+                        alt={selectedProduct.name}
+                        className="size-12 rounded-md object-cover shrink-0"
+                      />
+                    )}
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="font-medium text-sm">
+                        {selectedProduct.name}
+                      </span>
+                      {/* Información adicional de producto */}
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedProduct.unitMeasure && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-muted rounded text-xs font-medium">
+                            📦 {selectedProduct.unitMeasure.abbreviation}
+                          </span>
+                        )}
+                        {/* Campos para LICORERAS */}
+                        {businessType === 'liquor_store' && (
+                          <>
+                            {selectedProduct.volume && (
+                              <span className="text-xs text-muted-foreground">
+                                {selectedProduct.volume}ml
+                              </span>
+                            )}
+                            {selectedProduct.alcoholGrade && (
+                              <span className="text-xs text-muted-foreground">
+                                {selectedProduct.alcoholGrade}% Vol.
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {/* Campos para ZAPATERÍAS */}
+                        {businessType === 'shoe_store' && (
+                          <>
+                            {selectedProduct.size && (
+                              <span className="text-xs text-muted-foreground">
+                                Talla: {selectedProduct.size}
+                              </span>
+                            )}
+                            {selectedProduct.color && (
+                              <span className="text-xs text-muted-foreground">
+                                {selectedProduct.color}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Stock warning */}
+                  {selectedProduct.stock <= 5 && (
+                    <div className="flex items-start gap-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                      <IconPackage className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
+                      <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                        Stock bajo. Solo quedan {selectedProduct.stock} unidades
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

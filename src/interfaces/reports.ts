@@ -367,6 +367,11 @@ export interface TopProductData {
   category?: string;
   brand?: string;
   unitMeasure?: string; // Unit measure abbreviation
+  // Business-specific fields
+  volume?: number | null; // For liquor stores (ml)
+  alcoholGrade?: number | null; // For liquor stores (%)
+  size?: string | null; // For shoe stores
+  color?: string | null; // For shoe stores
 }
 
 // ===========================

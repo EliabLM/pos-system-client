@@ -270,6 +270,10 @@ export async function getSalesByProduct(
       category?: string;
       brand?: string;
       unitMeasure?: string;
+      volume?: number | null;
+      alcoholGrade?: number | null;
+      size?: string | null;
+      color?: string | null;
     }>();
 
     for (const item of saleItems) {
@@ -285,6 +289,10 @@ export async function getSalesByProduct(
         category: item.product.category?.name,
         brand: item.product.brand?.name,
         unitMeasure: item.product.unitMeasure?.abbreviation,
+        volume: item.product.volume,
+        alcoholGrade: item.product.alcoholGrade,
+        size: item.product.size,
+        color: item.product.color,
       };
 
       productMap.set(productId, {
@@ -295,6 +303,10 @@ export async function getSalesByProduct(
         category: existing.category,
         brand: existing.brand,
         unitMeasure: existing.unitMeasure,
+        volume: existing.volume,
+        alcoholGrade: existing.alcoholGrade,
+        size: existing.size,
+        color: existing.color,
       });
     }
 
@@ -314,6 +326,10 @@ export async function getSalesByProduct(
         category: values.category,
         brand: values.brand,
         unitMeasure: values.unitMeasure,
+        volume: values.volume,
+        alcoholGrade: values.alcoholGrade,
+        size: values.size,
+        color: values.color,
       };
     });
 

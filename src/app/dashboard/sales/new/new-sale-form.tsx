@@ -726,11 +726,27 @@ export const NewSaleForm = () => {
                                     📦 {product.unitMeasure.abbreviation}
                                   </span>
                                 )}
-                                {product.volume && businessType === 'liquor_store' && (
-                                  <span className="mr-2">{product.volume}ml</span>
+                                {/* Campos para LICORERAS */}
+                                {businessType === 'liquor_store' && (
+                                  <>
+                                    {product.volume && (
+                                      <span className="mr-2">{product.volume}ml</span>
+                                    )}
+                                    {product.alcoholGrade && (
+                                      <span className="mr-2">{product.alcoholGrade}% Vol.</span>
+                                    )}
+                                  </>
                                 )}
-                                {product.alcoholGrade && businessType === 'liquor_store' && (
-                                  <span className="mr-2">{product.alcoholGrade}% Vol.</span>
+                                {/* Campos para ZAPATERÍAS */}
+                                {businessType === 'shoe_store' && (
+                                  <>
+                                    {product.size && (
+                                      <span className="mr-2">Talla: {product.size}</span>
+                                    )}
+                                    {product.color && (
+                                      <span className="mr-2">Color: {product.color}</span>
+                                    )}
+                                  </>
                                 )}
                                 {/* Stock */}
                                 {product.currentStock > 0 ? (
@@ -813,16 +829,34 @@ export const NewSaleForm = () => {
                         <p className="text-xs text-muted-foreground">
                           {/* Unidad de medida */}
                           {item.product.unitMeasure && (
-                            <span className="font-medium mr-2">
-                              {item.product.unitMeasure.name} •
+                            <span className="inline-flex items-center gap-1 mr-2 px-1.5 py-0.5 bg-muted rounded text-xs font-medium">
+                              📦 {item.product.unitMeasure.abbreviation}
                             </span>
                           )}
-                          {/* Volumen para licoreras */}
-                          {item.product.volume && businessType === 'liquor_store' && (
-                            <span className="mr-2">{item.product.volume}ml •</span>
+                          {/* Campos para LICORERAS */}
+                          {businessType === 'liquor_store' && (
+                            <>
+                              {item.product.volume && (
+                                <span className="mr-2">{item.product.volume}ml</span>
+                              )}
+                              {item.product.alcoholGrade && (
+                                <span className="mr-2">{item.product.alcoholGrade}% Vol.</span>
+                              )}
+                            </>
+                          )}
+                          {/* Campos para ZAPATERÍAS */}
+                          {businessType === 'shoe_store' && (
+                            <>
+                              {item.product.size && (
+                                <span className="mr-2">Talla: {item.product.size}</span>
+                              )}
+                              {item.product.color && (
+                                <span className="mr-2">Color: {item.product.color}</span>
+                              )}
+                            </>
                           )}
                           {/* Stock */}
-                          Stock disponible: {item.product.currentStock}
+                          • Stock disponible: {item.product.currentStock}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">

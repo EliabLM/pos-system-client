@@ -38,6 +38,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSaleById } from '@/hooks/useSales';
+import { useBusinessType } from '@/hooks/useSystemConfig';
 
 interface SaleDetailDialogProps {
   open: boolean;
@@ -98,6 +99,7 @@ export function SaleDetailDialog({
 }: SaleDetailDialogProps) {
   // Usar el hook real para traer los datos
   const { data: sale, isLoading, error } = useSaleById(open ? saleId : null);
+  const { data: businessType } = useBusinessType();
 
   // Loading state
   if (isLoading) {
@@ -360,6 +362,44 @@ export function SaleDetailDialog({
                             {item.product.description}
                           </span>
                         )}
+                        {/* Información adicional de producto */}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.product.unitMeasure && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-muted rounded text-xs font-medium">
+                              📦 {item.product.unitMeasure.abbreviation}
+                            </span>
+                          )}
+                          {/* Campos para LICORERAS */}
+                          {businessType === 'liquor_store' && (
+                            <>
+                              {item.product.volume && (
+                                <span className="text-xs text-muted-foreground">
+                                  {item.product.volume}ml
+                                </span>
+                              )}
+                              {item.product.alcoholGrade && (
+                                <span className="text-xs text-muted-foreground">
+                                  {item.product.alcoholGrade}% Vol.
+                                </span>
+                              )}
+                            </>
+                          )}
+                          {/* Campos para ZAPATERÍAS */}
+                          {businessType === 'shoe_store' && (
+                            <>
+                              {item.product.size && (
+                                <span className="text-xs text-muted-foreground">
+                                  Talla: {item.product.size}
+                                </span>
+                              )}
+                              {item.product.color && (
+                                <span className="text-xs text-muted-foreground">
+                                  {item.product.color}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-sm">
@@ -435,6 +475,44 @@ export function SaleDetailDialog({
                                   {item.product.description}
                                 </span>
                               )}
+                              {/* Información adicional de producto */}
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {item.product.unitMeasure && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-muted rounded text-xs font-medium">
+                                    📦 {item.product.unitMeasure.abbreviation}
+                                  </span>
+                                )}
+                                {/* Campos para LICORERAS */}
+                                {businessType === 'liquor_store' && (
+                                  <>
+                                    {item.product.volume && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {item.product.volume}ml
+                                      </span>
+                                    )}
+                                    {item.product.alcoholGrade && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {item.product.alcoholGrade}% Vol.
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                                {/* Campos para ZAPATERÍAS */}
+                                {businessType === 'shoe_store' && (
+                                  <>
+                                    {item.product.size && (
+                                      <span className="text-xs text-muted-foreground">
+                                        Talla: {item.product.size}
+                                      </span>
+                                    )}
+                                    {item.product.color && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {item.product.color}
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </TableCell>

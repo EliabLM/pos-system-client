@@ -507,19 +507,23 @@ export const updateProduct = async (
       }
     }
 
-    // if (updateData.unitMeasureId && updateData.unitMeasureId !== existingProduct.unitMeasureId) {
-    //   const unitMeasure = await prisma.unitMeasure.findUnique({
-    //     where: { id: updateData.unitMeasureId },
-    //   });
+    if (updateData.unitMeasureId && updateData.unitMeasureId !== existingProduct.unitMeasureId) {
+      const unitMeasure = await prisma.unitMeasure.findFirst({
+        where: {
+          id: updateData.unitMeasureId,
+          organizationId: existingProduct.organizationId,
+          isDeleted: false,
+        },
+      });
 
-    //   if (!unitMeasure) {
-    //     return {
-    //       status: 400,
-    //       message: 'La unidad de medida especificada no existe',
-    //       data: null,
-    //     };
-    //   }
-    // }
+      if (!unitMeasure) {
+        return {
+          status: 400,
+          message: 'La unidad de medida especificada no existe',
+          data: null,
+        };
+      }
+    }
 
     // *** NUEVO BLOQUE: Gestionar cambio de imagen ***
     const oldImageUrl = existingProduct.image;

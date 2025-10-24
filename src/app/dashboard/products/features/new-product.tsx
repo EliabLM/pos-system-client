@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useForm } from 'react-hook-form';
+import { useForm, Resolver } from 'react-hook-form';
 import { toast } from 'sonner';
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
 
@@ -65,7 +65,7 @@ const baseSchema = {
   image: yup.string().nullable().notRequired().defined(),
   barcode: yup.string().nullable().notRequired().defined(),
   sku: yup.string().nullable().notRequired().defined(),
-  categoryId: yup.string().nullable().notRequired().defined(),
+  categoryId: yup.string().required('La categoría es requerida'),
   brandId: yup.string().required('La marca es requerida'),
   unitMeasureId: yup.string().required('La unidad de medida es requerida'),
   costPrice: yup
@@ -95,8 +95,8 @@ const baseSchema = {
   active: yup.bool().default(true),
 };
 
-// Liquor store specific fields (optional)
-const liquorFields = {
+// Liquor store specific fields (optional for non-liquor stores)
+const liquorFieldsOptional = {
   alcoholGrade: yup
     .number()
     .nullable()
@@ -113,6 +113,22 @@ const liquorFields = {
     .min(1, 'El volumen mínimo es 1ml'),
 };
 
+// Liquor store specific fields (REQUIRED for liquor stores)
+const liquorFieldsRequired = {
+  alcoholGrade: yup
+    .number()
+    .required('El grado alcohólico es obligatorio para licoreras')
+    .typeError('Debe ingresar un valor válido')
+    .min(0, 'El grado alcohólico mínimo es 0%')
+    .max(100, 'El grado alcohólico máximo es 100%'),
+  volume: yup
+    .number()
+    .required('El volumen es obligatorio para licoreras')
+    .typeError('Debe ingresar un valor válido')
+    .positive('El volumen debe ser un número positivo')
+    .min(1, 'El volumen mínimo es 1ml'),
+};
+
 // Footwear store specific fields (optional)
 const footwearFields = {
   size: yup.string().nullable().notRequired().defined(),
@@ -120,12 +136,38 @@ const footwearFields = {
   model: yup.string().nullable().notRequired().defined(),
 };
 
+// Comprehensive form type that includes all possible fields
+// This avoids union type issues with React Hook Form
+type StoreFormData = {
+  // Base fields (always present)
+  name: string;
+  description: string | null;
+  image: string | null;
+  barcode: string | null;
+  sku: string | null;
+  categoryId: string; // REQUIRED for all business types
+  brandId: string;
+  unitMeasureId: string;
+  costPrice: number;
+  salePrice: number;
+  minStock: number;
+  currentStock: number;
+  active: boolean;
+  // Liquor fields (conditional)
+  alcoholGrade?: number | null;
+  volume?: number | null;
+  // Footwear fields (conditional)
+  size?: string | null;
+  color?: string | null;
+  model?: string | null;
+};
+
 // Function to create schema based on business type
 const createSchema = (businessType: 'liquor_store' | 'shoe_store' | null) => {
   if (businessType === 'liquor_store') {
     return yup.object().shape({
       ...baseSchema,
-      ...liquorFields,
+      ...liquorFieldsRequired, // REQUIRED fields for liquor stores
     });
   } else if (businessType === 'shoe_store') {
     return yup.object().shape({
@@ -133,11 +175,12 @@ const createSchema = (businessType: 'liquor_store' | 'shoe_store' | null) => {
       ...footwearFields,
     });
   }
-  // Default to base schema if no business type
-  return yup.object().shape(baseSchema);
+  // Default to base schema with optional liquor fields
+  return yup.object().shape({
+    ...baseSchema,
+    ...liquorFieldsOptional, // Optional for backwards compatibility
+  });
 };
-
-type StoreFormData = yup.InferType<ReturnType<typeof createSchema>>;
 
 const NewProduct = ({
   setSheetOpen,
@@ -175,6 +218,7 @@ const NewProduct = ({
       sku: itemSelected?.sku ?? '',
       categoryId: itemSelected?.categoryId ?? '',
       brandId: itemSelected?.brandId ?? '',
+      unitMeasureId: itemSelected?.unitMeasureId ?? '',
       costPrice: Number(itemSelected?.costPrice),
       salePrice: Number(itemSelected?.salePrice),
       minStock: itemSelected?.minStock,
@@ -205,7 +249,7 @@ const NewProduct = ({
     defaultValues,
     mode: 'all',
     reValidateMode: 'onChange',
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema as unknown as yup.ObjectSchema<StoreFormData>) as unknown as Resolver<StoreFormData>,
   });
 
   // Watch cost and sale price for margin calculation
@@ -233,19 +277,30 @@ const NewProduct = ({
 
       //* Create product
       if (itemSelected) {
+        // Build update data with conditional fields based on business type
+        const updateData = {
+          name: data.name,
+          description: data.description,
+          image: imageUrl ?? data.image ?? null, // Update image if uploaded, otherwise keep existing
+          barcode: data.barcode,
+          sku: data.sku,
+          categoryId: data.categoryId,
+          brandId: data.brandId,
+          unitMeasureId: data.unitMeasureId,
+          costPrice: data.costPrice,
+          salePrice: data.salePrice,
+          isActive: data.active,
+          // Conditional fields based on business type - with explicit typing
+          alcoholGrade: (businessType === 'liquor_store' && 'alcoholGrade' in data ? data.alcoholGrade : null) as number | null,
+          volume: (businessType === 'liquor_store' && 'volume' in data ? data.volume : null) as number | null,
+          size: (businessType === 'shoe_store' && 'size' in data ? data.size : null) as string | null,
+          color: (businessType === 'shoe_store' && 'color' in data ? data.color : null) as string | null,
+          model: (businessType === 'shoe_store' && 'model' in data ? data.model : null) as string | null,
+        };
+
         await updateMutation.mutateAsync({
           productId: itemSelected.id,
-          updateData: {
-            name: data.name,
-            description: data.description,
-            barcode: data.barcode,
-            sku: data.sku,
-            categoryId: data.categoryId,
-            brandId: data.brandId,
-            costPrice: data.costPrice,
-            salePrice: data.salePrice,
-            isActive: data.active,
-          },
+          updateData,
         });
 
         toast.success('Producto actualizado exitosamente');
@@ -331,6 +386,7 @@ const NewProduct = ({
       form.resetField('currentStock');
       form.resetField('categoryId');
       form.resetField('brandId');
+      form.resetField('unitMeasureId');
       form.resetField('active');
 
       // Reset conditional fields based on business type
@@ -355,8 +411,9 @@ const NewProduct = ({
     form.setValue('salePrice', Number(itemSelected.salePrice));
     form.setValue('minStock', itemSelected.minStock);
     form.setValue('currentStock', itemSelected.currentStock);
-    form.setValue('categoryId', itemSelected.categoryId);
+    form.setValue('categoryId', itemSelected.categoryId ?? '');
     form.setValue('brandId', itemSelected.brandId ?? '');
+    form.setValue('unitMeasureId', itemSelected.unitMeasureId ?? '');
     form.setValue('active', itemSelected.isActive);
 
     // Set conditional fields based on business type
@@ -460,7 +517,7 @@ const NewProduct = ({
                     name="categoryId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Categoría</FormLabel>
+                        <FormLabel>Categoría <span className="text-destructive">*</span></FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value ?? undefined}
@@ -784,7 +841,7 @@ const NewProduct = ({
 
             {/* SECTION 4: Business-Specific Fields (Conditional) */}
             {businessType === 'liquor_store' && (
-              <ProductFieldsLiquor form={form} />
+              <ProductFieldsLiquor form={form} businessType={businessType} />
             )}
 
             {businessType === 'shoe_store' && (

@@ -16,9 +16,11 @@ import { IconBottle } from '@tabler/icons-react';
 interface ProductFieldsLiquorProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: UseFormReturn<any>;
+  businessType: 'liquor_store' | 'shoe_store' | null;
 }
 
-export function ProductFieldsLiquor({ form }: ProductFieldsLiquorProps) {
+export function ProductFieldsLiquor({ form, businessType }: ProductFieldsLiquorProps) {
+  const isLiquorStore = businessType === 'liquor_store';
   return (
     <Card>
       <CardHeader>
@@ -35,7 +37,9 @@ export function ProductFieldsLiquor({ form }: ProductFieldsLiquorProps) {
             name="alcoholGrade"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Grado Alcohólico (%)</FormLabel>
+                <FormLabel>
+                  Grado Alcohólico (%) {isLiquorStore && <span className="text-destructive">*</span>}
+                </FormLabel>
                 <FormControl>
                   <NumericFormat
                     id="alcoholGrade"
@@ -51,7 +55,7 @@ export function ProductFieldsLiquor({ form }: ProductFieldsLiquorProps) {
                   />
                 </FormControl>
                 <FormDescription>
-                  Porcentaje de alcohol por volumen (0-100%). Opcional.
+                  Porcentaje de alcohol por volumen (0-100%). {isLiquorStore ? 'Obligatorio para licoreras.' : 'Opcional.'}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -64,7 +68,9 @@ export function ProductFieldsLiquor({ form }: ProductFieldsLiquorProps) {
             name="volume"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Volumen (ml)</FormLabel>
+                <FormLabel>
+                  Volumen (ml) {isLiquorStore && <span className="text-destructive">*</span>}
+                </FormLabel>
                 <FormControl>
                   <NumericFormat
                     id="volume"
@@ -81,7 +87,7 @@ export function ProductFieldsLiquor({ form }: ProductFieldsLiquorProps) {
                 </FormControl>
                 <FormDescription>
                   Volumen en mililitros (ml). Ejemplos: 200, 330, 750, 1000.
-                  Opcional.
+                  {isLiquorStore ? ' Obligatorio para licoreras.' : ' Opcional.'}
                 </FormDescription>
                 <FormMessage />
               </FormItem>

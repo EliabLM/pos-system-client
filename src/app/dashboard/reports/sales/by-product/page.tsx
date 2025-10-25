@@ -127,7 +127,7 @@ export default function SalesByProductReportPage(): React.ReactElement {
   const excelData = useMemo(() => {
     if (!products) return [];
     return products.map((product) => {
-      const baseData = {
+      const baseData: Record<string, string | number> = {
         producto: product.productName,
         categoria: product.category || 'Sin categoría',
         unidad: product.unitMeasure || '-',
@@ -135,7 +135,7 @@ export default function SalesByProductReportPage(): React.ReactElement {
       };
 
       // Agregar campos específicos según tipo de negocio
-      const specificData =
+      const specificData: Record<string, string | number> =
         businessType === 'liquor_store'
           ? {
               volumen: product.volume ? `${product.volume}ml` : '-',

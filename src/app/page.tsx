@@ -6,6 +6,8 @@ import { headers } from 'next/headers';
 // TODO - Exportar PDF no funciona en ningún reporte
 // TODO - Cambiar el titulo del método de pago en el reporte de ventas por método de pago (están en ingles)
 // TODO - Unificar loaders en todas las tablas de parametrización, ventas, productos, inventarios. Loaders primarios y secundarios.
+// TODO - Revisar filtro de este mes en reportes de clientes y generales
+// TODO - Revisar card total clientes en filtro por tiendas en segmentación de clientes
 
 export default async function Home() {
   const headersList = await headers();

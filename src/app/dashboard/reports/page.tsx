@@ -174,35 +174,26 @@ const reportCategories: ReportCategory[] = [
   {
     id: 'customer',
     title: 'Reportes de Clientes',
-    description: 'Análisis de clientes, segmentación y retención',
+    description: 'Análisis de clientes, segmentación y comportamiento de compra',
     icon: IconUserHeart,
     reports: [
       {
         id: 'top-customers',
         title: 'Top Clientes',
-        description: 'Clientes con mayor volumen de compras',
+        description: 'Clientes con mayor volumen de compras y frecuencia',
         icon: IconUserHeart,
-        href: '/dashboard/reports/customers/top-customers',
+        href: '/dashboard/reports/customers/top',
         category: 'customer',
-        enabled: false, // Phase 5
+        enabled: true, // Phase 5 - COMPLETED
       },
       {
-        id: 'customer-segmentation',
-        title: 'Segmentación de Clientes',
-        description: 'Análisis RFM y segmentación geográfica',
-        icon: IconArrowsSort,
-        href: '/dashboard/reports/customers/segmentation',
+        id: 'customer-segments',
+        title: 'Segmentos de Clientes',
+        description: 'Clasificación de clientes por nivel de gasto (VIP, Premium, Regular, Ocasional)',
+        icon: IconChartBar,
+        href: '/dashboard/reports/customers/segments',
         category: 'customer',
-        enabled: false, // Phase 5
-      },
-      {
-        id: 'customer-retention',
-        title: 'Retención de Clientes',
-        description: 'Análisis de cohortes y tasa de retención',
-        icon: IconTrendingUp,
-        href: '/dashboard/reports/customers/retention',
-        category: 'customer',
-        enabled: false, // Phase 5
+        enabled: true, // Phase 5 - COMPLETED
       },
     ],
   },

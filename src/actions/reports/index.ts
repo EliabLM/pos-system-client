@@ -33,3 +33,11 @@ export type {
   ProfitabilityData,
   CashFlowData,
 } from './financial-reports';
+
+// Customer Reports
+export {
+  getCustomerSummary,
+  getTopCustomers,
+  getCustomerPurchaseHistory,
+  getCustomerSegments,
+} from './customer-reports';

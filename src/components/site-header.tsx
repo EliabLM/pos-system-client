@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
@@ -8,6 +9,7 @@ import {
   IconUser,
   IconSettings,
   IconLogout,
+  IconUserCircle,
 } from '@tabler/icons-react';
 
 import { Separator } from '@/components/ui/separator';
@@ -26,11 +28,13 @@ import { useStore } from '@/store';
 import { logoutUser } from '@/actions/auth';
 import { performLogoutCleanup } from '@/lib/logout-cleanup';
 import { toast } from 'sonner';
+import { UserProfileModal } from '@/components/user-profile-modal';
 
 export function SiteHeader() {
   const router = useRouter();
   const { setTheme } = useTheme();
   const queryClient = useQueryClient();
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const dbUser = useStore((state) => state.user);
 
   const handleLogout = async () => {
@@ -64,7 +68,8 @@ export function SiteHeader() {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <h1 className="text-base font-medium">
-          {dbUser?.firstName} {dbUser?.lastName} - {dbUser?.role}
+          {dbUser?.firstName} {dbUser?.lastName} -{' '}
+          {dbUser?.role === 'ADMIN' ? 'Administrador' : 'Vendedor'}
         </h1>
         <div className="ml-auto flex items-center gap-2">
           {/* Theme Toggle */}
@@ -110,12 +115,16 @@ export function SiteHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
+                <DropdownMenuItem onClick={() => setIsProfileModalOpen(true)}>
+                  <IconUserCircle />
+                  Mi Perfil
+                </DropdownMenuItem>
+                {/* <DropdownMenuItem
                   onClick={() => router.push('/dashboard/settings')}
                 >
                   <IconSettings className="mr-2 h-4 w-4" />
                   Configuración
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <IconLogout className="mr-2 h-4 w-4" />
@@ -126,6 +135,10 @@ export function SiteHeader() {
           )}
         </div>
       </div>
+      <UserProfileModal
+        open={isProfileModalOpen}
+        onOpenChange={setIsProfileModalOpen}
+      />
     </header>
   );
 }

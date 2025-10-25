@@ -153,7 +153,7 @@ const createInitialConfigurations = async (
   businessType?: 'liquor_store' | 'shoe_store' | null
 ): Promise<void> => {
   // Usar transacciones con timeout extendido para evitar errores por sobrecarga
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   await prisma.$transaction(
     async (_tx) => {
       // Determinar qué categorías y marcas crear según el tipo de negocio

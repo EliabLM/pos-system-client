@@ -98,6 +98,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
         id: true,
         firstName: true,
         lastName: true,
+        username: true,
         email: true,
         password: true,
         role: true,
@@ -125,6 +126,8 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
         },
       },
     });
+
+    console.log('user', user)
 
     if (!user) {
       return {

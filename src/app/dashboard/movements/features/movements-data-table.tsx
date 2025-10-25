@@ -167,7 +167,6 @@ export function MovementsDataTable({
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
       // Stock movements are immutable audit records - no reordering
-      console.log('Drag and drop disabled for stock movements');
     }
   }
 
@@ -204,7 +203,11 @@ export function MovementsDataTable({
             ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" aria-label="Personalizar columnas">
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label="Personalizar columnas"
+              >
                 <IconLayoutColumns className="size-4" />
                 <span className="hidden lg:inline ml-2">
                   Personalizar columnas
@@ -327,7 +330,10 @@ export function MovementsDataTable({
           </div>
           <div className="flex w-full sm:w-auto items-center gap-4 lg:gap-8">
             <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium whitespace-nowrap">
+              <Label
+                htmlFor="rows-per-page"
+                className="text-sm font-medium whitespace-nowrap"
+              >
                 Filas por página
               </Label>
               <Select

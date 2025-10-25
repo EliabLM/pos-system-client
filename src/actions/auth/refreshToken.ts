@@ -13,6 +13,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/actions/utils';
 import { ActionResponse } from '@/interfaces';
 import { createSession } from '@/lib/auth';
+import { AuthError, AuthErrorCode } from '@/lib/auth/types';
 
 const COOKIE_NAME = 'auth-token';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 días en segundos
@@ -33,6 +34,7 @@ interface RefreshTokenResponse {
 export async function refreshToken(userId: string): Promise<ActionResponse<RefreshTokenResponse>> {
   try {
     if (!userId) {
+      console.error('[RefreshToken] Error: userId no proporcionado');
       return {
         status: 400,
         message: 'El ID de usuario es requerido',
@@ -77,6 +79,7 @@ export async function refreshToken(userId: string): Promise<ActionResponse<Refre
     });
 
     if (!user) {
+      console.error('[RefreshToken] Usuario no encontrado o inactivo:', userId);
       return {
         status: 404,
         message: 'Usuario no encontrado o inactivo',
@@ -119,8 +122,44 @@ export async function refreshToken(userId: string): Promise<ActionResponse<Refre
       },
     };
   } catch (error) {
-    console.error('Refresh token error:', error);
+    console.error('[RefreshToken] Error en refresh token:', error);
 
+    // Manejo específico de errores de autenticación
+    if (error instanceof AuthError) {
+      console.error('[RefreshToken] AuthError detectado:', {
+        code: error.code,
+        message: error.message,
+      });
+
+      switch (error.code) {
+        case AuthErrorCode.USER_NOT_FOUND:
+          return {
+            status: 404,
+            message: 'Usuario no encontrado',
+            data: null,
+          };
+        case AuthErrorCode.USER_INACTIVE:
+          return {
+            status: 403,
+            message: 'La cuenta de usuario está inactiva',
+            data: null,
+          };
+        case AuthErrorCode.SESSION_EXPIRED:
+          return {
+            status: 401,
+            message: 'La sesión ha expirado',
+            data: null,
+          };
+        default:
+          return {
+            status: 500,
+            message: error.message || 'Error en la autenticación',
+            data: null,
+          };
+      }
+    }
+
+    // Error genérico
     return {
       status: 500,
       message: 'Error al actualizar token. Por favor intente más tarde',

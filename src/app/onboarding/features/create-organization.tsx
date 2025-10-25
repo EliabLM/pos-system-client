@@ -13,8 +13,10 @@ import {
   Loader2,
   Check,
 } from 'lucide-react';
-import { IconBottle, IconShoe } from '@tabler/icons-react';
+import { IconBottle, IconLogout, IconShoe } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,16 +50,19 @@ import { useUpdateUserOrg } from '@/hooks/useUsers';
 
 import { GENERIC_ERROR_MESSAGE } from '@/constants';
 import { createSlug } from '@/utils/createSlug';
-import { getCurrentUser, refreshToken } from '@/actions/auth';
+import { getCurrentUser, logoutUser, refreshToken } from '@/actions/auth';
 import { User } from '@/generated/prisma';
 import { useStore } from '@/store';
-import { toast } from 'sonner';
+import { performLogoutCleanup } from '@/lib/logout-cleanup';
 
 // Schema de validación con Yup
 const onboardingSchema = yup.object({
   businessType: yup
     .string()
-    .oneOf(['liquor_store', 'shoe_store'], 'Debes seleccionar un tipo de negocio válido')
+    .oneOf(
+      ['liquor_store', 'shoe_store'],
+      'Debes seleccionar un tipo de negocio válido'
+    )
     .required('El tipo de negocio es requerido'),
   companyName: yup
     .string()
@@ -107,14 +112,13 @@ const RegisterOrganizationPage = () => {
 
   const createOrgMutation = useCreateOrganization();
   const updateUserMutation = useUpdateUserOrg();
+  const queryClient = useQueryClient();
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingSubdomain] = useState(false);
-  const [subdomainAvailable] = useState<boolean | null>(
-    null
-  );
+  const [subdomainAvailable] = useState<boolean | null>(null);
 
   // Fetch current user on mount
   useEffect(() => {
@@ -140,7 +144,9 @@ const RegisterOrganizationPage = () => {
   }, [router]);
 
   const form = useForm<SignUpFormData>({
-    resolver: yupResolver(onboardingSchema) as unknown as Resolver<SignUpFormData>,
+    resolver: yupResolver(
+      onboardingSchema
+    ) as unknown as Resolver<SignUpFormData>,
     defaultValues: {
       businessType: undefined,
       address: '',
@@ -191,11 +197,21 @@ const RegisterOrganizationPage = () => {
         orgId: resOrgDb.id,
       });
 
+      // Pequeña pausa para asegurar que la actualización se propagó
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // Refrescar token JWT con organizationId actualizado
       const refreshResult = await refreshToken(currentUser.id);
 
       if (refreshResult.status !== 200) {
-        toast.error('Error al actualizar la sesión. Por favor inicia sesión nuevamente.');
+        console.error('[Onboarding] Error al refrescar token:', refreshResult);
+        toast.error(
+          refreshResult.message ||
+            'Error al actualizar la sesión. Por favor inicia sesión nuevamente.'
+        );
+
+        // Esperar un poco antes de redirigir para que el usuario pueda ver el error
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         router.push('/auth/login');
         return;
       }
@@ -210,8 +226,8 @@ const RegisterOrganizationPage = () => {
       toast.success('¡Organización creada exitosamente!');
       router.replace('/dashboard');
     } catch (error) {
-      console.error('Error creating organization:', error);
-      toast.error(GENERIC_ERROR_MESSAGE);
+      console.error('🚀 ~ onSubmit ~ error:', error);
+      toast.error(createOrgMutation.error?.message || GENERIC_ERROR_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
@@ -229,6 +245,28 @@ const RegisterOrganizationPage = () => {
       }
     }
   }, [watchedCompanyName, form, watchedSubdomain]);
+
+  const handleLogout = async () => {
+    try {
+      const result = await logoutUser();
+
+      if (result.status === 200) {
+        // Perform complete cleanup: clear query cache and sessionStorage
+        performLogoutCleanup(queryClient);
+
+        // Show success message
+        toast.success('Sesión cerrada exitosamente');
+
+        // Redirect to login
+        router.push('/auth/login');
+      } else {
+        toast.error(result.message || 'Error al cerrar sesión');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Error al cerrar sesión. Por favor intenta de nuevo');
+    }
+  };
 
   // Show loading state while fetching user
   if (isLoadingUser) {
@@ -276,8 +314,9 @@ const RegisterOrganizationPage = () => {
                       ¿Qué tipo de negocio es?
                     </FormLabel>
                     <FormDescription className="text-sm">
-                      Selecciona el tipo de negocio para personalizar tu experiencia.
-                      Esta configuración no se puede cambiar después.
+                      Selecciona el tipo de negocio para personalizar tu
+                      experiencia. Esta configuración no se puede cambiar
+                      después.
                     </FormDescription>
                     <Select
                       onValueChange={field.onChange}
@@ -494,7 +533,6 @@ const RegisterOrganizationPage = () => {
               </Button>
             </form>
           </Form>
-
           <div className="mt-8 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800 text-center">
               🔒 Tus datos están seguros y protegidos. Una vez creada tu
@@ -502,6 +540,11 @@ const RegisterOrganizationPage = () => {
               plataforma.
             </p>
           </div>
+
+          <Button variant={'outline'} onClick={handleLogout} className="mt-3">
+            <IconLogout className="mr-2 h-4 w-4" />
+            Cerrar sesión
+          </Button>
         </CardContent>
       </Card>
     </div>

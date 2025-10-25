@@ -3,12 +3,17 @@
 import {
   endOfDay,
   parseISO,
+  format,
 } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { ActionResponse } from '@/interfaces';
 import {
   CustomerReportFilters,
   CustomerSummary,
   TopCustomerData,
+  CustomerRetentionData,
+  CohortData,
+  CustomerActivitySegment,
 } from '@/interfaces/reports';
 import { prisma, checkOrgId, emptyOrgIdResponse } from '../utils';
 import { Prisma } from '@/generated/prisma';
@@ -527,6 +532,372 @@ export async function getCustomerSegments(
     return {
       status: 500,
       message: 'Error al obtener los segmentos de clientes',
+      data: null,
+    };
+  }
+}
+
+/**
+ * Get customer retention analysis
+ *
+ * @param filters - Customer report filters
+ * @returns ActionResponse with customer retention data
+ */
+export async function getCustomerRetention(
+  filters: CustomerReportFilters
+): Promise<ActionResponse<CustomerRetentionData>> {
+  try {
+    if (checkOrgId(filters.organizationId)) return emptyOrgIdResponse();
+
+    const whereClause = buildCustomerWhereClause(filters);
+
+    // Get all customers
+    const allCustomers = await prisma.customer.findMany({
+      where: whereClause,
+      include: {
+        sales: {
+          where: {
+            isDeleted: false,
+            saleDate: {
+              gte: parseDate(filters.dateRange.startDate.toISOString()),
+              lte: endOfDay(parseDate(filters.dateRange.endDate.toISOString())),
+            },
+          },
+          orderBy: { saleDate: 'asc' },
+        },
+      },
+    });
+
+    // Calculate retention metrics
+    let activeCustomers = 0;
+    let inactiveCustomers = 0;
+    let newCustomers = 0;
+    let returningCustomers = 0;
+    let totalDaysBetweenPurchases = 0;
+    let purchaseGapsCount = 0;
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    for (const customer of allCustomers) {
+      const sales = customer.sales;
+
+      if (sales.length === 0) {
+        inactiveCustomers++;
+        continue;
+      }
+
+      // Check if customer is new (first purchase in period)
+      const firstSale = sales[0];
+      if (
+        firstSale.saleDate >= parseDate(filters.dateRange.startDate.toISOString()) &&
+        sales.length === 1
+      ) {
+        newCustomers++;
+      } else if (sales.length > 1) {
+        returningCustomers++;
+      }
+
+      // Check if active (purchased in last 30 days)
+      const lastSale = sales[sales.length - 1];
+      if (lastSale.saleDate >= thirtyDaysAgo) {
+        activeCustomers++;
+      } else {
+        inactiveCustomers++;
+      }
+
+      // Calculate average days between purchases
+      if (sales.length > 1) {
+        for (let i = 1; i < sales.length; i++) {
+          const daysBetween =
+            (sales[i].saleDate.getTime() - sales[i - 1].saleDate.getTime()) /
+            (1000 * 60 * 60 * 24);
+          totalDaysBetweenPurchases += daysBetween;
+          purchaseGapsCount++;
+        }
+      }
+    }
+
+    const totalCustomersWithSales = activeCustomers + inactiveCustomers;
+    const retentionRate = totalCustomersWithSales > 0
+      ? (activeCustomers / totalCustomersWithSales) * 100
+      : 0;
+    const churnRate = 100 - retentionRate;
+    const averageDaysBetweenPurchases = purchaseGapsCount > 0
+      ? totalDaysBetweenPurchases / purchaseGapsCount
+      : 0;
+
+    const retentionData: CustomerRetentionData = {
+      retentionRate: Number(retentionRate.toFixed(2)),
+      churnRate: Number(churnRate.toFixed(2)),
+      activeCustomers,
+      inactiveCustomers,
+      newCustomers,
+      returningCustomers,
+      averageDaysBetweenPurchases: Number(averageDaysBetweenPurchases.toFixed(1)),
+    };
+
+    return {
+      status: 200,
+      message: 'Análisis de retención obtenido exitosamente',
+      data: retentionData,
+    };
+  } catch (error) {
+    console.error('Error getting customer retention:', error);
+    return {
+      status: 500,
+      message: 'Error al obtener el análisis de retención',
+      data: null,
+    };
+  }
+}
+
+/**
+ * Get cohort analysis
+ *
+ * @param filters - Customer report filters
+ * @returns ActionResponse with cohort analysis data
+ */
+export async function getCohortAnalysis(
+  filters: CustomerReportFilters
+): Promise<ActionResponse<CohortData[]>> {
+  try {
+    if (checkOrgId(filters.organizationId)) return emptyOrgIdResponse();
+
+    // Get all customers with their first purchase date
+    const customers = await prisma.customer.findMany({
+      where: {
+        organizationId: filters.organizationId,
+        isDeleted: false,
+      },
+      include: {
+        sales: {
+          where: {
+            isDeleted: false,
+          },
+          orderBy: { saleDate: 'asc' },
+          select: { saleDate: true },
+        },
+      },
+    });
+
+    // Group customers by cohort (month of first purchase)
+    const cohortMap = new Map<string, {
+      customers: Array<{ customerId: string; firstPurchase: Date; allPurchases: Date[] }>;
+    }>();
+
+    for (const customer of customers) {
+      if (customer.sales.length === 0) continue;
+
+      const firstPurchase = customer.sales[0].saleDate;
+      const cohortKey = format(firstPurchase, 'yyyy-MM');
+
+      const allPurchases = customer.sales.map(s => s.saleDate);
+
+      const existing = cohortMap.get(cohortKey) || { customers: [] };
+      existing.customers.push({
+        customerId: customer.id,
+        firstPurchase,
+        allPurchases,
+      });
+      cohortMap.set(cohortKey, existing);
+    }
+
+    // Calculate retention for each cohort
+    const cohortData: CohortData[] = [];
+
+    for (const [cohortMonth, cohortInfo] of cohortMap.entries()) {
+      const cohortSize = cohortInfo.customers.length;
+      const cohortStartDate = parseISO(`${cohortMonth}-01`);
+
+      // Calculate retention for up to 12 months
+      const retentionByMonth: CohortData['retentionByMonth'] = [];
+
+      for (let monthOffset = 0; monthOffset <= 12; monthOffset++) {
+        const monthStart = new Date(
+          cohortStartDate.getFullYear(),
+          cohortStartDate.getMonth() + monthOffset,
+          1
+        );
+        const monthEnd = new Date(
+          cohortStartDate.getFullYear(),
+          cohortStartDate.getMonth() + monthOffset + 1,
+          0
+        );
+
+        // Count customers who made a purchase in this month
+        let retainedCount = 0;
+        for (const customer of cohortInfo.customers) {
+          const hadPurchaseInMonth = customer.allPurchases.some(
+            purchaseDate =>
+              purchaseDate >= monthStart && purchaseDate <= monthEnd
+          );
+          if (hadPurchaseInMonth) {
+            retainedCount++;
+          }
+        }
+
+        const retentionRate = cohortSize > 0 ? (retainedCount / cohortSize) * 100 : 0;
+
+        retentionByMonth.push({
+          month: monthOffset,
+          monthLabel: format(monthStart, 'MMM yyyy', { locale: es }),
+          retainedCustomers: retainedCount,
+          retentionRate: Number(retentionRate.toFixed(2)),
+        });
+      }
+
+      cohortData.push({
+        cohortMonth,
+        cohortSize,
+        retentionByMonth,
+      });
+    }
+
+    // Sort by cohort month descending (most recent first)
+    cohortData.sort((a, b) => b.cohortMonth.localeCompare(a.cohortMonth));
+
+    // Limit to last 12 cohorts
+    const limitedCohortData = cohortData.slice(0, 12);
+
+    return {
+      status: 200,
+      message: 'Análisis de cohortes obtenido exitosamente',
+      data: limitedCohortData,
+    };
+  } catch (error) {
+    console.error('Error getting cohort analysis:', error);
+    return {
+      status: 500,
+      message: 'Error al obtener el análisis de cohortes',
+      data: null,
+    };
+  }
+}
+
+/**
+ * Get customer activity segments
+ *
+ * @param filters - Customer report filters
+ * @returns ActionResponse with customer activity segments
+ */
+export async function getCustomerActivitySegments(
+  filters: CustomerReportFilters
+): Promise<ActionResponse<CustomerActivitySegment[]>> {
+  try {
+    if (checkOrgId(filters.organizationId)) return emptyOrgIdResponse();
+
+    // Get all customers with their sales
+    const customers = await prisma.customer.findMany({
+      where: {
+        organizationId: filters.organizationId,
+        isDeleted: false,
+      },
+      include: {
+        sales: {
+          where: {
+            isDeleted: false,
+            saleDate: {
+              gte: parseDate(filters.dateRange.startDate.toISOString()),
+              lte: endOfDay(parseDate(filters.dateRange.endDate.toISOString())),
+            },
+          },
+          orderBy: { saleDate: 'desc' },
+        },
+      },
+    });
+
+    const now = new Date();
+
+    // Segment customers by recency
+    const segments = {
+      active: [] as Array<{ totalSpent: number }>,      // Last 30 days
+      occasional: [] as Array<{ totalSpent: number }>,  // 30-90 days
+      dormant: [] as Array<{ totalSpent: number }>,     // 90-180 days
+      inactive: [] as Array<{ totalSpent: number }>,    // 180+ days
+      new: [] as Array<{ totalSpent: number }>,         // No purchases
+    };
+
+    for (const customer of customers) {
+      if (customer.sales.length === 0) {
+        segments.new.push({ totalSpent: 0 });
+        continue;
+      }
+
+      const lastPurchase = customer.sales[0].saleDate;
+      const daysSinceLastPurchase =
+        (now.getTime() - lastPurchase.getTime()) / (1000 * 60 * 60 * 24);
+
+      const totalSpent = customer.sales.reduce((sum, sale) => sum + Number(sale.total), 0);
+
+      if (daysSinceLastPurchase <= 30) {
+        segments.active.push({ totalSpent });
+      } else if (daysSinceLastPurchase <= 90) {
+        segments.occasional.push({ totalSpent });
+      } else if (daysSinceLastPurchase <= 180) {
+        segments.dormant.push({ totalSpent });
+      } else {
+        segments.inactive.push({ totalSpent });
+      }
+    }
+
+    const totalCustomers = customers.length;
+
+    const segmentData: CustomerActivitySegment[] = [
+      {
+        segment: 'Activos (0-30 días)',
+        customerCount: segments.active.length,
+        percentage: totalCustomers > 0 ? Number(((segments.active.length / totalCustomers) * 100).toFixed(2)) : 0,
+        averageSpent: segments.active.length > 0
+          ? Number((segments.active.reduce((sum, c) => sum + c.totalSpent, 0) / segments.active.length).toFixed(2))
+          : 0,
+        daysSinceLastPurchase: 15,
+      },
+      {
+        segment: 'Ocasionales (30-90 días)',
+        customerCount: segments.occasional.length,
+        percentage: totalCustomers > 0 ? Number(((segments.occasional.length / totalCustomers) * 100).toFixed(2)) : 0,
+        averageSpent: segments.occasional.length > 0
+          ? Number((segments.occasional.reduce((sum, c) => sum + c.totalSpent, 0) / segments.occasional.length).toFixed(2))
+          : 0,
+        daysSinceLastPurchase: 60,
+      },
+      {
+        segment: 'Dormidos (90-180 días)',
+        customerCount: segments.dormant.length,
+        percentage: totalCustomers > 0 ? Number(((segments.dormant.length / totalCustomers) * 100).toFixed(2)) : 0,
+        averageSpent: segments.dormant.length > 0
+          ? Number((segments.dormant.reduce((sum, c) => sum + c.totalSpent, 0) / segments.dormant.length).toFixed(2))
+          : 0,
+        daysSinceLastPurchase: 135,
+      },
+      {
+        segment: 'Inactivos (180+ días)',
+        customerCount: segments.inactive.length,
+        percentage: totalCustomers > 0 ? Number(((segments.inactive.length / totalCustomers) * 100).toFixed(2)) : 0,
+        averageSpent: segments.inactive.length > 0
+          ? Number((segments.inactive.reduce((sum, c) => sum + c.totalSpent, 0) / segments.inactive.length).toFixed(2))
+          : 0,
+        daysSinceLastPurchase: 270,
+      },
+      {
+        segment: 'Nuevos (sin compras)',
+        customerCount: segments.new.length,
+        percentage: totalCustomers > 0 ? Number(((segments.new.length / totalCustomers) * 100).toFixed(2)) : 0,
+        averageSpent: 0,
+      },
+    ];
+
+    return {
+      status: 200,
+      message: 'Segmentos de actividad obtenidos exitosamente',
+      data: segmentData,
+    };
+  } catch (error) {
+    console.error('Error getting customer activity segments:', error);
+    return {
+      status: 500,
+      message: 'Error al obtener los segmentos de actividad',
       data: null,
     };
   }

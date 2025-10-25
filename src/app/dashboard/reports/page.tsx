@@ -195,6 +195,15 @@ const reportCategories: ReportCategory[] = [
         category: 'customer',
         enabled: true, // Phase 5 - COMPLETED
       },
+      {
+        id: 'customer-retention',
+        title: 'Retención de Clientes',
+        description: 'Análisis de retención, churn rate y cohortes',
+        icon: IconTrendingUp,
+        href: '/dashboard/reports/customers/retention',
+        category: 'customer',
+        enabled: true, // Phase 5 - COMPLETED
+      },
     ],
   },
   {

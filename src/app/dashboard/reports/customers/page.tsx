@@ -12,6 +12,7 @@ import Link from 'next/link';
 import {
   IconUsers,
   IconChartBar,
+  IconTrendingUp,
   IconArrowRight,
 } from '@tabler/icons-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,7 +57,7 @@ export default function CustomersReportsPage(): React.ReactElement {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <ReportCard
           title="Top Clientes"
           description="Listado de los mejores clientes por volumen de compras y frecuencia. Identifica tus clientes más valiosos."
@@ -69,6 +70,13 @@ export default function CustomersReportsPage(): React.ReactElement {
           description="Clasificación de clientes en segmentos (VIP, Premium, Regular, Ocasional) según su nivel de gasto."
           icon={<IconChartBar className="size-6" />}
           href="/dashboard/reports/customers/segments"
+        />
+
+        <ReportCard
+          title="Retención de Clientes"
+          description="Análisis de retención, churn rate, cohortes y segmentos de actividad según recencia de compra."
+          icon={<IconTrendingUp className="size-6" />}
+          href="/dashboard/reports/customers/retention"
         />
       </div>
 

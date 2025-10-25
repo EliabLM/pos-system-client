@@ -40,4 +40,7 @@ export {
   getTopCustomers,
   getCustomerPurchaseHistory,
   getCustomerSegments,
+  getCustomerRetention,
+  getCohortAnalysis,
+  getCustomerActivitySegments,
 } from './customer-reports';

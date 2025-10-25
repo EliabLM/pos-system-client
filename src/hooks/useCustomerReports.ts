@@ -5,6 +5,9 @@ import {
   getTopCustomers,
   getCustomerPurchaseHistory,
   getCustomerSegments,
+  getCustomerRetention,
+  getCohortAnalysis,
+  getCustomerActivitySegments,
 } from '@/actions/reports';
 import {
   CustomerReportFilters,
@@ -150,6 +153,117 @@ export function useCustomerSegments(
     queryKey: ['reports', 'customers', 'segments', filters],
     queryFn: async () => {
       const response = await getCustomerSegments(filters);
+
+      if (response.status !== 200 || !response.data) {
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    },
+    enabled: enabled && Boolean(
+      filters.organizationId &&
+      filters.dateRange.startDate &&
+      filters.dateRange.endDate
+    ),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+}
+
+// ===========================
+// CUSTOMER RETENTION HOOK
+// ===========================
+
+/**
+ * Hook for fetching customer retention analysis
+ *
+ * @param filters - Customer report filters
+ * @param enabled - Whether the query should run (default: true)
+ * @returns TanStack Query result with retention data
+ */
+export function useCustomerRetention(
+  filters: CustomerReportFilters,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: ['reports', 'customers', 'retention', filters],
+    queryFn: async () => {
+      const response = await getCustomerRetention(filters);
+
+      if (response.status !== 200 || !response.data) {
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    },
+    enabled: enabled && Boolean(
+      filters.organizationId &&
+      filters.dateRange.startDate &&
+      filters.dateRange.endDate
+    ),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+}
+
+// ===========================
+// COHORT ANALYSIS HOOK
+// ===========================
+
+/**
+ * Hook for fetching cohort analysis
+ *
+ * @param filters - Customer report filters
+ * @param enabled - Whether the query should run (default: true)
+ * @returns TanStack Query result with cohort data
+ */
+export function useCohortAnalysis(
+  filters: CustomerReportFilters,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: ['reports', 'customers', 'cohort', filters],
+    queryFn: async () => {
+      const response = await getCohortAnalysis(filters);
+
+      if (response.status !== 200 || !response.data) {
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    },
+    enabled: enabled && Boolean(
+      filters.organizationId &&
+      filters.dateRange.startDate &&
+      filters.dateRange.endDate
+    ),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+}
+
+// ===========================
+// CUSTOMER ACTIVITY SEGMENTS HOOK
+// ===========================
+
+/**
+ * Hook for fetching customer activity segments
+ *
+ * @param filters - Customer report filters
+ * @param enabled - Whether the query should run (default: true)
+ * @returns TanStack Query result with activity segments
+ */
+export function useCustomerActivitySegments(
+  filters: CustomerReportFilters,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: ['reports', 'customers', 'activity-segments', filters],
+    queryFn: async () => {
+      const response = await getCustomerActivitySegments(filters);
 
       if (response.status !== 200 || !response.data) {
         toast.error(response.message);

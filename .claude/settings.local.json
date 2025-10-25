@@ -43,7 +43,9 @@
       "Bash(done)",
       "Bash(tee:*)",
       "Bash(dir:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cat \"C:\\Users\\eliab\\workspace\\projects\\pos-system\\pos-system-client\\src\\hooks\\useCustomerReports.ts\")",
+      "Bash(timeout 180 pnpm build)"
     ],
     "deny": [],
     "ask": []

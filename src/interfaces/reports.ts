@@ -494,6 +494,44 @@ export interface TopCustomerData {
   frequency: number;
 }
 
+/**
+ * Customer retention data
+ */
+export interface CustomerRetentionData {
+  retentionRate: number;
+  churnRate: number;
+  activeCustomers: number;
+  inactiveCustomers: number;
+  newCustomers: number;
+  returningCustomers: number;
+  averageDaysBetweenPurchases: number;
+}
+
+/**
+ * Cohort analysis data
+ */
+export interface CohortData {
+  cohortMonth: string;
+  cohortSize: number;
+  retentionByMonth: Array<{
+    month: number;
+    monthLabel: string;
+    retainedCustomers: number;
+    retentionRate: number;
+  }>;
+}
+
+/**
+ * Customer activity segment
+ */
+export interface CustomerActivitySegment {
+  segment: string;
+  customerCount: number;
+  percentage: number;
+  averageSpent: number;
+  daysSinceLastPurchase?: number;
+}
+
 // ===========================
 // SUPPLIER REPORT INTERFACES
 // ===========================

@@ -45,8 +45,34 @@ interface LoginFormData {
  *   redirect('/dashboard');
  * }
  */
+interface UserData {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  username: string | null;
+  email: string;
+  role: string;
+  organizationId: string | null;
+  storeId: string | null;
+  isActive: boolean;
+  emailVerified: boolean;
+  loginAttempts: number;
+  passwordChangedAt: Date | null;
+  createdAt: Date;
+  organization: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  } | null;
+  store: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  } | null;
+}
+
 interface LoginResponse {
-  user?: Record<string, unknown>;
+  user?: UserData;
   sessionId?: string;
   attemptsRemaining?: number;
   lockedUntil?: Date;

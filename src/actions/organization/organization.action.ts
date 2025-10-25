@@ -155,7 +155,7 @@ const createInitialConfigurations = async (
   // Usar transacciones con timeout extendido para evitar errores por sobrecarga
    
   await prisma.$transaction(
-    async (_tx) => {
+    async () => {
       // Determinar qué categorías y marcas crear según el tipo de negocio
       const categories =
         businessType === 'liquor_store' ? LIQUOR_CATEGORIES : DEFAULT_CATEGORIES;

@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   IconUser,
-  IconSettings,
   IconLogout,
   IconUserCircle,
 } from '@tabler/icons-react';

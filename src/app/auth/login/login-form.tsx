@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/form';
 import { loginUser } from '@/actions/auth';
 import { useStore } from '@/store';
+import { User } from '@/interfaces';
 
 const schema = yup.object().shape({
   email: yup
@@ -80,7 +81,7 @@ export function LoginForm({
 
       if (result.status === 200 && result.data?.user) {
         // Login successful - save user to Zustand store
-        setUser(result.data.user);
+        setUser(result.data.user as unknown as User);
 
         // Show success toast
         toast.success(result.message || 'Inicio de sesión exitoso');

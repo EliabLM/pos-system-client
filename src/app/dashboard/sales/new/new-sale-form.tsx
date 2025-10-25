@@ -52,11 +52,19 @@ import { useStores } from '@/hooks/useStores';
 import { useActiveProducts } from '@/hooks/useProducts';
 import { useActivePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useCreateSale } from '@/hooks/useSales';
-import type { Product, SaleStatus } from '@/generated/prisma';
+import type { Product, SaleStatus, UnitMeasure } from '@/generated/prisma';
 import { isSeller } from '@/lib/rbac';
+import { useBusinessType } from '@/hooks/useSystemConfig';
 
 import { CustomerCombobox } from './features/customer-combobox';
 import { CreateCustomerDialog } from './features/create-customer-dialog';
+
+// Tipo extendido de Product con relaciones
+type ProductWithRelations = Product & {
+  unitMeasure?: UnitMeasure | null;
+  brand?: { id: string; name: string } | null;
+  category?: { id: string; name: string } | null;
+};
 
 // Mapeo de estados en español
 const SALE_STATUS_LABELS: Record<string, string> = {
@@ -123,7 +131,7 @@ type SaleFormData = yup.InferType<typeof schema>;
 // Tipos locales para el formulario
 interface SelectedProduct {
   productId: string;
-  product: Product;
+  product: ProductWithRelations;
   quantity: number;
   unitPrice: number;
   unitMeasureId: string | null;
@@ -143,6 +151,7 @@ export const NewSaleForm = () => {
   const userRole = user?.role || '';
   const paymentMethods = useActivePaymentMethods();
   const createSaleMutation = useCreateSale();
+  const { data: businessType } = useBusinessType();
 
   // Estado para productos seleccionados y pagos
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
@@ -197,7 +206,7 @@ export const NewSaleForm = () => {
   }, [selectedProducts, payments]);
 
   // Agregar producto seleccionado
-  const handleAddProduct = (product: Product) => {
+  const handleAddProduct = (product: ProductWithRelations) => {
     const existing = selectedProducts.find((p) => p.productId === product.id);
 
     if (existing) {
@@ -711,6 +720,35 @@ export const NewSaleForm = () => {
                                 {product.name}
                               </p>
                               <p className="text-xs text-muted-foreground">
+                                {/* Unidad de medida y campos específicos */}
+                                {product.unitMeasure && (
+                                  <span className="inline-flex items-center gap-1 mr-2 px-1.5 py-0.5 bg-muted rounded text-xs font-medium">
+                                    📦 {product.unitMeasure.abbreviation}
+                                  </span>
+                                )}
+                                {/* Campos para LICORERAS */}
+                                {businessType === 'liquor_store' && (
+                                  <>
+                                    {product.volume && (
+                                      <span className="mr-2">{product.volume}ml</span>
+                                    )}
+                                    {product.alcoholGrade && (
+                                      <span className="mr-2">{product.alcoholGrade}% Vol.</span>
+                                    )}
+                                  </>
+                                )}
+                                {/* Campos para ZAPATERÍAS */}
+                                {businessType === 'shoe_store' && (
+                                  <>
+                                    {product.size && (
+                                      <span className="mr-2">Talla: {product.size}</span>
+                                    )}
+                                    {product.color && (
+                                      <span className="mr-2">Color: {product.color}</span>
+                                    )}
+                                  </>
+                                )}
+                                {/* Stock */}
                                 {product.currentStock > 0 ? (
                                   <span className="text-green-600">
                                     Stock: {product.currentStock}
@@ -789,7 +827,36 @@ export const NewSaleForm = () => {
                           {item.product.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Stock disponible: {item.product.currentStock}
+                          {/* Unidad de medida */}
+                          {item.product.unitMeasure && (
+                            <span className="inline-flex items-center gap-1 mr-2 px-1.5 py-0.5 bg-muted rounded text-xs font-medium">
+                              📦 {item.product.unitMeasure.abbreviation}
+                            </span>
+                          )}
+                          {/* Campos para LICORERAS */}
+                          {businessType === 'liquor_store' && (
+                            <>
+                              {item.product.volume && (
+                                <span className="mr-2">{item.product.volume}ml</span>
+                              )}
+                              {item.product.alcoholGrade && (
+                                <span className="mr-2">{item.product.alcoholGrade}% Vol.</span>
+                              )}
+                            </>
+                          )}
+                          {/* Campos para ZAPATERÍAS */}
+                          {businessType === 'shoe_store' && (
+                            <>
+                              {item.product.size && (
+                                <span className="mr-2">Talla: {item.product.size}</span>
+                              )}
+                              {item.product.color && (
+                                <span className="mr-2">Color: {item.product.color}</span>
+                              )}
+                            </>
+                          )}
+                          {/* Stock */}
+                          • Stock disponible: {item.product.currentStock}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">

@@ -66,6 +66,7 @@ export default function StockStatusReportPage(): React.ReactElement {
   const { exportToPDF, exportToExcel, isExporting } = useExport<{
     producto: string;
     sku: string | null;
+    unidad: string;
     stock_actual: number;
     stock_minimo: number;
     costo: string;
@@ -122,6 +123,7 @@ export default function StockStatusReportPage(): React.ReactElement {
     return reportData.data.map((item) => ({
       producto: item.productName,
       sku: item.sku,
+      unidad: item.unitMeasure || '-',
       stock_actual: item.currentStock,
       stock_minimo: item.minStock,
       costo: formatCurrency(item.costPrice),
@@ -319,7 +321,9 @@ export default function StockStatusReportPage(): React.ReactElement {
                       <div>
                         <p className="font-medium text-sm">{alert.productName}</p>
                         <p className="text-xs text-muted-foreground">
-                          SKU: {alert.sku} • Stock: {alert.currentStock} / Min: {alert.minStock}
+                          {alert.sku && `SKU: ${alert.sku} • `}
+                          {alert.unitMeasure && `${alert.unitMeasure} • `}
+                          Stock: {alert.currentStock} / Min: {alert.minStock}
                         </p>
                       </div>
                     </div>

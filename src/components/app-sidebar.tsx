@@ -20,6 +20,7 @@ import {
   IconChartCandle,
   IconUserHeart,
   IconChartBar,
+  IconRuler,
 } from '@tabler/icons-react';
 
 import { NavParametrization } from '@/components/nav-parametrization';
@@ -156,6 +157,11 @@ const data = {
       name: 'Marcas',
       url: '/dashboard/brands',
       icon: IconAB2,
+    },
+    {
+      name: 'Unidades de medida',
+      url: '/dashboard/unit-measures',
+      icon: IconRuler,
     },
     {
       name: 'Métodos de pago',

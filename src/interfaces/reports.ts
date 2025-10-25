@@ -366,6 +366,12 @@ export interface TopProductData {
   profitMargin: number;
   category?: string;
   brand?: string;
+  unitMeasure?: string; // Unit measure abbreviation
+  // Business-specific fields
+  volume?: number | null; // For liquor stores (ml)
+  alcoholGrade?: number | null; // For liquor stores (%)
+  size?: string | null; // For shoe stores
+  color?: string | null; // For shoe stores
 }
 
 // ===========================
@@ -486,6 +492,44 @@ export interface TopCustomerData {
   averageTicket: number;
   lastPurchaseDate: Date;
   frequency: number;
+}
+
+/**
+ * Customer retention data
+ */
+export interface CustomerRetentionData {
+  retentionRate: number;
+  churnRate: number;
+  activeCustomers: number;
+  inactiveCustomers: number;
+  newCustomers: number;
+  returningCustomers: number;
+  averageDaysBetweenPurchases: number;
+}
+
+/**
+ * Cohort analysis data
+ */
+export interface CohortData {
+  cohortMonth: string;
+  cohortSize: number;
+  retentionByMonth: Array<{
+    month: number;
+    monthLabel: string;
+    retainedCustomers: number;
+    retentionRate: number;
+  }>;
+}
+
+/**
+ * Customer activity segment
+ */
+export interface CustomerActivitySegment {
+  segment: string;
+  customerCount: number;
+  percentage: number;
+  averageSpent: number;
+  daysSinceLastPurchase?: number;
 }
 
 // ===========================

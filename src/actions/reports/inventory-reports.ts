@@ -38,6 +38,7 @@ interface StockStatusProduct {
   stockValue: number;
   category?: string;
   brand?: string;
+  unitMeasure?: string; // Unit measure abbreviation
   status: 'OK' | 'LOW' | 'OUT';
 }
 
@@ -53,6 +54,7 @@ interface InventoryValuationData {
   totalValue: number;
   category?: string;
   brand?: string;
+  unitMeasure?: string; // Unit measure abbreviation
 }
 
 /**
@@ -69,6 +71,7 @@ interface InventoryRotationData {
   classification: 'A' | 'B' | 'C';
   category?: string;
   brand?: string;
+  unitMeasure?: string; // Unit measure abbreviation
 }
 
 /**
@@ -201,6 +204,9 @@ export async function getStockStatusReport(
         brand: {
           select: { id: true, name: true },
         },
+        unitMeasure: {
+          select: { id: true, name: true, abbreviation: true },
+        },
       },
       orderBy: { name: 'asc' },
     });
@@ -244,6 +250,7 @@ export async function getStockStatusReport(
         stockValue: Number(stockValue.toFixed(2)),
         category: product.category?.name,
         brand: product.brand?.name,
+        unitMeasure: product.unitMeasure?.abbreviation,
         status,
       };
 
@@ -421,6 +428,9 @@ export async function getInventoryValuationReport(
         brand: {
           select: { id: true, name: true },
         },
+        unitMeasure: {
+          select: { id: true, name: true, abbreviation: true },
+        },
       },
       orderBy: { name: 'asc' },
     });
@@ -454,6 +464,7 @@ export async function getInventoryValuationReport(
         totalValue: Number(totalValue.toFixed(2)),
         category: product.category?.name,
         brand: product.brand?.name,
+        unitMeasure: product.unitMeasure?.abbreviation,
       };
     });
 
@@ -508,6 +519,9 @@ export async function getInventoryRotationReport(
         },
         brand: {
           select: { name: true },
+        },
+        unitMeasure: {
+          select: { id: true, name: true, abbreviation: true },
         },
         saleItems: {
           where: {
@@ -573,6 +587,7 @@ export async function getInventoryRotationReport(
         classification,
         category: product.category?.name,
         brand: product.brand?.name,
+        unitMeasure: product.unitMeasure?.abbreviation,
       };
     });
 

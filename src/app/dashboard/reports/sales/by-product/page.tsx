@@ -30,7 +30,13 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { ReportHeader } from '@/app/dashboard/reports/components/report-header';
@@ -38,20 +44,21 @@ import { ReportFilters } from '@/app/dashboard/reports/components/report-filters
 import { useSalesByProduct } from '@/hooks/useSalesReports';
 import { useExport } from '@/hooks/useExport';
 import { useStore } from '@/store';
+import { useBusinessType } from '@/hooks/useSystemConfig';
 import type { DateRangeFilter } from '@/interfaces/reports';
 
 // Colores para el gráfico de barras - Solo HSL hardcodeados
 const CHART_COLORS = [
-  'hsl(220, 90%, 56%)',  // Blue
-  'hsl(142, 71%, 45%)',  // Green
-  'hsl(280, 65%, 60%)',  // Purple
-  'hsl(25, 95%, 53%)',   // Orange
-  'hsl(340, 75%, 55%)',  // Pink
-  'hsl(199, 89%, 48%)',  // Cyan
-  'hsl(48, 96%, 53%)',   // Yellow
-  'hsl(160, 60%, 45%)',  // Teal
-  'hsl(0, 84%, 60%)',    // Red
-  'hsl(262, 52%, 47%)',  // Deep Purple
+  'hsl(220, 90%, 56%)', // Blue
+  'hsl(142, 71%, 45%)', // Green
+  'hsl(280, 65%, 60%)', // Purple
+  'hsl(25, 95%, 53%)', // Orange
+  'hsl(340, 75%, 55%)', // Pink
+  'hsl(199, 89%, 48%)', // Cyan
+  'hsl(48, 96%, 53%)', // Yellow
+  'hsl(160, 60%, 45%)', // Teal
+  'hsl(0, 84%, 60%)', // Red
+  'hsl(262, 52%, 47%)', // Deep Purple
 ];
 
 export default function SalesByProductReportPage(): React.ReactElement {
@@ -64,21 +71,20 @@ export default function SalesByProductReportPage(): React.ReactElement {
 
   const [storeId, setStoreId] = useState<string | undefined>(undefined);
 
-  const { data: products, isLoading, error } = useSalesByProduct({
+  const {
+    data: products,
+    isLoading,
+    error,
+  } = useSalesByProduct({
     organizationId: user?.organizationId || '',
     storeId,
     dateRange,
   });
 
-  const { exportToPDF, exportToExcel, isExporting } = useExport<{
-    producto: string;
-    categoria: string;
-    marca: string;
-    cantidad: number;
-    ingresos: string;
-    ganancia: string;
-    margen: string;
-  }>();
+  const { data: businessType } = useBusinessType();
+
+  const { exportToPDF, exportToExcel, isExporting } =
+    useExport<Record<string, string | number>>();
 
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('es-CO', {
@@ -92,9 +98,10 @@ export default function SalesByProductReportPage(): React.ReactElement {
   const chartData = useMemo(() => {
     if (!products) return [];
     return products.slice(0, 10).map((product) => ({
-      name: product.productName.length > 20
-        ? `${product.productName.substring(0, 20)}...`
-        : product.productName,
+      name:
+        product.productName.length > 20
+          ? `${product.productName.substring(0, 20)}...`
+          : product.productName,
       revenue: product.revenue,
       quantity: product.quantity,
     }));
@@ -119,16 +126,40 @@ export default function SalesByProductReportPage(): React.ReactElement {
   // Excel data
   const excelData = useMemo(() => {
     if (!products) return [];
-    return products.map((product) => ({
-      producto: product.productName,
-      categoria: product.category || 'Sin categoría',
-      marca: product.brand || 'Sin marca',
-      cantidad: product.quantity,
-      ingresos: formatCurrency(product.revenue),
-      ganancia: formatCurrency(product.profit),
-      margen: `${product.profitMargin.toFixed(2)}%`,
-    }));
-  }, [products]);
+    return products.map((product) => {
+      const baseData: Record<string, string | number> = {
+        producto: product.productName,
+        categoria: product.category || 'Sin categoría',
+        unidad: product.unitMeasure || '-',
+        marca: product.brand || 'Sin marca',
+      };
+
+      // Agregar campos específicos según tipo de negocio
+      const specificData: Record<string, string | number> =
+        businessType === 'liquor_store'
+          ? {
+              volumen: product.volume ? `${product.volume}ml` : '-',
+              graduacion: product.alcoholGrade
+                ? `${product.alcoholGrade}%`
+                : '-',
+            }
+          : businessType === 'shoe_store'
+          ? {
+              talla: product.size || '-',
+              color: product.color || '-',
+            }
+          : {};
+
+      return {
+        ...baseData,
+        ...specificData,
+        cantidad: product.quantity,
+        ingresos: formatCurrency(product.revenue),
+        ganancia: formatCurrency(product.profit),
+        margen: `${product.profitMargin.toFixed(2)}%`,
+      };
+    });
+  }, [products, businessType]);
 
   const handleExportPDF = (): void => {
     exportToPDF({
@@ -218,11 +249,15 @@ export default function SalesByProductReportPage(): React.ReactElement {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="font-semibold text-lg mb-1 truncate">{product.productName}</p>
+                    <p className="font-semibold text-lg mb-1 truncate">
+                      {product.productName}
+                    </p>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Ingresos:</span>
-                        <span className="font-medium">{formatCurrency(product.revenue)}</span>
+                        <span className="font-medium">
+                          {formatCurrency(product.revenue)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Ganancia:</span>
@@ -232,7 +267,9 @@ export default function SalesByProductReportPage(): React.ReactElement {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Margen:</span>
-                        <span className="font-medium">{product.profitMargin.toFixed(1)}%</span>
+                        <span className="font-medium">
+                          {product.profitMargin.toFixed(1)}%
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -256,8 +293,15 @@ export default function SalesByProductReportPage(): React.ReactElement {
               <Skeleton className="h-[500px] w-full" />
             ) : chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={500}>
-                <BarChart data={chartData} layout="vertical" margin={{ left: 100 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <BarChart
+                  data={chartData}
+                  layout="vertical"
+                  margin={{ left: 100 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-muted"
+                  />
                   <XAxis
                     type="number"
                     className="text-xs"
@@ -286,13 +330,17 @@ export default function SalesByProductReportPage(): React.ReactElement {
                             </p>
                             <div className="space-y-1 text-xs">
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-muted-foreground">Ingresos:</span>
+                                <span className="text-muted-foreground">
+                                  Ingresos:
+                                </span>
                                 <span className="font-medium">
                                   {formatCurrency(Number(payload[0].value))}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-muted-foreground">Cantidad:</span>
+                                <span className="text-muted-foreground">
+                                  Cantidad:
+                                </span>
                                 <span className="font-medium">
                                   {payload[0].payload.quantity} unidades
                                 </span>
@@ -304,12 +352,12 @@ export default function SalesByProductReportPage(): React.ReactElement {
                       return null;
                     }}
                   />
-                  <Bar
-                    dataKey="revenue"
-                    radius={[0, 4, 4, 0]}
-                  >
+                  <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -344,6 +392,25 @@ export default function SalesByProductReportPage(): React.ReactElement {
                       <th className="text-left p-2 font-medium">#</th>
                       <th className="text-left p-2 font-medium">Producto</th>
                       <th className="text-left p-2 font-medium">Categoría</th>
+                      <th className="text-left p-2 font-medium">Unidad</th>
+                      {/* Columnas dinámicas para licoreras */}
+                      {businessType === 'liquor_store' && (
+                        <>
+                          <th className="text-right p-2 font-medium">
+                            Volumen
+                          </th>
+                          <th className="text-right p-2 font-medium">
+                            Alcohol
+                          </th>
+                        </>
+                      )}
+                      {/* Columnas dinámicas para zapaterías */}
+                      {businessType === 'shoe_store' && (
+                        <>
+                          <th className="text-left p-2 font-medium">Talla</th>
+                          <th className="text-left p-2 font-medium">Color</th>
+                        </>
+                      )}
                       <th className="text-right p-2 font-medium">Cantidad</th>
                       <th className="text-right p-2 font-medium">Ingresos</th>
                       <th className="text-right p-2 font-medium">Ganancia</th>
@@ -352,12 +419,44 @@ export default function SalesByProductReportPage(): React.ReactElement {
                   </thead>
                   <tbody>
                     {products.map((product, index) => (
-                      <tr key={product.productId} className="border-b hover:bg-muted/50">
+                      <tr
+                        key={product.productId}
+                        className="border-b hover:bg-muted/50"
+                      >
                         <td className="p-2">{index + 1}</td>
-                        <td className="p-2 font-medium">{product.productName}</td>
+                        <td className="p-2 font-medium">
+                          {product.productName}
+                        </td>
                         <td className="p-2 text-muted-foreground">
                           {product.category || 'Sin categoría'}
                         </td>
+                        <td className="p-2 text-muted-foreground">
+                          {product.unitMeasure || '-'}
+                        </td>
+                        {/* Datos dinámicos para licoreras */}
+                        {businessType === 'liquor_store' && (
+                          <>
+                            <td className="p-2 text-right">
+                              {product.volume ? `${product.volume}ml` : '-'}
+                            </td>
+                            <td className="p-2 text-right">
+                              {product.alcoholGrade
+                                ? `${product.alcoholGrade}%`
+                                : '-'}
+                            </td>
+                          </>
+                        )}
+                        {/* Datos dinámicos para zapaterías */}
+                        {businessType === 'shoe_store' && (
+                          <>
+                            <td className="p-2 text-left">
+                              {product.size || '-'}
+                            </td>
+                            <td className="p-2 text-left">
+                              {product.color || '-'}
+                            </td>
+                          </>
+                        )}
                         <td className="p-2 text-right">{product.quantity}</td>
                         <td className="p-2 text-right font-medium">
                           {formatCurrency(product.revenue)}
@@ -365,7 +464,9 @@ export default function SalesByProductReportPage(): React.ReactElement {
                         <td className="p-2 text-right text-green-600 font-medium">
                           {formatCurrency(product.profit)}
                         </td>
-                        <td className="p-2 text-right">{product.profitMargin.toFixed(1)}%</td>
+                        <td className="p-2 text-right">
+                          {product.profitMargin.toFixed(1)}%
+                        </td>
                       </tr>
                     ))}
                   </tbody>

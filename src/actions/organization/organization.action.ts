@@ -152,68 +152,73 @@ const createInitialConfigurations = async (
   adminUserId: string,
   businessType?: 'liquor_store' | 'shoe_store' | null
 ): Promise<void> => {
-  // Usar transacciones para asegurar consistencia
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  await prisma.$transaction(async (_tx) => {
-    // Determinar qué categorías y marcas crear según el tipo de negocio
-    const categories =
-      businessType === 'liquor_store' ? LIQUOR_CATEGORIES : DEFAULT_CATEGORIES;
+  // Usar transacciones con timeout extendido para evitar errores por sobrecarga
+   
+  await prisma.$transaction(
+    async () => {
+      // Determinar qué categorías y marcas crear según el tipo de negocio
+      const categories =
+        businessType === 'liquor_store' ? LIQUOR_CATEGORIES : DEFAULT_CATEGORIES;
 
-    const brands =
-      businessType === 'liquor_store'
-        ? [...LIQUOR_BRANDS_NATIONAL, ...LIQUOR_BRANDS_INTERNATIONAL]
-        : DEFAULT_BRANDS;
+      const brands =
+        businessType === 'liquor_store'
+          ? [...LIQUOR_BRANDS_NATIONAL, ...LIQUOR_BRANDS_INTERNATIONAL]
+          : DEFAULT_BRANDS;
 
-    // Determinar qué unidades de medida crear según el tipo de negocio
-    const unitMeasures =
-      businessType === 'liquor_store'
-        ? LIQUOR_UNIT_MEASURES
-        : FOOTWEAR_UNIT_MEASURES;
+      // Determinar qué unidades de medida crear según el tipo de negocio
+      const unitMeasures =
+        businessType === 'liquor_store'
+          ? LIQUOR_UNIT_MEASURES
+          : FOOTWEAR_UNIT_MEASURES;
 
-    // Crear categorías en paralelo usando Promise.all
-    const categoryPromises = categories.map((category) =>
-      createCategory(organizationId, adminUserId, {
-        name: category.name,
-        description: category.description,
-        isActive: true,
-      })
-    );
+      // EJECUTAR OPERACIONES SECUENCIALMENTE POR TIPO
+      // Esto evita sobrecargar la transacción con 47+ operaciones paralelas simultáneas
 
-    // Crear métodos de pago en paralelo (comunes para ambos tipos)
-    const paymentMethodPromises = DEFAULT_PAYMENT_METHODS.map((method) =>
-      createPaymentMethod(organizationId, adminUserId, {
-        name: method.name,
-        type: method.type,
-        isActive: true,
-      })
-    );
+      // 1. Crear categorías en paralelo (dentro de su tipo)
+      const categoryPromises = categories.map((category) =>
+        createCategory(organizationId, adminUserId, {
+          name: category.name,
+          description: category.description,
+          isActive: true,
+        })
+      );
+      await Promise.all(categoryPromises);
 
-    // Crear marcas según tipo de negocio
-    const brandsPromises = brands.map((brand) =>
-      createBrand(organizationId, adminUserId, {
-        name: brand.name,
-        description: brand.description,
-        isActive: true,
-      })
-    );
+      // 2. Crear métodos de pago en paralelo (dentro de su tipo)
+      const paymentMethodPromises = DEFAULT_PAYMENT_METHODS.map((method) =>
+        createPaymentMethod(organizationId, adminUserId, {
+          name: method.name,
+          type: method.type,
+          isActive: true,
+        })
+      );
+      await Promise.all(paymentMethodPromises);
 
-    // Crear unidades de medida según tipo de negocio
-    const unitMeasurePromises = unitMeasures.map((unit) =>
-      createUnitMeasure(organizationId, adminUserId, {
-        name: unit.name,
-        abbreviation: unit.abbreviation,
-        isActive: true,
-      })
-    );
+      // 3. Crear marcas según tipo de negocio (dentro de su tipo)
+      const brandsPromises = brands.map((brand) =>
+        createBrand(organizationId, adminUserId, {
+          name: brand.name,
+          description: brand.description,
+          isActive: true,
+        })
+      );
+      await Promise.all(brandsPromises);
 
-    // Ejecutar todas las creaciones en paralelo
-    await Promise.all([
-      ...categoryPromises,
-      ...paymentMethodPromises,
-      ...brandsPromises,
-      ...unitMeasurePromises,
-    ]);
-  });
+      // 4. Crear unidades de medida según tipo de negocio (dentro de su tipo)
+      const unitMeasurePromises = unitMeasures.map((unit) =>
+        createUnitMeasure(organizationId, adminUserId, {
+          name: unit.name,
+          abbreviation: unit.abbreviation,
+          isActive: true,
+        })
+      );
+      await Promise.all(unitMeasurePromises);
+    },
+    {
+      maxWait: 10000, // Esperar máximo 10 segundos para adquirir la transacción
+      timeout: 30000, // Timeout de 30 segundos para ejecutar la transacción completa
+    }
+  );
 };
 
 // CREATE

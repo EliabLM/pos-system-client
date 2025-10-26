@@ -1,12 +1,11 @@
 'use client';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
-  IconCreditCard,
   IconDotsVertical,
   IconLogout,
-  IconNotification,
   IconUserCircle,
 } from '@tabler/icons-react';
 
@@ -30,11 +29,13 @@ import { useStore } from '@/store';
 import { logoutUser } from '@/actions/auth';
 import { performLogoutCleanup } from '@/lib/logout-cleanup';
 import { toast } from 'sonner';
+import { UserProfileModal } from '@/components/user-profile-modal';
 
 export function NavUser() {
   const router = useRouter();
   const { isMobile } = useSidebar();
   const queryClient = useQueryClient();
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const user = useStore((state) => state.user);
 
@@ -118,18 +119,18 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsProfileModalOpen(true)}>
                 <IconUserCircle />
-                Cuenta
+                Mi Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem>
                 <IconCreditCard />
                 Facturas
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <IconNotification />
                 Notificaciones
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
@@ -139,6 +140,10 @@ export function NavUser() {
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+      <UserProfileModal
+        open={isProfileModalOpen}
+        onOpenChange={setIsProfileModalOpen}
+      />
     </SidebarMenu>
   );
 }

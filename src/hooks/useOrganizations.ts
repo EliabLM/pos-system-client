@@ -247,7 +247,8 @@ export const useCreateOrganization = () => {
       });
     },
     onError: (error) => {
-      console.error('Error creando la organización:', error);
+      console.error('Error creando la organización:', error.message);
+      return error.message;
     },
   });
 };

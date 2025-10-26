@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/form';
 import { loginUser } from '@/actions/auth';
 import { useStore } from '@/store';
+import { User } from '@/interfaces';
 
 const schema = yup.object().shape({
   email: yup
@@ -76,11 +77,11 @@ export function LoginForm({
 
       // Call the login server action
       const result = await loginUser(formData);
+      console.log('🚀 ~ handleLoginWithEmailAndPassword ~ result:', result);
 
       if (result.status === 200 && result.data?.user) {
         // Login successful - save user to Zustand store
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setUser(result.data.user as any);
+        setUser(result.data.user as unknown as User);
 
         // Show success toast
         toast.success(result.message || 'Inicio de sesión exitoso');
@@ -190,7 +191,7 @@ export function LoginForm({
                             <div className="relative">
                               <Input
                                 id="password"
-                                type={showPassword ? "text" : "password"}
+                                type={showPassword ? 'text' : 'password'}
                                 className="pr-10"
                                 {...field}
                               />
@@ -198,7 +199,11 @@ export function LoginForm({
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                aria-label={
+                                  showPassword
+                                    ? 'Ocultar contraseña'
+                                    : 'Mostrar contraseña'
+                                }
                               >
                                 {showPassword ? (
                                   <IconEyeOff size={20} />

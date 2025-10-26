@@ -45,8 +45,34 @@ interface LoginFormData {
  *   redirect('/dashboard');
  * }
  */
+interface UserData {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  username: string | null;
+  email: string;
+  role: string;
+  organizationId: string | null;
+  storeId: string | null;
+  isActive: boolean;
+  emailVerified: boolean;
+  loginAttempts: number;
+  passwordChangedAt: Date | null;
+  createdAt: Date;
+  organization: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  } | null;
+  store: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  } | null;
+}
+
 interface LoginResponse {
-  user?: Record<string, unknown>;
+  user?: UserData;
   sessionId?: string;
   attemptsRemaining?: number;
   lockedUntil?: Date;
@@ -98,6 +124,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
         id: true,
         firstName: true,
         lastName: true,
+        username: true,
         email: true,
         password: true,
         role: true,
@@ -125,6 +152,8 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
         },
       },
     });
+
+    console.log('user', user)
 
     if (!user) {
       return {

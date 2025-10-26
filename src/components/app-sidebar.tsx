@@ -7,11 +7,8 @@ import {
   IconFileAi,
   IconFileDescription,
   IconCash,
-  IconHelp,
   IconInnerShadowTop,
   IconAB2,
-  IconSearch,
-  IconSettings,
   IconUsers,
   IconCategory,
   IconBuildingStore,
@@ -131,21 +128,21 @@ const data = {
     },
   ],
   navSecondary: [
-    {
-      title: 'Settings',
-      url: '#',
-      icon: IconSettings,
-    },
-    {
-      title: 'Get Help',
-      url: '#',
-      icon: IconHelp,
-    },
-    {
-      title: 'Search',
-      url: '#',
-      icon: IconSearch,
-    },
+    // {
+    //   title: 'Settings',
+    //   url: '#',
+    //   icon: IconSettings,
+    // },
+    // {
+    //   title: 'Get Help',
+    //   url: '#',
+    //   icon: IconHelp,
+    // },
+    // {
+    //   title: 'Search',
+    //   url: '#',
+    //   icon: IconSearch,
+    // },
   ],
   parametrization: [
     {

@@ -9,6 +9,8 @@ import { headers } from 'next/headers';
 // TODO - Revisar filtro de este mes en reportes de clientes y generales
 // TODO - Revisar card total clientes en filtro por tiendas en segmentación de clientes
 // TODO - Limpiar interfaz de opciones sin usar de Shadcn/ui
+// TODO - Corregir en vista actualización de usuario el rol y permisos, esta quemado solo para vendedores
+// TODO - Corregir placeholder de creación de productos dependiendo del tipo de negocio
 
 export default async function Home() {
   const headersList = await headers();

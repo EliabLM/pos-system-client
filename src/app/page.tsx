@@ -11,6 +11,7 @@ import { headers } from 'next/headers';
 // TODO - Limpiar interfaz de opciones sin usar de Shadcn/ui
 // TODO - Corregir en vista actualización de usuario el rol y permisos, esta quemado solo para vendedores
 // TODO - Corregir placeholder de creación de productos dependiendo del tipo de negocio
+// TODO  - Corregir número de compra, se están mezclando los números entre diferentes organizaciones
 
 export default async function Home() {
   const headersList = await headers();

@@ -294,12 +294,25 @@ export async function loginUser(
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, session.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: data.rememberMe ? 30 * 24 * 60 * 60 : COOKIE_MAX_AGE,
       path: '/',
-      domain: undefined,
     });
+
+    // Después de establecer la cookie
+    console.log('🍪 Cookie establecida:', {
+      name: COOKIE_NAME,
+      tokenLength: session.token.length,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: data.rememberMe ? 30 * 24 * 60 * 60 : COOKIE_MAX_AGE,
+    });
+
+    console.log(
+      '🚀 Redirigiendo a:',
+      user.organizationId ? '/dashboard' : '/onboarding'
+    );
 
     const redirectUrl = user.organizationId ? '/dashboard' : '/onboarding';
 

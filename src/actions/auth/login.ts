@@ -10,6 +10,7 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/actions/utils';
 import { ActionResponse } from '@/interfaces';
 import {
@@ -296,9 +297,14 @@ export async function loginUser(
       sameSite: 'lax',
       maxAge: data.rememberMe ? 30 * 24 * 60 * 60 : COOKIE_MAX_AGE,
       path: '/',
+      domain: undefined,
     });
 
     const redirectUrl = user.organizationId ? '/dashboard' : '/onboarding';
+
+    revalidatePath(redirectUrl);
+    revalidatePath('/');
+
     redirect(redirectUrl);
   } catch (error) {
     // Si el error es de redirect(), déjalo pasar SIN loguearlo

@@ -39,8 +39,6 @@ export function UserProfileModal({
 }: UserProfileModalProps) {
   const user = useStore((state) => state.user);
 
-  console.log('user', user);
-
   // Get user initials for avatar
   const getUserInitials = (): string => {
     if (!user?.firstName && !user?.lastName) return 'U';

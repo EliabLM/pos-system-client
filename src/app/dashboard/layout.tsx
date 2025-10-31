@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { SiteHeader } from '@/components/site-header';
@@ -15,7 +14,6 @@ const DashboardLayout = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const router = useRouter();
   const setUser = useStore((state) => state.setUser);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,14 +26,14 @@ const DashboardLayout = ({
         if (result.status === 401) {
           // Not authenticated or session expired
           setUser(null);
-          router.push('/auth/login');
+          window.location.href = '/auth/login';
           return;
         }
 
         // Handle account deactivation
         if (result.status === 403) {
           setUser(null);
-          router.push('/auth/login');
+          window.location.href = '/auth/login';
           return;
         }
 
@@ -47,14 +45,14 @@ const DashboardLayout = ({
       } catch (error) {
         console.error('Error fetching user:', error);
         setUser(null);
-        router.push('/auth/login');
+        window.location.href = '/auth/login';
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchUser();
-  }, [router, setUser]);
+  }, [setUser]);
 
   // Show loading state while fetching user
   if (isLoading) {

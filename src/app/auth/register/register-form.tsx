@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -82,7 +81,6 @@ export const RegisterForm = ({
   className,
   ...props
 }: React.ComponentProps<'div'>) => {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,8 +125,11 @@ export const RegisterForm = ({
           confirmButtonText: 'Continuar',
         });
 
-        // Redirigir al onboarding
-        router.push('/onboarding');
+        // Pequeño delay para que la cookie se propague
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Redirigir al onboarding usando window.location.href
+        window.location.href = '/onboarding';
       } else if (result.status === 409) {
         // Email o username ya existe
         await Swal.fire({

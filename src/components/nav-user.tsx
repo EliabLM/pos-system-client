@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -32,7 +31,6 @@ import { toast } from 'sonner';
 import { UserProfileModal } from '@/components/user-profile-modal';
 
 export function NavUser() {
-  const router = useRouter();
   const { isMobile } = useSidebar();
   const queryClient = useQueryClient();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -51,7 +49,7 @@ export function NavUser() {
         toast.success('Sesión cerrada exitosamente');
 
         // Redirect to login
-        router.push('/auth/login');
+        window.location.href = '/auth/login';
       } else {
         toast.error(result.message || 'Error al cerrar sesión');
       }

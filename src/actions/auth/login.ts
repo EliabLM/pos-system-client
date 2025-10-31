@@ -8,9 +8,7 @@
  * Server action para autenticación de usuarios
  */
 
-import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
 import { prisma } from '@/actions/utils';
 import { ActionResponse } from '@/interfaces';
 import {
@@ -316,7 +314,8 @@ export async function loginUser(
 
     const redirectUrl = user.organizationId ? '/dashboard' : '/onboarding';
 
-    // 7. Return success con redirect URL
+    // 7. Return success con redirect URL (excluir password de la respuesta)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
 
     return {

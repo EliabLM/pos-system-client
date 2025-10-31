@@ -14,7 +14,6 @@ import {
   Check,
 } from 'lucide-react';
 import { IconBottle, IconLogout, IconShoe } from '@tabler/icons-react';
-import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -107,7 +106,6 @@ const onboardingSchema = yup.object({
 type SignUpFormData = yup.InferType<typeof onboardingSchema>;
 
 const RegisterOrganizationPage = () => {
-  const router = useRouter();
   const setUser = useStore((state) => state.setUser);
 
   const createOrgMutation = useCreateOrganization();
@@ -130,18 +128,18 @@ const RegisterOrganizationPage = () => {
           setCurrentUser(result.data.user as any);
         } else {
           // User not authenticated, redirect to login
-          router.push('/auth/login');
+          window.location.href = '/auth/login';
         }
       } catch (error) {
         console.error('Error fetching user:', error);
-        router.push('/auth/login');
+        window.location.href = '/auth/login';
       } finally {
         setIsLoadingUser(false);
       }
     };
 
     fetchUser();
-  }, [router]);
+  }, []);
 
   const form = useForm<SignUpFormData>({
     resolver: yupResolver(
@@ -212,7 +210,7 @@ const RegisterOrganizationPage = () => {
 
         // Esperar un poco antes de redirigir para que el usuario pueda ver el error
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        router.push('/auth/login');
+        window.location.href = '/auth/login';
         return;
       }
 
@@ -224,7 +222,12 @@ const RegisterOrganizationPage = () => {
 
       // Success! Redirect to dashboard
       toast.success('¡Organización creada exitosamente!');
-      router.replace('/dashboard');
+
+      // Pequeño delay para que el token actualizado se propague
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // Usar window.location.href para forzar recarga completa y evitar problemas de cache del middleware
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('🚀 ~ onSubmit ~ error:', error);
       toast.error(createOrgMutation.error?.message || GENERIC_ERROR_MESSAGE);
@@ -258,7 +261,7 @@ const RegisterOrganizationPage = () => {
         toast.success('Sesión cerrada exitosamente');
 
         // Redirect to login
-        router.push('/auth/login');
+        window.location.href = '/auth/login';
       } else {
         toast.error(result.message || 'Error al cerrar sesión');
       }

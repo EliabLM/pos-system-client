@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Loader2Icon } from 'lucide-react';
 import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import { useForm } from 'react-hook-form';
@@ -48,7 +47,6 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
-  const router = useRouter();
   const setUser = useStore((state) => state.setUser);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -75,30 +73,43 @@ export function LoginForm({
       formData.append('email', data.email);
       formData.append('password', data.password);
 
-      // Call the login server action
       const result = await loginUser(formData);
-      console.log('🚀 ~ handleLoginWithEmailAndPassword ~ result:', result);
 
-      if (result.status === 200 && result.data?.user) {
-        // Login successful - save user to Zustand store
+      // ============================================
+      // LOGIN EXITOSO
+      // ============================================
+      if (result?.status === 200 && result.data?.user) {
+        // Guardar usuario en store
         setUser(result.data.user as unknown as User);
 
-        // Show success toast
+        // Mostrar toast de éxito
         toast.success(result.message || 'Inicio de sesión exitoso');
 
-        // Redirect based on organizationId
-        if (result.data.user.organizationId) {
-          // User has organization - go to dashboard
-          router.push('/dashboard');
-        } else {
-          // User doesn't have organization - go to onboarding
-          router.push('/onboarding');
-        }
-      } else {
-        // Login failed - show error toast
+        const redirectUrl = result.data.redirectTo || '/dashboard';
+
+        // Pequeño delay para que la cookie se propague
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      // ============================================
+      // LOGIN CON ERROR
+      // ============================================
+      if (result) {
         toast.error(result.message || 'Error al iniciar sesión');
+
+        if (result.data?.attemptsRemaining !== undefined) {
+          toast.warning(`Intentos restantes: ${result.data.attemptsRemaining}`);
+        }
       }
     } catch (error) {
+      if (error && typeof error === 'object' && 'digest' in error) {
+        throw error;
+      }
+
+      // Para otros errores, mostrar toast
       console.error('Login error:', error);
       toast.error('Ocurrió un error inesperado. Por favor intente nuevamente.');
     } finally {

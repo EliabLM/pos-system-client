@@ -293,7 +293,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, session.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: COOKIE_MAX_AGE,
       path: '/',

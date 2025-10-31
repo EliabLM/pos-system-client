@@ -45,12 +45,6 @@ const organizationInclude: Prisma.OrganizationInclude = {
 };
 
 // Definir constantes para configuraciones por defecto
-const DEFAULT_CATEGORIES = [
-  { name: 'Hombres', description: 'Hombres' },
-  { name: 'Damas', description: 'Damas' },
-  { name: 'Niños', description: 'Niños' },
-] as const;
-
 const DEFAULT_PAYMENT_METHODS: Omit<
   PaymentMethod,
   | 'id'
@@ -69,10 +63,46 @@ const DEFAULT_PAYMENT_METHODS: Omit<
   { name: 'Otro', type: 'OTHER' },
 ] as const;
 
-const DEFAULT_BRANDS = [
-  { name: 'NIKE', description: 'NIKE' },
-  { name: 'ADIDAS', description: 'ADIDAS' },
-  { name: 'PUMA', description: 'PUMA' },
+// ============================================
+// CONSTANTES PARA ZAPATERÍAS
+// ============================================
+
+// Categorías para ZAPATERÍAS (Calzado deportivo)
+const FOOTWEAR_CATEGORIES = [
+  { name: 'Calzado Hombre', description: 'Calzado deportivo para hombre' },
+  { name: 'Calzado Mujer', description: 'Calzado deportivo para mujer' },
+  { name: 'Calzado Niños', description: 'Calzado deportivo para niños' },
+  { name: 'Zapatillas Running', description: 'Zapatillas especializadas para correr' },
+  { name: 'Zapatillas Training', description: 'Zapatillas para entrenamiento y gimnasio' },
+  { name: 'Zapatillas Basketball', description: 'Zapatillas de baloncesto' },
+  { name: 'Zapatillas Fútbol', description: 'Guayos y zapatillas de fútbol' },
+  { name: 'Zapatillas Casual', description: 'Calzado deportivo casual/lifestyle' },
+  { name: 'Zapatillas Skateboarding', description: 'Zapatillas para skateboarding' },
+  { name: 'Sandalias Deportivas', description: 'Sandalias y chancletas deportivas' },
+] as const;
+
+// Marcas para ZAPATERÍAS (Internacionales - Calzado deportivo)
+const FOOTWEAR_BRANDS_INTERNATIONAL = [
+  { name: 'Nike', description: 'Marca estadounidense líder en calzado deportivo' },
+  { name: 'Adidas', description: 'Marca alemana de calzado deportivo' },
+  { name: 'Puma', description: 'Marca alemana de artículos deportivos' },
+  { name: 'Reebok', description: 'Marca británica-estadounidense de calzado deportivo' },
+  { name: 'New Balance', description: 'Marca estadounidense especializada en running' },
+  { name: 'Asics', description: 'Marca japonesa especializada en calzado deportivo' },
+  { name: 'Converse', description: 'Marca estadounidense icónica de zapatillas' },
+  { name: 'Vans', description: 'Marca estadounidense de zapatillas skate' },
+  { name: 'Under Armour', description: 'Marca estadounidense de ropa y calzado deportivo' },
+  { name: 'Fila', description: 'Marca italiana de calzado deportivo' },
+  { name: 'Skechers', description: 'Marca estadounidense de calzado lifestyle y deportivo' },
+  { name: 'Jordan', description: 'Línea de Nike especializada en basketball' },
+  { name: 'Mizuno', description: 'Marca japonesa especializada en calzado deportivo' },
+  { name: 'Saucony', description: 'Marca estadounidense especializada en running' },
+  { name: 'Brooks', description: 'Marca estadounidense especializada en running' },
+  { name: 'Salomon', description: 'Marca francesa especializada en outdoor y trail' },
+  { name: 'Hoka One One', description: 'Marca francesa especializada en running maximalista' },
+  { name: 'On Running', description: 'Marca suiza de calzado de running premium' },
+  { name: 'Crocs', description: 'Marca estadounidense de calzado cómodo' },
+  { name: 'Timberland', description: 'Marca estadounidense de calzado outdoor y casual' },
 ] as const;
 
 // ============================================
@@ -152,73 +182,73 @@ const createInitialConfigurations = async (
   adminUserId: string,
   businessType?: 'liquor_store' | 'shoe_store' | null
 ): Promise<void> => {
-  // Usar transacciones con timeout extendido para evitar errores por sobrecarga
-   
-  await prisma.$transaction(
-    async () => {
-      // Determinar qué categorías y marcas crear según el tipo de negocio
-      const categories =
-        businessType === 'liquor_store' ? LIQUOR_CATEGORIES : DEFAULT_CATEGORIES;
+  try {
+    // Determinar qué categorías y marcas crear según el tipo de negocio
+    let categories;
+    let brands;
+    let unitMeasures;
 
-      const brands =
-        businessType === 'liquor_store'
-          ? [...LIQUOR_BRANDS_NATIONAL, ...LIQUOR_BRANDS_INTERNATIONAL]
-          : DEFAULT_BRANDS;
-
-      // Determinar qué unidades de medida crear según el tipo de negocio
-      const unitMeasures =
-        businessType === 'liquor_store'
-          ? LIQUOR_UNIT_MEASURES
-          : FOOTWEAR_UNIT_MEASURES;
-
-      // EJECUTAR OPERACIONES SECUENCIALMENTE POR TIPO
-      // Esto evita sobrecargar la transacción con 47+ operaciones paralelas simultáneas
-
-      // 1. Crear categorías en paralelo (dentro de su tipo)
-      const categoryPromises = categories.map((category) =>
-        createCategory(organizationId, adminUserId, {
-          name: category.name,
-          description: category.description,
-          isActive: true,
-        })
-      );
-      await Promise.all(categoryPromises);
-
-      // 2. Crear métodos de pago en paralelo (dentro de su tipo)
-      const paymentMethodPromises = DEFAULT_PAYMENT_METHODS.map((method) =>
-        createPaymentMethod(organizationId, adminUserId, {
-          name: method.name,
-          type: method.type,
-          isActive: true,
-        })
-      );
-      await Promise.all(paymentMethodPromises);
-
-      // 3. Crear marcas según tipo de negocio (dentro de su tipo)
-      const brandsPromises = brands.map((brand) =>
-        createBrand(organizationId, adminUserId, {
-          name: brand.name,
-          description: brand.description,
-          isActive: true,
-        })
-      );
-      await Promise.all(brandsPromises);
-
-      // 4. Crear unidades de medida según tipo de negocio (dentro de su tipo)
-      const unitMeasurePromises = unitMeasures.map((unit) =>
-        createUnitMeasure(organizationId, adminUserId, {
-          name: unit.name,
-          abbreviation: unit.abbreviation,
-          isActive: true,
-        })
-      );
-      await Promise.all(unitMeasurePromises);
-    },
-    {
-      maxWait: 10000, // Esperar máximo 10 segundos para adquirir la transacción
-      timeout: 30000, // Timeout de 30 segundos para ejecutar la transacción completa
+    if (businessType === 'liquor_store') {
+      categories = LIQUOR_CATEGORIES;
+      brands = [...LIQUOR_BRANDS_NATIONAL, ...LIQUOR_BRANDS_INTERNATIONAL];
+      unitMeasures = LIQUOR_UNIT_MEASURES;
+    } else if (businessType === 'shoe_store') {
+      categories = FOOTWEAR_CATEGORIES;
+      brands = FOOTWEAR_BRANDS_INTERNATIONAL;
+      unitMeasures = FOOTWEAR_UNIT_MEASURES;
+    } else {
+      // Sin tipo de negocio específico - usar configuración genérica
+      categories = FOOTWEAR_CATEGORIES;
+      brands = FOOTWEAR_BRANDS_INTERNATIONAL;
+      unitMeasures = FOOTWEAR_UNIT_MEASURES;
     }
-  );
+
+    // EJECUTAR OPERACIONES SECUENCIALMENTE POR TIPO
+    // Sin transacción global para evitar conflictos con transacciones anidadas
+
+    // 1. Crear categorías en paralelo
+    const categoryPromises = categories.map((category) =>
+      createCategory(organizationId, adminUserId, {
+        name: category.name,
+        description: category.description,
+        isActive: true,
+      })
+    );
+    await Promise.all(categoryPromises);
+
+    // 2. Crear métodos de pago en paralelo
+    const paymentMethodPromises = DEFAULT_PAYMENT_METHODS.map((method) =>
+      createPaymentMethod(organizationId, adminUserId, {
+        name: method.name,
+        type: method.type,
+        isActive: true,
+      })
+    );
+    await Promise.all(paymentMethodPromises);
+
+    // 3. Crear marcas según tipo de negocio
+    const brandsPromises = brands.map((brand) =>
+      createBrand(organizationId, adminUserId, {
+        name: brand.name,
+        description: brand.description,
+        isActive: true,
+      })
+    );
+    await Promise.all(brandsPromises);
+
+    // 4. Crear unidades de medida según tipo de negocio
+    const unitMeasurePromises = unitMeasures.map((unit) =>
+      createUnitMeasure(organizationId, adminUserId, {
+        name: unit.name,
+        abbreviation: unit.abbreviation,
+        isActive: true,
+      })
+    );
+    await Promise.all(unitMeasurePromises);
+  } catch (error) {
+    // Re-lanzar el error para que sea manejado por el caller
+    throw error;
+  }
 };
 
 // CREATE
@@ -257,19 +287,6 @@ export const createOrganization = async (
       include: organizationInclude,
     });
 
-    // Crear configuraciones iniciales de forma asíncrona
-    createInitialConfigurations(
-      newOrganization.id,
-      adminUserId,
-      businessType
-    ).catch((error) => {
-      console.error(
-        'Error creating initial configurations for organization:',
-        newOrganization.id,
-        error
-      );
-    });
-
     // Guardar tipo de negocio en SystemConfig si se proporciona
     if (businessType) {
       try {
@@ -281,6 +298,23 @@ export const createOrganization = async (
           error
         );
       }
+    }
+
+    // Crear configuraciones iniciales (categorías, marcas, métodos de pago, etc.)
+    try {
+      await createInitialConfigurations(
+        newOrganization.id,
+        adminUserId,
+        businessType
+      );
+    } catch (error) {
+      console.error(
+        'Error creating initial configurations for organization:',
+        newOrganization.id,
+        error
+      );
+      // No fallar la creación de la organización si las configuraciones fallan
+      // El usuario puede crearlas manualmente después
     }
 
     return {

@@ -8,6 +8,7 @@
  * Server action para autenticación de usuarios
  */
 
+import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { prisma } from '@/actions/utils';
 import { ActionResponse } from '@/interfaces';
@@ -79,7 +80,9 @@ interface LoginResponse {
   minutesRemaining?: number;
 }
 
-export async function loginUser(formData: FormData): Promise<ActionResponse<LoginResponse>> {
+export async function loginUser(
+  formData: FormData
+): Promise<ActionResponse<LoginResponse>> {
   try {
     // 1. Extraer y validar credenciales
     const data: LoginFormData = {
@@ -152,8 +155,6 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
         },
       },
     });
-
-    console.log('user', user)
 
     if (!user) {
       return {
@@ -249,10 +250,15 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
     }
 
     // Verificar organización activa (si aplica)
-    if (user.organizationId && user.organization && !user.organization.isActive) {
+    if (
+      user.organizationId &&
+      user.organization &&
+      !user.organization.isActive
+    ) {
       return {
         status: 403,
-        message: 'Su organización ha sido desactivada. Por favor contacte a soporte',
+        message:
+          'Su organización ha sido desactivada. Por favor contacte a soporte',
         data: null,
       };
     }
@@ -261,14 +267,18 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
     if (user.storeId && user.store && !user.store.isActive) {
       return {
         status: 403,
-        message: 'Su tienda ha sido desactivada. Por favor contacte a su administrador',
+        message:
+          'Su tienda ha sido desactivada. Por favor contacte a su administrador',
         data: null,
       };
     }
 
     // 5. Crear sesión y generar JWT
     const headersList = await headers();
-    const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || undefined;
+    const ipAddress =
+      headersList.get('x-forwarded-for') ||
+      headersList.get('x-real-ip') ||
+      undefined;
     const userAgent = headersList.get('user-agent') || undefined;
 
     const session = await createSession({
@@ -288,19 +298,14 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
       path: '/',
     });
 
-    // 7. Return success con user data (sin password)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = user;
-
-    return {
-      status: 200,
-      message: 'Inicio de sesión exitoso',
-      data: {
-        user: userWithoutPassword,
-        sessionId: session.id,
-      },
-    };
+    const redirectUrl = user.organizationId ? '/dashboard' : '/onboarding';
+    redirect(redirectUrl);
   } catch (error) {
+    // Si el error es de redirect(), déjalo pasar SIN loguearlo
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error; // Re-lanzar para que el redirect funcione
+    }
+
     console.error('Login error:', error);
 
     if (error instanceof AuthError) {

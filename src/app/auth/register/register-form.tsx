@@ -27,6 +27,33 @@ import {
 } from '@/components/ui/form';
 import { cn } from '@/lib/utils';
 import { registerUser } from '@/actions/auth';
+import { ActionResponse } from '@/interfaces';
+
+// Tipo de respuesta del registro (debe coincidir con register.ts)
+interface RegisterResponseData {
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    role: string;
+    organizationId: string | null;
+    storeId: string | null;
+    isActive: boolean;
+    emailVerified: boolean;
+    createdAt: Date;
+    organization: {
+      id: string;
+      name: string;
+    } | null;
+    store: {
+      id: string;
+      name: string;
+    } | null;
+  };
+  sessionId: string;
+  redirectTo: string;
+}
 
 // Schema de validación con Yup
 const signUpSchema = yup.object({
@@ -114,22 +141,28 @@ export const RegisterForm = ({
       formData.append('confirmPassword', data.confirmPassword);
 
       // Llamar al server action de registro
-      const result = await registerUser(formData);
+      const result: ActionResponse<RegisterResponseData> =
+        await registerUser(formData);
 
       if (result.status === 201) {
         // Registro exitoso
+        const isOnboarding = result.data?.redirectTo === '/onboarding';
+
         await Swal.fire({
           icon: 'success',
           title: '¡Cuenta creada!',
-          text: 'Tu cuenta ha sido creada exitosamente. Ahora vamos a configurar tu organización.',
+          text: isOnboarding
+            ? 'Tu cuenta ha sido creada exitosamente. Ahora vamos a configurar tu organización.'
+            : 'Tu cuenta ha sido creada exitosamente. Bienvenido al sistema.',
           confirmButtonText: 'Continuar',
         });
 
-        // Pequeño delay para que la cookie se propague
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        // Delay para que la cookie se propague correctamente
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // Redirigir al onboarding usando window.location.href
-        window.location.href = '/onboarding';
+        // Redirigir usando la URL devuelta por el server action
+        const redirectUrl = result.data?.redirectTo || '/onboarding';
+        window.location.href = redirectUrl;
       } else if (result.status === 409) {
         // Email o username ya existe
         await Swal.fire({

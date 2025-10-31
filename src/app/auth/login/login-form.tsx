@@ -27,6 +27,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { loginUser } from '@/actions/auth';
+import { useStore } from '@/store';
+import { User } from '@/interfaces';
 
 const schema = yup.object().shape({
   email: yup
@@ -45,6 +47,8 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
+  const setUser = useStore((state) => state.setUser);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -71,11 +75,31 @@ export function LoginForm({
 
       const result = await loginUser(formData);
 
+      // ============================================
+      // LOGIN EXITOSO
+      // ============================================
+      if (result?.status === 200 && result.data?.user) {
+        // Guardar usuario en store
+        setUser(result.data.user as unknown as User);
+
+        // Mostrar toast de éxito
+        toast.success(result.message || 'Inicio de sesión exitoso');
+
+        const redirectUrl = result.data.redirectTo || '/dashboard';
+
+        // Pequeño delay para que la cookie se propague
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      // ============================================
+      // LOGIN CON ERROR
+      // ============================================
       if (result) {
-        // Mostrar el mensaje de error
         toast.error(result.message || 'Error al iniciar sesión');
 
-        // Si hay intentos restantes, mostrarlos
         if (result.data?.attemptsRemaining !== undefined) {
           toast.warning(`Intentos restantes: ${result.data.attemptsRemaining}`);
         }

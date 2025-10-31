@@ -79,6 +79,7 @@ interface LoginResponse {
   attemptsRemaining?: number;
   lockedUntil?: Date;
   minutesRemaining?: number;
+  redirectTo?: string;
 }
 
 export async function loginUser(
@@ -302,16 +303,19 @@ export async function loginUser(
 
     const redirectUrl = user.organizationId ? '/dashboard' : '/onboarding';
 
-    revalidatePath(redirectUrl);
-    revalidatePath('/');
+    // 7. Return success con redirect URL
+    const { password, ...userWithoutPassword } = user;
 
-    redirect(redirectUrl);
+    return {
+      status: 200,
+      message: 'Inicio de sesión exitoso',
+      data: {
+        user: userWithoutPassword,
+        sessionId: session.id,
+        redirectTo: redirectUrl,
+      },
+    };
   } catch (error) {
-    // Si el error es de redirect(), déjalo pasar SIN loguearlo
-    if (error && typeof error === 'object' && 'digest' in error) {
-      throw error; // Re-lanzar para que el redirect funcione
-    }
-
     console.error('Login error:', error);
 
     if (error instanceof AuthError) {

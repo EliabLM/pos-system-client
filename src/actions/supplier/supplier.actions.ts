@@ -4,7 +4,7 @@ import { Supplier, Prisma } from '@/generated/prisma';
 import { ActionResponse } from '@/interfaces';
 import {
   prisma,
-  checkAdminOrSellerRole,
+  checkAdminRole,
   unauthorizedResponse,
   checkOrgId,
   emptyOrgIdResponse,
@@ -51,10 +51,29 @@ export const createSupplier = async (
   >
 ): Promise<ActionResponse<Supplier | null>> => {
   try {
-    const hasAccess = await checkAdminOrSellerRole(userId);
-    if (!hasAccess) return unauthorizedResponse();
+    const isAdmin = await checkAdminRole(userId);
+    if (!isAdmin) return unauthorizedResponse();
 
     if (checkOrgId(orgId)) return emptyOrgIdResponse();
+
+    // Verificar si ya existe un proveedor con el mismo email (si se proporciona)
+    if (supplierData.email) {
+      const existingByEmail = await prisma.supplier.findFirst({
+        where: {
+          organizationId: orgId,
+          email: supplierData.email,
+          isDeleted: false,
+        },
+      });
+
+      if (existingByEmail) {
+        return {
+          status: 409,
+          message: 'Ya existe un proveedor con ese email',
+          data: null,
+        };
+      }
+    }
 
     // Verificar si ya existe un proveedor con el mismo taxId (si se proporciona)
     if (supplierData.taxId) {
@@ -69,7 +88,7 @@ export const createSupplier = async (
       if (existingByTaxId) {
         return {
           status: 409,
-          message: 'Ya existe un proveedor con ese NIT/Tax ID',
+          message: 'Ya existe un proveedor con ese NIT/RUC',
           data: null,
         };
       }
@@ -209,6 +228,86 @@ export const getSupplierById = async (
   }
 };
 
+// GET SUPPLIER BY TAX ID
+export const getSupplierByTaxId = async (
+  orgId: string,
+  taxId: string
+): Promise<ActionResponse<Supplier | null>> => {
+  try {
+    if (checkOrgId(orgId)) return emptyOrgIdResponse();
+
+    if (!taxId) {
+      return {
+        status: 400,
+        message: 'NIT/RUC es requerido',
+        data: null,
+      };
+    }
+
+    const supplier = await prisma.supplier.findFirst({
+      where: {
+        organizationId: orgId,
+        taxId,
+        isDeleted: false,
+      },
+      include: supplierInclude,
+    });
+
+    if (!supplier) {
+      return { status: 404, message: 'Proveedor no encontrado', data: null };
+    }
+
+    return {
+      status: 200,
+      message: 'Proveedor obtenido exitosamente',
+      data: supplier,
+    };
+  } catch (error) {
+    console.error('Error fetching supplier by taxId:', error);
+    return { status: 500, message: 'Error interno del servidor', data: null };
+  }
+};
+
+// GET SUPPLIER BY EMAIL
+export const getSupplierByEmail = async (
+  orgId: string,
+  email: string
+): Promise<ActionResponse<Supplier | null>> => {
+  try {
+    if (checkOrgId(orgId)) return emptyOrgIdResponse();
+
+    if (!email) {
+      return {
+        status: 400,
+        message: 'Email es requerido',
+        data: null,
+      };
+    }
+
+    const supplier = await prisma.supplier.findFirst({
+      where: {
+        organizationId: orgId,
+        email,
+        isDeleted: false,
+      },
+      include: supplierInclude,
+    });
+
+    if (!supplier) {
+      return { status: 404, message: 'Proveedor no encontrado', data: null };
+    }
+
+    return {
+      status: 200,
+      message: 'Proveedor obtenido exitosamente',
+      data: supplier,
+    };
+  } catch (error) {
+    console.error('Error fetching supplier by email:', error);
+    return { status: 500, message: 'Error interno del servidor', data: null };
+  }
+};
+
 // UPDATE SUPPLIER
 export const updateSupplier = async (
   supplierId: string,
@@ -226,8 +325,8 @@ export const updateSupplier = async (
   >
 ): Promise<ActionResponse<Supplier | null>> => {
   try {
-    const hasAccess = await checkAdminOrSellerRole(userId);
-    if (!hasAccess) return unauthorizedResponse();
+    const isAdmin = await checkAdminRole(userId);
+    if (!isAdmin) return unauthorizedResponse();
 
     if (!supplierId) {
       return {
@@ -245,6 +344,26 @@ export const updateSupplier = async (
       return { status: 404, message: 'Proveedor no encontrado', data: null };
     }
 
+    // Verificar email único si se está actualizando
+    if (updateData.email && updateData.email !== existingSupplier.email) {
+      const emailExists = await prisma.supplier.findFirst({
+        where: {
+          organizationId: existingSupplier.organizationId,
+          email: updateData.email,
+          isDeleted: false,
+          id: { not: supplierId },
+        },
+      });
+
+      if (emailExists) {
+        return {
+          status: 409,
+          message: 'Ya existe otro proveedor con ese email',
+          data: null,
+        };
+      }
+    }
+
     // Verificar taxId único si se está actualizando
     if (updateData.taxId && updateData.taxId !== existingSupplier.taxId) {
       const taxIdExists = await prisma.supplier.findFirst({
@@ -259,7 +378,7 @@ export const updateSupplier = async (
       if (taxIdExists) {
         return {
           status: 409,
-          message: 'Ya existe otro proveedor con ese NIT/Tax ID',
+          message: 'Ya existe otro proveedor con ese NIT/RUC',
           data: null,
         };
       }
@@ -305,8 +424,8 @@ export const softDeleteSupplier = async (
   userId: string
 ): Promise<ActionResponse> => {
   try {
-    const hasAccess = await checkAdminOrSellerRole(userId);
-    if (!hasAccess) return unauthorizedResponse();
+    const isAdmin = await checkAdminRole(userId);
+    if (!isAdmin) return unauthorizedResponse();
 
     if (!supplierId) {
       return {
@@ -366,8 +485,8 @@ export const toggleSupplierActiveStatus = async (
   userId: string
 ): Promise<ActionResponse<Supplier | null>> => {
   try {
-    const hasAccess = await checkAdminOrSellerRole(userId);
-    if (!hasAccess) return unauthorizedResponse();
+    const isAdmin = await checkAdminRole(userId);
+    if (!isAdmin) return unauthorizedResponse();
 
     if (!supplierId) {
       return {
@@ -545,6 +664,69 @@ export const getSupplierStatistics = async (
     };
   } catch (error) {
     console.error('Error fetching supplier statistics:', error);
+    return { status: 500, message: 'Error interno del servidor', data: null };
+  }
+};
+
+// GET TOP SUPPLIERS BY PURCHASES
+export const getTopSuppliersByPurchases = async (
+  orgId: string,
+  limit: number = 10
+): Promise<
+  ActionResponse<
+    | {
+        supplierId: string;
+        supplierName: string;
+        totalPurchases: number;
+        totalSpent: number;
+      }[]
+    | null
+  >
+> => {
+  try {
+    if (checkOrgId(orgId)) return emptyOrgIdResponse();
+
+    const topSuppliers = await prisma.purchase.groupBy({
+      by: ['supplierId'],
+      where: {
+        organizationId: orgId,
+        isDeleted: false,
+        status: { not: 'CANCELLED' },
+      },
+      _count: { id: true },
+      _sum: { total: true },
+      orderBy: {
+        _sum: {
+          total: 'desc',
+        },
+      },
+      take: limit,
+    });
+
+    // Obtener información de proveedores
+    const supplierIds = topSuppliers.map((item) => item.supplierId);
+
+    const suppliers = await prisma.supplier.findMany({
+      where: { id: { in: supplierIds } },
+      select: { id: true, name: true },
+    });
+
+    const supplierMap = new Map(suppliers.map((s) => [s.id, s.name]));
+
+    const result = topSuppliers.map((item) => ({
+      supplierId: item.supplierId,
+      supplierName: supplierMap.get(item.supplierId) || 'Proveedor desconocido',
+      totalPurchases: item._count.id,
+      totalSpent: item._sum.total || 0,
+    }));
+
+    return {
+      status: 200,
+      message: 'Top proveedores obtenidos exitosamente',
+      data: result,
+    };
+  } catch (error) {
+    console.error('Error fetching top suppliers:', error);
     return { status: 500, message: 'Error interno del servidor', data: null };
   }
 };

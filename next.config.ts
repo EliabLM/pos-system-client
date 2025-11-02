@@ -4,7 +4,18 @@ import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin';
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    remotePatterns: [new URL('https://toeustbcqq.ufs.sh/f/**')],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'utfs.io',
+        pathname: '/f/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'toeustbcqq.ufs.sh',
+        pathname: '/f/**',
+      },
+    ],
   },
   serverExternalPackages: ['@prisma/client', 'prisma'],
   outputFileTracingIncludes: {

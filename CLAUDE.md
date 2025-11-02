@@ -151,6 +151,83 @@ Always import from:
 import { PrismaClient } from '@/generated/prisma'
 ```
 
+### ⛔ CRITICAL RESTRICTION: PRISMA SCHEMA FIELDS ONLY
+
+**ABSOLUTELY FORBIDDEN - ZERO TOLERANCE POLICY:**
+
+**YOU MUST NEVER, UNDER ANY CIRCUMSTANCES, INVENT OR CREATE FIELDS THAT DO NOT EXIST IN THE PRISMA SCHEMA.**
+
+This is a **STRICT** and **NON-NEGOTIABLE** rule that applies to:
+- ✅ All Claude Code interactions
+- ✅ All subagents (ui-ux-designer, pos-fullstack-dev, database-architect, etc.)
+- ✅ All code generation
+- ✅ All database operations
+- ✅ All TypeScript interfaces for database models
+
+**Rules:**
+1. **ALWAYS** reference `prisma/schema.prisma` before working with any database model
+2. **ONLY** use fields that are explicitly defined in the Prisma schema
+3. **NEVER** assume a field exists - verify it in the schema first
+4. **NEVER** create "helpful" or "logical" fields that seem to make sense
+5. **NEVER** add fields based on business logic assumptions
+
+**Why this is critical:**
+- Invented fields cause runtime errors in production
+- TypeScript type safety is compromised
+- Database operations fail silently
+- Data integrity is violated
+- Migrations become impossible
+
+**Example of FORBIDDEN behavior:**
+```typescript
+// ❌ FORBIDDEN - "presentation" field does NOT exist in Product schema
+const productData = {
+  name: "Cerveza Corona",
+  presentation: "Botella de vidrio"  // THIS FIELD DOESN'T EXIST!
+}
+
+// ❌ FORBIDDEN - "maxStock" field does NOT exist in Product schema
+const productData = {
+  name: "Nike Air Max",
+  maxStock: 1000  // THIS FIELD DOESN'T EXIST!
+}
+```
+
+**Correct approach:**
+```typescript
+// ✅ CORRECT - Only use fields defined in prisma/schema.prisma
+// Product model fields: name, categoryId, brandId, unitMeasureId,
+// costPrice, salePrice, minStock, currentStock, image, barcode, sku,
+// description, alcoholGrade, volume, size, color, model, isActive, etc.
+
+const productData = {
+  name: "Cerveza Corona",
+  volume: 355,           // ✅ EXISTS in schema
+  alcoholGrade: 4.5,     // ✅ EXISTS in schema
+  // NO "presentation" field - it doesn't exist!
+}
+```
+
+**How to verify fields:**
+1. Open `prisma/schema.prisma`
+2. Find the model (e.g., `model Product`)
+3. Check ONLY the fields listed in that model
+4. If a field is not there, you CANNOT use it
+
+**Consequences of violating this rule:**
+- Code will fail in production
+- Pull requests will be rejected
+- Critical bugs will be introduced
+- Data corruption may occur
+
+**This applies to ALL models:** User, Organization, Product, Category, Brand, Sale, Purchase, StockMovement, etc.
+
+**If you need a new field:**
+1. Do NOT create it in code
+2. Ask the user if they want to add it to the Prisma schema
+3. Wait for schema update and migration
+4. THEN use the field in code
+
 ### Soft Delete Pattern
 
 All entities use soft deletes with these fields:
@@ -614,6 +691,12 @@ Utility for cleaning up user session data on logout.
    - Use `unknown` for truly unknown types, then narrow with type guards
    - Use proper type assertions: `as unknown as TargetType` (double assertion pattern)
    - Import and use proper types from React Hook Form, Prisma, etc.
+
+5. **ONLY use Prisma schema fields:**
+   - NEVER invent fields that don't exist in `prisma/schema.prisma`
+   - ALWAYS verify field existence in the Prisma schema before using
+   - Type interfaces for database models must EXACTLY match Prisma schema
+   - See "⛔ CRITICAL RESTRICTION: PRISMA SCHEMA FIELDS ONLY" section for details
 
 **Correct patterns:**
 

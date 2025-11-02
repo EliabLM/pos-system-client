@@ -107,7 +107,7 @@ export async function refreshToken(userId: string): Promise<ActionResponse<Refre
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, session.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: COOKIE_MAX_AGE,
       path: '/',

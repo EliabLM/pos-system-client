@@ -35,6 +35,31 @@ interface RegisterFormData {
   storeId?: string;
 }
 
+interface RegisterResponseData {
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    role: string;
+    organizationId: string | null;
+    storeId: string | null;
+    isActive: boolean;
+    emailVerified: boolean;
+    createdAt: Date;
+    organization: {
+      id: string;
+      name: string;
+    } | null;
+    store: {
+      id: string;
+      name: string;
+    } | null;
+  };
+  sessionId: string;
+  redirectTo: string;
+}
+
 /**
  * Registra un nuevo usuario en el sistema
  *
@@ -48,7 +73,9 @@ interface RegisterFormData {
  *   redirect('/dashboard');
  * }
  */
-export async function registerUser(formData: FormData): Promise<ActionResponse> {
+export async function registerUser(
+  formData: FormData
+): Promise<ActionResponse<RegisterResponseData>> {
   try {
     // 1. Extraer y validar datos del formulario
     const data: RegisterFormData = {
@@ -121,7 +148,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
         return {
           status: 400,
           message: error.message,
-          data: error.details,
+          data: null,
         };
       }
       throw error;
@@ -293,19 +320,25 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, session.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: COOKIE_MAX_AGE,
       path: '/',
     });
 
-    // 9. Return success con user data (sin password)
+    // 9. Determinar URL de redirección
+    // Usuarios sin organización van a onboarding
+    // Usuarios con organización van directo a dashboard
+    const redirectUrl = newUser.organizationId ? '/dashboard' : '/onboarding';
+
+    // 10. Return success con user data (sin password) y redirect URL
     return {
       status: 201,
       message: 'Usuario registrado exitosamente',
       data: {
         user: newUser,
         sessionId: session.id,
+        redirectTo: redirectUrl,
       },
     };
   } catch (error) {
@@ -315,7 +348,7 @@ export async function registerUser(formData: FormData): Promise<ActionResponse> 
       return {
         status: 400,
         message: error.message,
-        data: error.details || null,
+        data: null,
       };
     }
 

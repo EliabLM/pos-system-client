@@ -77,9 +77,12 @@ interface LoginResponse {
   attemptsRemaining?: number;
   lockedUntil?: Date;
   minutesRemaining?: number;
+  redirectTo?: string;
 }
 
-export async function loginUser(formData: FormData): Promise<ActionResponse<LoginResponse>> {
+export async function loginUser(
+  formData: FormData
+): Promise<ActionResponse<LoginResponse>> {
   try {
     // 1. Extraer y validar credenciales
     const data: LoginFormData = {
@@ -152,8 +155,6 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
         },
       },
     });
-
-    console.log('user', user)
 
     if (!user) {
       return {
@@ -249,10 +250,15 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
     }
 
     // Verificar organización activa (si aplica)
-    if (user.organizationId && user.organization && !user.organization.isActive) {
+    if (
+      user.organizationId &&
+      user.organization &&
+      !user.organization.isActive
+    ) {
       return {
         status: 403,
-        message: 'Su organización ha sido desactivada. Por favor contacte a soporte',
+        message:
+          'Su organización ha sido desactivada. Por favor contacte a soporte',
         data: null,
       };
     }
@@ -261,14 +267,18 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
     if (user.storeId && user.store && !user.store.isActive) {
       return {
         status: 403,
-        message: 'Su tienda ha sido desactivada. Por favor contacte a su administrador',
+        message:
+          'Su tienda ha sido desactivada. Por favor contacte a su administrador',
         data: null,
       };
     }
 
     // 5. Crear sesión y generar JWT
     const headersList = await headers();
-    const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || undefined;
+    const ipAddress =
+      headersList.get('x-forwarded-for') ||
+      headersList.get('x-real-ip') ||
+      undefined;
     const userAgent = headersList.get('user-agent') || undefined;
 
     const session = await createSession({
@@ -282,13 +292,15 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, session.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: data.rememberMe ? 30 * 24 * 60 * 60 : COOKIE_MAX_AGE,
       path: '/',
     });
 
-    // 7. Return success con user data (sin password)
+    const redirectUrl = user.organizationId ? '/dashboard' : '/onboarding';
+
+    // 7. Return success con redirect URL (excluir password de la respuesta)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
 
@@ -298,6 +310,7 @@ export async function loginUser(formData: FormData): Promise<ActionResponse<Logi
       data: {
         user: userWithoutPassword,
         sessionId: session.id,
+        redirectTo: redirectUrl,
       },
     };
   } catch (error) {

@@ -316,15 +316,27 @@ export async function loginUser(
       },
     };
   } catch (error) {
-    console.error('Login error:', error);
-
+    // Log completo del error incluyendo originalError si existe
     if (error instanceof AuthError) {
+      console.error('Login error:', error.message);
+      console.error('Error code:', error.code);
+
+      // Type guard para verificar si details tiene originalError
+      if (error.details && typeof error.details === 'object' && 'originalError' in error.details) {
+        console.error('Original error:', error.details.originalError);
+      } else if (error.details) {
+        console.error('Error details:', error.details);
+      }
+
       return {
         status: 400,
         message: error.message,
         data: error.details || null,
       };
     }
+
+    // Log genérico para errores no-AuthError
+    console.error('Login error:', error);
 
     return {
       status: 500,

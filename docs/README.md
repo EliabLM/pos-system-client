@@ -22,8 +22,13 @@ docs/
 │   └── LOGOUT_STATE_CLEANUP.md
 ├── maintenance/                       # Mantenimiento y Operaciones
 │   └── DEPENDENCIES_UPDATE.md
+├── deployment/                        # Deployment y Producción
+│   ├── PM2_DEPLOYMENT_GUIDE.md
+│   ├── ssl-troubleshooting-nginx-cloudflare-oracle.md
+│   ├── fix-database-ssl-production.md
+│   ├── RESUMEN-FIX-SSL-LOGIN.md
+│   └── QUICK-FIX-LOGIN.txt
 └── infrastructure/                    # Infraestructura y DevOps (futuro)
-    ├── deployment/
     └── monitoring/
 ```
 
@@ -68,6 +73,22 @@ docs/
 | Documento | Descripción | Estado |
 |-----------|-------------|--------|
 | [DEPENDENCIES_UPDATE.md](./maintenance/DEPENDENCIES_UPDATE.md) | Guía para actualización de dependencias del proyecto | ✅ Completado |
+
+### 🚀 Deployment y Producción
+
+| Documento | Descripción | Estado |
+|-----------|-------------|--------|
+| [RESUMEN-FIX-SSL-LOGIN.md](./RESUMEN-FIX-SSL-LOGIN.md) | **Guía ejecutiva completa** para solucionar error de login después de migrar a HTTPS | ✅ Completado |
+| [QUICK-FIX-LOGIN.txt](./QUICK-FIX-LOGIN.txt) | Cheat sheet rápida (2 minutos) para aplicar el fix SSL | ✅ Completado |
+| [fix-database-ssl-production.md](./fix-database-ssl-production.md) | Documentación técnica detallada del problema y solución SSL | ✅ Completado |
+| [ssl-troubleshooting-nginx-cloudflare-oracle.md](./ssl-troubleshooting-nginx-cloudflare-oracle.md) | Troubleshooting completo de SSL con Nginx + Cloudflare + OCI | ✅ Completado |
+| [PM2_DEPLOYMENT_GUIDE.md](./PM2_DEPLOYMENT_GUIDE.md) | Guía de deployment con PM2 en producción | ✅ Completado |
+| [DATABASE_REMOTE_ACCESS.md](./DATABASE_REMOTE_ACCESS.md) | Configuración de acceso remoto a base de datos PostgreSQL | ✅ Completado |
+| [ROUTER_REDIRECT_FIX.md](./ROUTER_REDIRECT_FIX.md) | Fix de problemas de redirección en Next.js App Router | ✅ Completado |
+
+**Scripts disponibles:**
+- `scripts/deploy-fix-ssl.sh` - Deployment completo con build
+- `scripts/quick-restart-pm2.sh` - Reinicio rápido de PM2
 
 ## 🏗️ Convenciones
 
@@ -147,4 +168,4 @@ Para preguntas sobre la documentación, contactar al equipo técnico o crear un 
 
 ---
 
-**Última actualización de este índice:** 2025-01-25
+**Última actualización de este índice:** 2025-11-03

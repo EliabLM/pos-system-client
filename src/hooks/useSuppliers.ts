@@ -1,13 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   createSupplier,
   getSuppliersByOrgId,
   getSupplierById,
+  getSupplierByTaxId,
+  getSupplierByEmail,
   updateSupplier,
   softDeleteSupplier,
   toggleSupplierActiveStatus,
   getSupplierPurchaseHistory,
   getSupplierStatistics,
+  getTopSuppliersByPurchases,
 } from '@/actions/supplier';
 import { useStore } from '@/store';
 import { Supplier } from '@/generated/prisma';
@@ -115,6 +119,68 @@ export const useSupplierById = (supplierId: string) => {
   });
 };
 
+// Hook para obtener supplier por TaxId (NIT/RUC)
+export const useSupplierByTaxId = (taxId: string) => {
+  const user = useStore((state) => state.user);
+
+  return useQuery({
+    queryKey: ['supplier', 'taxId', user?.organizationId, taxId],
+    queryFn: async () => {
+      if (!user?.organizationId) {
+        throw new Error('Usuario no tiene organización asignada');
+      }
+
+      if (!taxId) {
+        throw new Error('TaxId requerido');
+      }
+
+      const response = await getSupplierByTaxId(user.organizationId, taxId);
+
+      if (response.status !== 200) {
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    },
+    enabled: !!taxId && !!user?.organizationId,
+    staleTime: 3 * 60 * 1000, // 3 minutos
+    gcTime: 5 * 60 * 1000,
+  });
+};
+
+// Hook para obtener supplier por email
+export const useSupplierByEmail = (email: string) => {
+  const user = useStore((state) => state.user);
+
+  return useQuery({
+    queryKey: ['supplier', 'email', user?.organizationId, email],
+    queryFn: async () => {
+      if (!user?.organizationId) {
+        throw new Error('Usuario no tiene organización asignada');
+      }
+
+      if (!email) {
+        throw new Error('Email requerido');
+      }
+
+      const response = await getSupplierByEmail(user.organizationId, email);
+
+      if (response.status !== 200) {
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    },
+    enabled: !!email && !!user?.organizationId,
+    staleTime: 3 * 60 * 1000, // 3 minutos
+    gcTime: 5 * 60 * 1000,
+  });
+};
+
+// ===========================
+// HOOKS DE MUTACIÓN
+// ===========================
+
 // Hook para crear supplier
 export const useCreateSupplier = () => {
   const queryClient = useQueryClient();
@@ -139,13 +205,19 @@ export const useCreateSupplier = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidar múltiples queries relacionadas
+      // Invalidar queries relacionadas
       queryClient.invalidateQueries({
         queryKey: ['suppliers', user?.organizationId],
       });
+      toast.success('Proveedor creado exitosamente');
     },
     onError: (error) => {
-      console.error('Error creando el supplier:', error);
+      console.error('Error creando el proveedor:', error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Error al crear el proveedor'
+      );
     },
   });
 };
@@ -177,9 +249,30 @@ export const useUpdateSupplier = () => {
       queryClient.invalidateQueries({
         queryKey: ['supplier', variables.supplierId],
       });
+
+      // Invalidar queries por taxId si existe
+      if (data?.taxId) {
+        queryClient.invalidateQueries({
+          queryKey: ['supplier', 'taxId', user?.organizationId, data.taxId],
+        });
+      }
+
+      // Invalidar queries por email si existe
+      if (data?.email) {
+        queryClient.invalidateQueries({
+          queryKey: ['supplier', 'email', user?.organizationId, data.email],
+        });
+      }
+
+      toast.success('Proveedor actualizado exitosamente');
     },
     onError: (error) => {
-      console.error('Error actualizando el supplier:', error);
+      console.error('Error actualizando el proveedor:', error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Error al actualizar el proveedor'
+      );
     },
   });
 };
@@ -210,9 +303,15 @@ export const useSoftDeleteSupplier = () => {
       queryClient.invalidateQueries({
         queryKey: ['supplier', variables.supplierId],
       });
+      toast.success('Proveedor eliminado exitosamente');
     },
     onError: (error) => {
-      console.error('Error eliminando el supplier:', error);
+      console.error('Error eliminando el proveedor:', error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Error al eliminar el proveedor'
+      );
     },
   });
 };
@@ -236,21 +335,35 @@ export const useToggleSupplierActiveStatus = () => {
 
       return response.data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['suppliers', user?.organizationId],
       });
       queryClient.invalidateQueries({
         queryKey: ['supplier', variables.supplierId],
       });
+      toast.success(
+        data?.isActive
+          ? 'Proveedor activado exitosamente'
+          : 'Proveedor desactivado exitosamente'
+      );
     },
     onError: (error) => {
-      console.error('Error cambiando estado del supplier:', error);
+      console.error('Error cambiando estado del proveedor:', error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Error al cambiar el estado del proveedor'
+      );
     },
   });
 };
 
-// Hook para obtener historial de compras
+// ===========================
+// HOOKS ANALÍTICOS
+// ===========================
+
+// Hook para obtener historial de compras del supplier
 export const useSupplierPurchaseHistory = (
   supplierId: string,
   pagination?: SupplierPagination
@@ -295,6 +408,34 @@ export const useSupplierStatistics = (supplierId: string) => {
     },
     enabled: !!supplierId,
     staleTime: 5 * 60 * 1000, // 5 minutos (estadísticas pueden ser menos frecuentes)
+    gcTime: 10 * 60 * 1000,
+  });
+};
+
+// Hook para obtener top suppliers por compras
+export const useTopSuppliersByPurchases = (limit: number = 10) => {
+  const user = useStore((state) => state.user);
+
+  return useQuery({
+    queryKey: ['suppliers', 'top', user?.organizationId, limit],
+    queryFn: async () => {
+      if (!user?.organizationId) {
+        throw new Error('Usuario no tiene organización asignada');
+      }
+
+      const response = await getTopSuppliersByPurchases(
+        user.organizationId,
+        limit
+      );
+
+      if (response.status !== 200) {
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    },
+    enabled: !!user?.organizationId,
+    staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000,
   });
 };

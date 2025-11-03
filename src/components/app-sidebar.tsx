@@ -18,6 +18,7 @@ import {
   IconUserHeart,
   IconChartBar,
   IconRuler,
+  IconTruck,
 } from '@tabler/icons-react';
 
 import { NavParametrization } from '@/components/nav-parametrization';
@@ -58,11 +59,16 @@ const data = {
       url: '/dashboard/customers',
       icon: IconUserHeart,
     },
-    // {
-    //   title: 'Proveedores',
-    //   url: '/dashboard/suppliers',
-    //   icon: IconTruck,
-    // },
+    {
+      title: 'Proveedores',
+      url: '/dashboard/suppliers',
+      icon: IconTruck,
+    },
+    {
+      title: 'Compras',
+      url: '/dashboard/purchases',
+      icon: IconShoppingCart,
+    },
     {
       title: 'Productos',
       url: '/dashboard/products',

@@ -103,11 +103,13 @@ export async function refreshToken(userId: string): Promise<ActionResponse<Refre
       expirationDays: 7,
     });
 
+    const hasHTTPS = process.env.HTTPS_ENABLED === 'true';
+
     // Actualizar cookie con nuevo token
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, session.token, {
       httpOnly: true,
-      secure: false,
+      secure: hasHTTPS,
       sameSite: 'lax',
       maxAge: COOKIE_MAX_AGE,
       path: '/',

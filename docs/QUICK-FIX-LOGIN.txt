@@ -1,0 +1,81 @@
+═══════════════════════════════════════════════════════════════
+  FIX RÁPIDO - Error Login HTTPS (2 minutos)
+═══════════════════════════════════════════════════════════════
+
+PROBLEMA:
+  Error al crear sesión después de cambiar a HTTPS
+
+CAUSA:
+  DATABASE_URL sin configuración SSL para PostgreSQL local
+
+═══════════════════════════════════════════════════════════════
+  SOLUCIÓN RÁPIDA
+═══════════════════════════════════════════════════════════════
+
+1. SSH al servidor:
+   $ ssh usuario@servidor-ip
+
+2. Editar .env:
+   $ cd /ruta/a/pos-system-client
+   $ nano .env
+
+3. Cambiar estas líneas:
+
+   DATABASE_URL="postgresql://user:pass@localhost:5432/db?sslmode=disable"
+   DIRECT_URL="postgresql://user:pass@localhost:5432/db?sslmode=disable"
+   JWT_SECRET="tu_secret"
+   HTTPS_ENABLED="true"
+
+   (Reemplaza user, pass, db con tus valores)
+
+4. Guardar: Ctrl+O → Enter → Ctrl+X
+
+5. Reiniciar PM2:
+   $ pm2 restart all --update-env
+
+6. Ver logs:
+   $ pm2 logs --lines 30
+
+7. Probar login en navegador
+
+═══════════════════════════════════════════════════════════════
+  VERIFICACIÓN
+═══════════════════════════════════════════════════════════════
+
+✓ PM2 online:
+  $ pm2 status
+
+✓ Sin errores:
+  $ pm2 logs --err --lines 20
+
+✓ Variables cargadas:
+  $ pm2 env 0 | grep DATABASE_URL
+
+═══════════════════════════════════════════════════════════════
+  SI FALLA
+═══════════════════════════════════════════════════════════════
+
+1. Ver error completo:
+   $ pm2 logs --err --lines 100
+
+2. Buscar línea: "Original error:"
+
+3. Verificar PostgreSQL:
+   $ sudo systemctl status postgresql
+
+4. Probar conexión:
+   $ psql -U user -d db -h localhost
+
+═══════════════════════════════════════════════════════════════
+  OPCIONES DE sslmode
+═══════════════════════════════════════════════════════════════
+
+disable  → No SSL (recomendado para PostgreSQL local)
+prefer   → Intenta SSL, sin SSL si falla
+require  → SSL obligatorio
+verify-* → SSL con verificación de certificado
+
+═══════════════════════════════════════════════════════════════
+
+Documentación completa: docs/RESUMEN-FIX-SSL-LOGIN.md
+Scripts automatizados: scripts/quick-restart-pm2.sh

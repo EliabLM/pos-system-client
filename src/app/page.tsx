@@ -12,6 +12,7 @@ import { headers } from 'next/headers';
 // TODO - Corregir en vista actualización de usuario el rol y permisos, esta quemado solo para vendedores
 // TODO - Corregir placeholder de creación de productos dependiendo del tipo de negocio
 // TODO  - Corregir número de compra, se están mezclando los números entre diferentes organizaciones
+// TODO - Corregir combobox de cliente en ventas, no se visualiza el boton crear cliente
 
 export default async function Home() {
   const headersList = await headers();

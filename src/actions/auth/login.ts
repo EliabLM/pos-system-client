@@ -288,11 +288,13 @@ export async function loginUser(
       expirationDays: data.rememberMe ? 30 : 7, // 30 días si "remember me"
     });
 
+    const hasHTTPS = process.env.HTTPS_ENABLED === 'true';
+
     // 6. Set cookie con token (httpOnly, secure, sameSite)
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, session.token, {
       httpOnly: true,
-      secure: false, // process.env.NODE_ENV === 'production',
+      secure: hasHTTPS,
       sameSite: 'lax',
       maxAge: data.rememberMe ? 30 * 24 * 60 * 60 : COOKIE_MAX_AGE,
       path: '/',

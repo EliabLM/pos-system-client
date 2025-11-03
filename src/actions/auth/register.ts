@@ -316,11 +316,13 @@ export async function registerUser(
       expirationDays: 7,
     });
 
+    const hasHTTPS = process.env.HTTPS_ENABLED === 'true';
+
     // 8. Set cookie con token (httpOnly, secure, sameSite)
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, session.token, {
       httpOnly: true,
-      secure: false,
+      secure: hasHTTPS,
       sameSite: 'lax',
       maxAge: COOKIE_MAX_AGE,
       path: '/',

@@ -44,8 +44,12 @@ export const CustomerActions = ({
   item: CustomerWithIncludes;
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setDetailSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<CustomerWithIncludes | null>>;
-  setDetailCustomer: React.Dispatch<React.SetStateAction<CustomerWithIncludes | null>>;
+  setItemSelected: React.Dispatch<
+    React.SetStateAction<CustomerWithIncludes | null>
+  >;
+  setDetailCustomer: React.Dispatch<
+    React.SetStateAction<CustomerWithIncludes | null>
+  >;
 }) => {
   const softDeleteMutation = useSoftDeleteCustomer();
   const toggleActiveStatusMutation = useToggleCustomerActiveStatus();
@@ -115,9 +119,26 @@ export const CustomerActions = ({
         showLoaderOnConfirm: true,
         confirmButtonColor: '#dc2626',
         preConfirm: async () => {
-          await softDeleteMutation.mutateAsync({
-            customerId: item.id,
-          });
+          try {
+            const response = await softDeleteMutation.mutateAsync({
+              customerId: item.id,
+            });
+
+            if (response.status !== 200) {
+              Swal.showValidationMessage(response.message);
+              return false;
+            }
+
+            return response;
+          } catch (error) {
+            console.error('🚀 ~ handleSoftDelete ~ error:', error);
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Ha ocurrido un error eliminando el cliente';
+            Swal.showValidationMessage(errorMessage);
+            return false;
+          }
         },
         allowOutsideClick: () => !Swal.isLoading(),
       }).then((result) => {

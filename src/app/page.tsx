@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 
-// TODO - CORREGIR eliminación de opciones parametrizable (marcas, métodos de pago, etc.), se queda loader infinito cuando da error.
 // TODO - Se realizaron ventas después de 6 pm y en los reportes no se visualizan en la opción hoy.
 // TODO - Exportar PDF no funciona en ningún reporte
 // TODO - Cambiar el titulo del método de pago en el reporte de ventas por método de pago (están en ingles)

@@ -44,8 +44,12 @@ export const SupplierActions = ({
   item: SupplierWithIncludes;
   setSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setDetailSheetOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemSelected: React.Dispatch<React.SetStateAction<SupplierWithIncludes | null>>;
-  setDetailSupplier: React.Dispatch<React.SetStateAction<SupplierWithIncludes | null>>;
+  setItemSelected: React.Dispatch<
+    React.SetStateAction<SupplierWithIncludes | null>
+  >;
+  setDetailSupplier: React.Dispatch<
+    React.SetStateAction<SupplierWithIncludes | null>
+  >;
 }) => {
   const softDeleteMutation = useSoftDeleteSupplier();
   const toggleActiveStatusMutation = useToggleSupplierActiveStatus();
@@ -87,7 +91,9 @@ export const SupplierActions = ({
       }).then((result) => {
         if (result.isConfirmed) {
           toast.success(
-            `Proveedor ${item.isActive ? 'desactivado' : 'activado'} exitosamente`
+            `Proveedor ${
+              item.isActive ? 'desactivado' : 'activado'
+            } exitosamente`
           );
         }
       });
@@ -115,9 +121,26 @@ export const SupplierActions = ({
         showLoaderOnConfirm: true,
         confirmButtonColor: '#dc2626',
         preConfirm: async () => {
-          await softDeleteMutation.mutateAsync({
-            supplierId: item.id,
-          });
+          try {
+            const response = await softDeleteMutation.mutateAsync({
+              supplierId: item.id,
+            });
+
+            if (response.status !== 200) {
+              Swal.showValidationMessage(response.message);
+              return false;
+            }
+
+            return response;
+          } catch (error) {
+            console.error('🚀 ~ handleSoftDelete ~ error:', error);
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Ha ocurrido un error eliminando el proveedor';
+            Swal.showValidationMessage(errorMessage);
+            return false;
+          }
         },
         allowOutsideClick: () => !Swal.isLoading(),
       }).then((result) => {

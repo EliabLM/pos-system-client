@@ -49,9 +49,26 @@ export const StoreActionComponent = ({
         showConfirmButton: true,
         showLoaderOnConfirm: true,
         preConfirm: async () => {
-          await softDeleteMutation.mutateAsync({
-            storeId: item.id,
-          });
+          try {
+            const response = await softDeleteMutation.mutateAsync({
+              storeId: item.id,
+            });
+
+            if (response.status !== 200) {
+              Swal.showValidationMessage(response.message);
+              return false;
+            }
+
+            return response;
+          } catch (error) {
+            console.error('🚀 ~ handleSoftDelete ~ error:', error);
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Ha ocurrido un error eliminando la tienda';
+            Swal.showValidationMessage(errorMessage);
+            return false;
+          }
         },
         allowOutsideClick: () => !Swal.isLoading(),
       }).then((result) => {

@@ -279,7 +279,7 @@ export const useSoftDeleteCustomer = () => {
         throw new Error(response.message);
       }
 
-      return response.data;
+      return response
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

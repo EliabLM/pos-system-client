@@ -119,9 +119,26 @@ export const UserActionComponent = ({
         showLoaderOnConfirm: true,
         confirmButtonColor: '#dc2626',
         preConfirm: async () => {
-          await softDeleteMutation.mutateAsync({
-            userId: item.id,
-          });
+          try {
+            const response = await softDeleteMutation.mutateAsync({
+              userId: item.id,
+            });
+
+            if (response.status !== 200) {
+              Swal.showValidationMessage(response.message);
+              return false;
+            }
+
+            return response;
+          } catch (error) {
+            console.error('🚀 ~ handleSoftDelete ~ error:', error);
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Ha ocurrido un error eliminando el usuario';
+            Swal.showValidationMessage(errorMessage);
+            return false;
+          }
         },
         allowOutsideClick: () => !Swal.isLoading(),
       });

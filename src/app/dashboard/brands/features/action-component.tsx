@@ -49,9 +49,27 @@ export const BrandActionComponent = ({
         showConfirmButton: true,
         showLoaderOnConfirm: true,
         preConfirm: async () => {
-          await softDeleteMutation.mutateAsync({
-            brandId: item.id,
-          });
+          try {
+            const result = await softDeleteMutation.mutateAsync({
+              brandId: item.id,
+            });
+
+            if (result.status !== 200) {
+              Swal.showValidationMessage(result.message);
+              return false;
+            }
+
+            return result;
+          } catch (error) {
+            console.error('🚀 ~ handleSoftDelete ~ error:', error);
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Ha ocurrido un error eliminando la marca';
+
+            Swal.showValidationMessage(errorMessage);
+            return false;
+          }
         },
         allowOutsideClick: () => !Swal.isLoading(),
       }).then((result) => {
@@ -69,19 +87,19 @@ export const BrandActionComponent = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant='ghost'
-          className='data-[state=open]:bg-muted text-muted-foreground flex size-8'
-          size='icon'
+          variant="ghost"
+          className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+          size="icon"
         >
           <IconDotsVertical />
-          <span className='sr-only'>Open menu</span>
+          <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align='end' className='w-32'>
+      <DropdownMenuContent align="end" className="w-32">
         <DropdownMenuItem onClick={handleEdit}>Editar</DropdownMenuItem>
         {/* <DropdownMenuItem>Copiar ID</DropdownMenuItem> */}
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant='destructive' onClick={handleSoftDelete}>
+        <DropdownMenuItem variant="destructive" onClick={handleSoftDelete}>
           Eliminar
         </DropdownMenuItem>
       </DropdownMenuContent>

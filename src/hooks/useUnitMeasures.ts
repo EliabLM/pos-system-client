@@ -149,7 +149,7 @@ export const useSoftDeleteUnitMeasure = () => {
         throw new Error(response.message);
       }
 
-      return response.data;
+      return response;
     },
     onSuccess: () => {
       // Invalidar todas las queries de unidades de medida para esta organización

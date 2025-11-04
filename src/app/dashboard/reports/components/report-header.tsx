@@ -46,7 +46,7 @@ export function ReportHeader({
               variant="outline"
               size="sm"
               onClick={onExportPDF}
-              disabled={isExporting}
+              disabled={true}
               className="gap-2"
             >
               <IconFileTypePdf className="size-4" />

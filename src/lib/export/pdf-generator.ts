@@ -42,95 +42,97 @@ export async function generatePDF(
       throw new Error(`Element with ID "${elementId}" not found`);
     }
 
-    // Clone the element to avoid modifying the original
-    const clonedElement = element.cloneNode(true) as HTMLElement;
+    // Convert HTML to canvas with color fix
+    const canvas = await html2canvas.default(element, {
+      scale,
+      logging: false,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#ffffff',
+      onclone: (clonedDoc) => {
+        // Add CSS override to replace oklch colors with RGB fallbacks
+        const style = clonedDoc.createElement('style');
+        style.textContent = `
+          * {
+            --background: rgb(255, 255, 255) !important;
+            --foreground: rgb(36, 36, 36) !important;
+            --card: rgb(255, 255, 255) !important;
+            --card-foreground: rgb(36, 36, 36) !important;
+            --primary: rgb(56, 189, 115) !important;
+            --primary-foreground: rgb(245, 250, 247) !important;
+            --muted: rgb(247, 247, 247) !important;
+            --muted-foreground: rgb(140, 140, 140) !important;
+            --border: rgb(235, 235, 235) !important;
+          }
+        `;
+        clonedDoc.head.appendChild(style);
 
-    // Add temporary styling for better PDF rendering
-    clonedElement.style.backgroundColor = 'white';
-    clonedElement.style.padding = '20px';
+        // Ensure white background for PDF
+        const clonedElement = clonedDoc.getElementById(elementId);
+        if (clonedElement) {
+          clonedElement.style.backgroundColor = 'white';
+          clonedElement.style.padding = '20px';
+        }
+      },
+    });
 
-    // Append to body temporarily (required for html2canvas)
-    clonedElement.style.position = 'absolute';
-    clonedElement.style.left = '-9999px';
-    document.body.appendChild(clonedElement);
+    // Get canvas dimensions
+    const imgData = canvas.toDataURL('image/png');
+    const imgWidth = orientation === 'landscape' ? 297 : 210; // A4 size in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    try {
-      // Convert HTML to canvas
-      const canvas = await html2canvas.default(clonedElement, {
-        scale,
-        logging: false,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-      });
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation,
+      unit: 'mm',
+      format: 'a4',
+    });
 
-      // Remove cloned element
-      document.body.removeChild(clonedElement);
-
-      // Get canvas dimensions
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = orientation === 'landscape' ? 297 : 210; // A4 size in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      // Create PDF
-      const pdf = new jsPDF({
-        orientation,
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      // Add title if provided
-      if (title) {
-        pdf.setFontSize(16);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(title, 14, 15);
-      }
-
-      // Add date if requested
-      if (includeDate) {
-        const currentDate = new Date().toLocaleDateString('es-ES', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        });
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        const dateX = orientation === 'landscape' ? 230 : 140;
-        pdf.text(`Generado: ${currentDate}`, dateX, title ? 15 : 10);
-      }
-
-      // Calculate Y position for image (after title/date)
-      const startY = title || includeDate ? 25 : 10;
-
-      // Add image to PDF
-      pdf.addImage(imgData, 'PNG', 10, startY, imgWidth - 20, imgHeight);
-
-      // Handle multi-page PDFs
-      const pageHeight = orientation === 'landscape' ? 210 : 297;
-      let heightLeft = imgHeight - (pageHeight - startY);
-
-      while (heightLeft > 0) {
-        pdf.addPage();
-        pdf.addImage(
-          imgData,
-          'PNG',
-          10,
-          -(pageHeight - startY) - (imgHeight - heightLeft),
-          imgWidth - 20,
-          imgHeight
-        );
-        heightLeft -= pageHeight;
-      }
-
-      // Save the PDF
-      pdf.save(`${filename}.pdf`);
-    } catch (error) {
-      // Clean up cloned element in case of error
-      if (document.body.contains(clonedElement)) {
-        document.body.removeChild(clonedElement);
-      }
-      throw error;
+    // Add title if provided
+    if (title) {
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(title, 14, 15);
     }
+
+    // Add date if requested
+    if (includeDate) {
+      const currentDate = new Date().toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      const dateX = orientation === 'landscape' ? 230 : 140;
+      pdf.text(`Generado: ${currentDate}`, dateX, title ? 15 : 10);
+    }
+
+    // Calculate Y position for image (after title/date)
+    const startY = title || includeDate ? 25 : 10;
+
+    // Add image to PDF
+    pdf.addImage(imgData, 'PNG', 10, startY, imgWidth - 20, imgHeight);
+
+    // Handle multi-page PDFs
+    const pageHeight = orientation === 'landscape' ? 210 : 297;
+    let heightLeft = imgHeight - (pageHeight - startY);
+
+    while (heightLeft > 0) {
+      pdf.addPage();
+      pdf.addImage(
+        imgData,
+        'PNG',
+        10,
+        -(pageHeight - startY) - (imgHeight - heightLeft),
+        imgWidth - 20,
+        imgHeight
+      );
+      heightLeft -= pageHeight;
+    }
+
+    // Save the PDF
+    pdf.save(`${filename}.pdf`);
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error(
